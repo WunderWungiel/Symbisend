@@ -20,7 +20,7 @@ PageStackWindow {
             SendPage { id: sendTab }
             SettingsPage {
                 id: settingsTab
-                onLogRequested: mainPage.pageStack.push(Qt.resolvedUrl("LogPage.qml"))
+                onAboutRequested: mainPage.pageStack.push(Qt.resolvedUrl("AboutPage.qml"))
             }
         }
 
