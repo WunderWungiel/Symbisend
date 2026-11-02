@@ -19,7 +19,7 @@ static const int kPollIntervalMs = 250;
 static const int kMaxDatagram = 8192;
 
 MulticastReceiver::MulticastReceiver(QObject *parent)
-    : QObject(parent), m_fd(-1)
+    : QObject(parent), m_fd(-1), m_badReadLogged(false)
 {
     m_pollTimer.setInterval(kPollIntervalMs);
     connect(&m_pollTimer, SIGNAL(timeout()), this, SLOT(poll()));
@@ -89,6 +89,7 @@ bool MulticastReceiver::start(const QHostAddress &group, quint16 port, const QHo
         qWarning() << "Multicast: could not set O_NONBLOCK, errno" << errno;
 
     m_fd = fd;
+    m_badReadLogged = false;
     m_pollTimer.start();
     qDebug() << "Multicast: joined" << group.toString() << "port" << port;
     return true;
@@ -112,12 +113,25 @@ void MulticastReceiver::poll()
     // datagramReceived() may have called stop().
     for (int i = 0; i < 32 && m_fd >= 0; ++i) {
         struct sockaddr_in from;
+        memset(&from, 0, sizeof(from));
         socklen_t fromLen = sizeof(from);
         ssize_t n = ::recvfrom(m_fd, buffer, sizeof(buffer), 0,
                                reinterpret_cast<struct sockaddr *>(&from), &fromLen);
         if (n < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK)
                 qWarning() << "Multicast: recvfrom failed, errno" << errno;
+            return;
+        }
+        // When the WLAN link goes down, Open C's recvfrom() "succeeds" with
+        // no datagram behind it: empty data and/or no IPv4 sender. Drop
+        // those; going offline stops the receiver shortly after.
+        if (n == 0 || fromLen < socklen_t(sizeof(from)) || from.sin_family != AF_INET) {
+            if (!m_badReadLogged) {
+                m_badReadLogged = true;
+                qWarning() << "Multicast: bogus read (" << int(n) << "bytes, address length"
+                           << int(fromLen) << "family" << int(from.sin_family)
+                           << ") - link down? Ignoring further ones";
+            }
             return;
         }
         QHostAddress sender(ntohl(from.sin_addr.s_addr));

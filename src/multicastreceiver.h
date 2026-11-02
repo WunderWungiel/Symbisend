@@ -30,6 +30,7 @@ private slots:
 
 private:
     int m_fd;
+    bool m_badReadLogged; // bogus reads (link going down) are logged once per start()
     QTimer m_pollTimer;
 };
 
