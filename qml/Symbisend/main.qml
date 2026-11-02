@@ -17,17 +17,17 @@ PageStackWindow {
             ButtonRow {
                 TabButton {
                     tab: receiveTab
-                    iconSource: "images/tab-receive.svg"
+                    iconSource: "toolbar-home"
                     text: window.showTabLabels ? "Receive" : ""
                 }
                 TabButton {
                     tab: sendTab
-                    iconSource: "images/tab-send.svg"
+                    iconSource: "toolbar-share"
                     text: window.showTabLabels ? "Send" : ""
                 }
                 TabButton {
                     tab: settingsTab
-                    iconSource: "images/tab-settings.svg"
+                    iconSource: "toolbar-settings"
                     text: window.showTabLabels ? "Settings" : ""
                 }
             }
