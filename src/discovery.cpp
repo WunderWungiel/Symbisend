@@ -260,6 +260,31 @@ void Discovery::onScanTick()
         m_tickTimer.stop();
 }
 
+// Errors that mean a TCP connection was made but the TLS handshake failed,
+// which is what a TLS ClientHello sent to a plain-HTTP server ends in.
+static bool looksLikePlainHttpServer(QNetworkReply::NetworkError error)
+{
+    switch (error) {
+    case QNetworkReply::SslHandshakeFailedError:
+    case QNetworkReply::RemoteHostClosedError:
+    case QNetworkReply::ProtocolFailure:
+    case QNetworkReply::UnknownNetworkError:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// No (LocalSend) server at that address: not worth logging during a scan.
+static bool isNothingThere(QNetworkReply::NetworkError error, bool timedOut)
+{
+    return timedOut
+            || error == QNetworkReply::ConnectionRefusedError
+            || error == QNetworkReply::HostNotFoundError
+            || error == QNetworkReply::TimeoutError
+            || error == QNetworkReply::OperationCanceledError;
+}
+
 void Discovery::onReplyFinished(QNetworkReply *reply)
 {
     reply->deleteLater();
@@ -270,7 +295,6 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         --m_activeScanJobs;
 
     const QNetworkReply::NetworkError error = reply->error();
-    bool handled = false;
 
     if (error == QNetworkReply::NoError) {
         bool ok = false;
@@ -284,22 +308,22 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         } else if (!ok) {
             qWarning() << "Discovery:" << job.ip << "answered with invalid JSON";
         }
-        handled = true;
-    } else if (job.timedOut || error == QNetworkReply::ConnectionRefusedError
-               || error == QNetworkReply::HostNotFoundError) {
-        handled = true; // nothing there
-    } else if (job.protocol == QLatin1String("https")) {
-        // Probably a LocalSend instance with encryption disabled: retry over HTTP.
+    } else if (job.kind == ScanJob && job.protocol == QLatin1String("https")
+               && !job.timedOut && looksLikePlainHttpServer(error)) {
+        // Something answered, but not with TLS: probably a LocalSend instance
+        // with encryption disabled. Retry over HTTP.
         qDebug() << "Discovery:" << job.ip << "https failed (" << int(error) << reply->errorString()
                  << ") - trying http";
         startJob(job.kind, job.ip, job.port, QLatin1String("http"), job.v1);
         return;
-    } else {
-        qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error) << reply->errorString();
-        handled = true;
+    } else if (!isNothingThere(error, job.timedOut) || job.kind == AnnounceReplyJob) {
+        qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error)
+                 << reply->errorString();
     }
 
-    if (handled && job.kind == AnnounceReplyJob && error != QNetworkReply::NoError) {
+    if (job.kind == AnnounceReplyJob && error != QNetworkReply::NoError) {
+        // The announcing peer told us its protocol, so there is no point in
+        // switching it (the official app does not either). Fall back to UDP.
         qDebug() << "Discovery: HTTP reply to" << job.ip << "failed, replying via UDP";
         replyViaUdp();
     }
