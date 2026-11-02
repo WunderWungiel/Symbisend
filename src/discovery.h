@@ -6,12 +6,12 @@
 #include <QHash>
 #include <QHostAddress>
 #include <QList>
+#include <QNetworkAccessManager>
 #include <QTimer>
 #include <QUdpSocket>
 
 #include "httpserver.h"
 
-class QNetworkAccessManager;
 class QNetworkReply;
 class QSslError;
 class DeviceInfo;
@@ -54,6 +54,7 @@ signals:
 
 private slots:
     void onOnlineChanged();
+    void onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
     void onDatagram(const QByteArray &data, const QHostAddress &sender, quint16 senderPort);
     void onReplyFinished(QNetworkReply *reply);
     void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
@@ -73,6 +74,8 @@ private:
     };
 
     void stopAll();
+    void abortJobs();
+    static void abortReply(QNetworkReply *reply);
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
                   bool v1 = false);
     void pumpScanQueue();

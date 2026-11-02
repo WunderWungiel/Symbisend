@@ -34,6 +34,8 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *netwo
     connect(m_multicast, SIGNAL(datagramReceived(QByteArray,QHostAddress,quint16)),
             this, SLOT(onDatagram(QByteArray,QHostAddress,quint16)));
     connect(m_nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(onReplyFinished(QNetworkReply*)));
+    connect(m_nam, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)),
+            this, SLOT(onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)));
 #ifndef QT_NO_OPENSSL
     connect(m_nam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
             this, SLOT(onSslErrors(QNetworkReply*,QList<QSslError>)));
@@ -79,28 +81,61 @@ void Discovery::onOnlineChanged()
     refresh();
 }
 
+// The access manager follows its own session to our access point and is
+// usually the first to notice the link going down. Drop the pending requests
+// right away: Qt 4.8 fails a request that once waited for that session both
+// with a session error and with the socket error, which it reports as
+// "QNetworkReplyImplPrivate::error: Internal problem, this method must only
+// be called once" - once per request.
+void Discovery::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible)
+{
+    qDebug() << "Discovery: network accessible" << int(accessible)
+             << "(" << m_jobs.size() << "request(s) pending)";
+    if (accessible == QNetworkAccessManager::NotAccessible && !m_jobs.isEmpty()) {
+        qWarning() << "Discovery: network not accessible - stopping scan";
+        abortJobs();
+    }
+}
+
 void Discovery::stopAll()
 {
+    // Requests made while offline fail at once instead of making the access
+    // manager reopen its session (and possibly show a connection dialog).
+    m_nam->setNetworkAccessible(QNetworkAccessManager::NotAccessible);
     m_multicast->stop();
     m_server->close();
+    abortJobs();
+    m_tickTimer.stop();
+    m_recentReplies.clear();
+    m_scanStarted = QDateTime();
+    m_previousScanStarted = QDateTime();
+}
 
+// Drops all pending HTTP jobs and ends a running scan without completing it.
+void Discovery::abortJobs()
+{
     // abort() emits finished() synchronously; with m_jobs already cleared
     // onReplyFinished() only deletes the replies (no retries, no UDP replies).
     QList<QNetworkReply *> replies = m_jobs.keys();
     m_jobs.clear();
     foreach (QNetworkReply *reply, replies)
-        reply->abort();
+        abortReply(reply);
 
     m_scanQueue.clear();
     m_activeScanJobs = 0;
-    m_tickTimer.stop();
-    m_recentReplies.clear();
-    m_scanStarted = QDateTime();
-    m_previousScanStarted = QDateTime();
     if (m_scanning) {
         m_scanning = false;
         emit scanningChanged();
     }
+}
+
+// A reply that already failed is about to emit finished() by itself; aborting
+// it would make Qt set a second error ("QNetworkReplyImplPrivate::error:
+// Internal problem, this method must only be called once").
+void Discovery::abortReply(QNetworkReply *reply)
+{
+    if (reply->error() == QNetworkReply::NoError && !reply->isFinished())
+        reply->abort();
 }
 
 void Discovery::refresh()
@@ -272,7 +307,7 @@ void Discovery::onScanTick()
     }
     // abort() emits finished() synchronously, so do it outside the iteration.
     foreach (QNetworkReply *reply, expired)
-        reply->abort();
+        abortReply(reply);
     if (m_jobs.isEmpty() && !m_scanning)
         m_tickTimer.stop();
 }
@@ -290,6 +325,17 @@ static bool looksLikePlainHttpServer(QNetworkReply::NetworkError error)
     default:
         return false;
     }
+}
+
+// Our own connection went away (WLAN off / out of range): every further
+// request would fail the same way.
+static bool isNetworkGone(QNetworkReply::NetworkError error)
+{
+    // QNetworkReply::NetworkSessionFailedError, added in Qt 4.8 (the runtime
+    // on the phone) but missing from the 4.7.4 headers we compile against.
+    static const int kNetworkSessionFailedError = 99;
+    return int(error) == kNetworkSessionFailedError
+            || error == QNetworkReply::TemporaryNetworkFailureError;
 }
 
 // No (LocalSend) server at that address: not worth logging during a scan.
@@ -312,6 +358,21 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         --m_activeScanJobs;
 
     const QNetworkReply::NetworkError error = reply->error();
+
+    // A failed session is reported as UnknownNetworkError ("Network session
+    // error."), which on its own may also be a TLS handshake with a plain-http
+    // server; the access manager's accessibility tells the two apart.
+    if (error != QNetworkReply::NoError
+            && (isNetworkGone(error) || !m_network->isOnline()
+                || m_nam->networkAccessible() == QNetworkAccessManager::NotAccessible)) {
+        // Don't start more requests (scan queue, http retries) on a dead
+        // connection: each would just fail. NetworkManager reports offline
+        // separately and stopAll() cleans up the rest.
+        qWarning() << "Discovery: network lost (" << int(error) << reply->errorString()
+                   << ", accessible" << int(m_nam->networkAccessible()) << ") - stopping scan";
+        abortJobs();
+        return;
+    }
 
     if (error == QNetworkReply::NoError) {
         bool ok = false;
