@@ -124,22 +124,10 @@ Page {
             SettingsItem {
                 title: "About Symbisend"
                 onClicked: page.aboutRequested()
-
-                Button {
-                    platformInverted: page.platformInverted
-                    text: "Open"
-                    onClicked: page.aboutRequested()
-                }
             }
             SettingsItem {
                 title: "Log"
                 onClicked: page.logRequested()
-
-                Button {
-                    platformInverted: page.platformInverted
-                    text: "Open"
-                    onClicked: page.logRequested()
-                }
             }
         }
     }
