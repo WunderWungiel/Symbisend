@@ -14,10 +14,6 @@ PageStackWindow {
         id: mainPage
 
         tools: ToolBarLayout {
-            ToolButton {
-                iconSource: "toolbar-back"
-                onClicked: Qt.quit()
-            }
             ButtonRow {
                 TabButton {
                     tab: receiveTab
