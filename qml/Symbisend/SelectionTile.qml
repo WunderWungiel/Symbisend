@@ -12,7 +12,7 @@ Rectangle {
 
     width: platformStyle.graphicSizeLarge
     height: width
-    radius: 3
+    radius: 8
     color: platformInverted ? "#1f000000" : "#26ffffff"
 
     Image {

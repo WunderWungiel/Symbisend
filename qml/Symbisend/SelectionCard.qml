@@ -13,15 +13,21 @@ Rectangle {
     signal editClicked
     signal addClicked
 
-    height: column.height + 2 * platformStyle.paddingMedium
+    // The title row is as tall as the close button, so its label already sits
+    // lower than the top edge: vertical padding stays medium, while the sides
+    // get more so the left-aligned text isn't pressed against the border.
+    property real horizontalPadding: platformStyle.paddingLarge
+    property real verticalPadding: platformStyle.paddingMedium
+
+    height: column.height + 2 * verticalPadding
     radius: 3
     color: platformInverted ? "#14000000" : "#1affffff"
 
     Column {
         id: column
-        x: platformStyle.paddingMedium
-        y: platformStyle.paddingMedium
-        width: parent.width - 2 * platformStyle.paddingMedium
+        x: root.horizontalPadding
+        y: root.verticalPadding
+        width: parent.width - 2 * root.horizontalPadding
         spacing: platformStyle.paddingSmall
 
         // ------------------------------------------------ Title + close
@@ -58,20 +64,28 @@ Rectangle {
         }
 
         // ------------------------------------------------ Item tiles
-        ListView {
-            id: tiles
+        // Wrapped in an Item to give the row extra room above and below on top
+        // of the column spacing.
+        Item {
             width: parent.width
-            height: platformStyle.graphicSizeLarge
-            orientation: ListView.Horizontal
-            spacing: platformStyle.paddingSmall
-            clip: true
-            model: selection
-            // Follow newly added items.
-            onCountChanged: positionViewAtEnd()
+            height: tiles.height + 2 * platformStyle.paddingSmall
 
-            delegate: SelectionTile {
-                kind: model.kind
-                platformInverted: root.platformInverted
+            ListView {
+                id: tiles
+                y: platformStyle.paddingSmall
+                width: parent.width
+                height: platformStyle.graphicSizeLarge
+                orientation: ListView.Horizontal
+                spacing: platformStyle.paddingMedium
+                clip: true
+                model: selection
+                // Follow newly added items.
+                onCountChanged: positionViewAtEnd()
+
+                delegate: SelectionTile {
+                    kind: model.kind
+                    platformInverted: root.platformInverted
+                }
             }
         }
 
