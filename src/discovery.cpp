@@ -380,13 +380,22 @@ static bool looksLikePlainHttpServer(QNetworkReply::NetworkError error)
 
 // Our own connection went away (WLAN off / out of range): every further
 // request would fail the same way.
-static bool isNetworkGone(QNetworkReply::NetworkError error)
+//
+// Qt 4.7 and 4.8 have no NetworkSessionFailedError (that is Qt 5). Qt 4.8's
+// QNetworkReplyImpl reports a failed session as UnknownNetworkError with the
+// text "Network session error.", and a request made while the manager is
+// NotAccessible as UnknownNetworkError "Network access is disabled.". The
+// HTTP backend also uses UnknownNetworkError for socket errors it cannot map,
+// e.g. a TLS handshake answered by a plain-http server, so the code alone
+// says nothing; only these two texts (untranslated: we install no
+// translator) mean that our connection is gone.
+static bool isNetworkGone(QNetworkReply::NetworkError error, const QString &errorString)
 {
-    // QNetworkReply::NetworkSessionFailedError, added in Qt 4.8 (the runtime
-    // on the phone) but missing from the 4.7.4 headers we compile against.
-    static const int kNetworkSessionFailedError = 99;
-    return int(error) == kNetworkSessionFailedError
-            || error == QNetworkReply::TemporaryNetworkFailureError;
+    if (error == QNetworkReply::TemporaryNetworkFailureError)
+        return true;
+    return error == QNetworkReply::UnknownNetworkError
+            && (errorString == QLatin1String("Network session error.")
+                || errorString == QLatin1String("Network access is disabled."));
 }
 
 // No (LocalSend) server at that address: not worth logging during a scan.
@@ -410,11 +419,12 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
 
     const QNetworkReply::NetworkError error = reply->error();
 
-    // A failed session is reported as UnknownNetworkError ("Network session
-    // error."), which on its own may also be a TLS handshake with a plain-http
-    // server; the access manager's accessibility tells the two apart.
+    // A failed session is reported as UnknownNetworkError, which on its own
+    // may also be a TLS handshake with a plain-http server; the error text
+    // (see isNetworkGone()) and the access manager's accessibility tell the
+    // two apart.
     if (error != QNetworkReply::NoError
-            && (isNetworkGone(error) || !m_network->isOnline()
+            && (isNetworkGone(error, reply->errorString()) || !m_network->isOnline()
                 || m_nam->networkAccessible() == QNetworkAccessManager::NotAccessible)) {
         // Don't start more requests (scan queue, http retries) on a dead
         // connection: each would just fail. NetworkManager reports offline
