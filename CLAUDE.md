@@ -13,7 +13,7 @@ build_symbian.bat            :: release (default)
 build_symbian.bat debug
 ```
 
-- Uses the Qt SDK at `C:\QtSDK\Symbian\SDKs\Symbian3Qt474` (Qt **4.7.4**, GCCE, `symbian-sbsv2` spec) and produces a self-signed `Symbisend.sis` in the repo root.
+- Uses the Qt SDK at `C:\QtSDK\Symbian\SDKs\Symbian3Qt474` (Qt **4.7.4**, GCCE, `symbian-sbsv2` spec) and produces a self-signed `Symbisend.sis` in the repo root. The app needs developer-certificate capabilities (`ReadDeviceData`, … for the gallery picker), so the script passes `QT_SIS_OPTIONS=-d` to keep them; the "self-signing viability failed" warning is expected, and the phone accepts unsigned packages.
 - **In-source build only** — Qt 4.7 + sbsv2 does not support shadow builds. qmake/sbsv2 output (`Makefile`, `bld.inf`, `*.mmp`, `*.pkg`, `*.rss`, `moc_*.cpp`, `*.sis`, …) lands in the repo root and is gitignored.
 - When adding source files, add them to `SOURCES`/`HEADERS` in `Symbisend.pro`.
 - There are no tests or linters. Verification happens on a real device (Nokia 808, Belle, Qt 4.8 runtime): hand over the `.sis` and say what to look for on the in-app Log page / log file (`E:/Symbisend/`, falling back to `F:` or `C:/Data`).
@@ -27,7 +27,7 @@ build_symbian.bat debug
 
 ## Architecture
 
-`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI.
+`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`, `settings`, `picker`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI.
 
 Flow:
 1. `NetworkManager` opens a `QNetworkSession` (Symbian access point), finds the local IPv4 address/prefix, and emits `onlineChanged`.

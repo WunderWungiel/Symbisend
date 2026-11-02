@@ -12,7 +12,10 @@ pushd "%PROJDIR%"
 
 qmake.exe Symbisend.pro -r -spec symbian-sbsv2 "CONFIG+=%CONF%" || goto :fail
 make %CONF%-gcce -w || goto :fail
-make sis QT_SIS_TARGET=%CONF%-gcce || goto :fail
+:: -d: keep the developer-certificate capabilities (ReadDeviceData, ... for the
+:: gallery picker) instead of stripping them; the self-signed .sis then needs a
+:: phone that accepts unsigned packages.
+make sis QT_SIS_TARGET=%CONF%-gcce QT_SIS_OPTIONS=-d || goto :fail
 
 echo.
 echo === Build OK ===

@@ -81,5 +81,16 @@ Receive:
 - `autoFinish` (bool, default false) *(stored only)*
 - `saveToHistory` (bool, default true) *(stored only)*
 
+## `picker` — what to send (Send page buttons)
+Native pickers; for now the results are only logged, nothing is sent yet.
+- `pickFile()` — native file picker (memory, then browse), one file
+- `pickMedia(kind)` — the gallery (Photos) picker, several items; `kind` is `"image"` or
+  `"video"` (the gallery picker shows one type at a time)
+- `pickFolder()` — native folder picker
+- The three `pick*()` methods return immediately; on confirm the result arrives as signal
+  `filesPicked(paths)` (list of native paths, e.g. `E:\Images\a.jpg`) or
+  `folderPicked(path)`. Nothing is emitted on cancel.
+- `clipboardText()` → string — the clipboard's text (`""` if empty); also logged
+
 ## `logger` — debug log
 - `logText` (string, last ~300 lines), `logFilePath` (string), `clear()`

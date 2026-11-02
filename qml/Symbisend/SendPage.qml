@@ -37,6 +37,47 @@ Page {
                 onClicked: discovery.refresh()
             }
         }
+
+        // What to send. For now each one only opens its picker/dialog and
+        // logs the result (see Picker in docs/qml-api.md).
+        Row {
+            id: sendOptions
+            width: parent.width
+            spacing: platformStyle.paddingSmall
+
+            property real buttonWidth: (width - 4 * spacing) / 5
+
+            SendOptionButton {
+                width: sendOptions.buttonWidth
+                label: "File"
+                icon: "send-file"
+                onClicked: picker.pickFile()
+            }
+            SendOptionButton {
+                width: sendOptions.buttonWidth
+                label: "Media"
+                icon: "send-media"
+                onClicked: mediaMenu.open()
+            }
+            SendOptionButton {
+                width: sendOptions.buttonWidth
+                label: "Paste"
+                icon: "send-paste"
+                onClicked: picker.clipboardText() // logged by C++
+            }
+            SendOptionButton {
+                width: sendOptions.buttonWidth
+                label: "Text"
+                icon: "send-text"
+                onClicked: textDialog.openEmpty()
+            }
+            SendOptionButton {
+                width: sendOptions.buttonWidth
+                label: "Folder"
+                icon: "send-folder"
+                onClicked: picker.pickFolder()
+            }
+        }
     }
 
     ListView {
@@ -60,5 +101,59 @@ Page {
         visible: list.count === 0
         color: page.platformInverted ? platformStyle.colorNormalMidInverted : platformStyle.colorNormalMid
         text: discovery.scanning ? "Searching..." : "No devices found"
+    }
+
+    // ---------------------------------------------------- dialogs
+
+    // The gallery fetcher shows one media type at a time.
+    ContextMenu {
+        id: mediaMenu
+        platformInverted: page.platformInverted
+        MenuLayout {
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Images"
+                onClicked: picker.pickMedia("image")
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Videos"
+                onClicked: picker.pickMedia("video")
+            }
+        }
+    }
+
+    CommonDialog {
+        id: textDialog
+        platformInverted: page.platformInverted
+        titleText: "Send text"
+        buttonTexts: ["OK", "Cancel"]
+
+        function openEmpty() {
+            textArea.text = ""
+            open()
+        }
+
+        content: Item {
+            width: textDialog.platformContentMaximumWidth
+            height: textArea.height + 2 * platformStyle.paddingLarge
+
+            TextArea {
+                id: textArea
+                platformInverted: page.platformInverted
+                anchors {
+                    left: parent.left; right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    margins: platformStyle.paddingLarge
+                }
+                height: 4 * platformStyle.fontSizeLarge + 2 * platformStyle.paddingLarge
+                placeholderText: "Enter text"
+            }
+        }
+
+        onButtonClicked: {
+            if (index == 0)
+                console.log("SendPage: text to send, " + textArea.text.length + " chars: " + textArea.text)
+        }
     }
 }

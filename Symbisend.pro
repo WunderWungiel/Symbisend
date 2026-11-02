@@ -20,8 +20,18 @@ symbian:TARGET.UID3 = 0xE62546C5
 # Allow network access on Symbian
 symbian:TARGET.CAPABILITY += NetworkServices
 
-# Native Avkon folder picker (AknCommonDialogsDynMem)
+# Native Avkon file/folder pickers (AknCommonDialogsDynMem)
 symbian:LIBS += -lcommondialogs
+
+# Gallery (Photos) fetcher for the Send page's Media button
+symbian:LIBS += -lmgfetch -lbafl
+# The fetcher talks to the Photos metadata/MPX/thumbnail servers, which refuse
+# clients without these capabilities (MGFetch::RunL leaves with -46
+# otherwise). ReadUserData/WriteUserData alone were not enough on a Belle
+# 808. ReadDeviceData, WriteDeviceData and SwEvent are developer-certificate
+# capabilities: the self-signed .sis then only installs on phones that accept
+# unsigned packages (patched installserver).
+symbian:TARGET.CAPABILITY += ReadUserData WriteUserData UserEnvironment LocalServices     ReadDeviceData WriteDeviceData SwEvent
 
 symbian:TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
 
@@ -42,7 +52,7 @@ SOURCES += main.cpp \
     src/httpserver.cpp \
     src/multicastreceiver.cpp \
     src/discovery.cpp \
-    src/settings.cpp
+    src/settings.cpp \n    src/picker.cpp
 
 HEADERS += \
     src/logger.h \
@@ -53,7 +63,7 @@ HEADERS += \
     src/httpserver.h \
     src/multicastreceiver.h \
     src/discovery.h \
-    src/settings.h
+    src/settings.h \n    src/picker.h
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

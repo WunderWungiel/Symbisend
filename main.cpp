@@ -10,6 +10,7 @@
 #include "src/networkmanager.h"
 #include "src/discovery.h"
 #include "src/settings.h"
+#include "src/picker.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -23,6 +24,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "Log file:" << Logger::instance()->logFilePath();
 
     Settings settings;
+    Picker picker;
     DeviceInfo device;
     PeerModel peers;
     NetworkManager network;
@@ -37,6 +39,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("network"), &network);
     ctx->setContextProperty(QLatin1String("discovery"), &discovery);
     ctx->setContextProperty(QLatin1String("settings"), &settings);
+    ctx->setContextProperty(QLatin1String("picker"), &picker);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));
