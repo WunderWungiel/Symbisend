@@ -52,10 +52,10 @@ DeviceInfo::DeviceInfo(QObject *parent)
         m_fingerprint = randomFingerprint();
         settings.setValue(QLatin1String("identity/fingerprint"), m_fingerprint);
     }
-#if defined(Q_OS_SYMBIAN)
-    m_deviceModel = QLatin1String("Symbian");
-#elif defined(MEEGO_EDITION_HARMATTAN)
-    m_deviceModel = QLatin1String("MeeGo");
+    // Like the official app: the manufacturer on phones ("Samsung", ...),
+    // the OS on desktops ("Windows", ...).
+#if defined(Q_OS_SYMBIAN) || defined(MEEGO_EDITION_HARMATTAN)
+    m_deviceModel = QLatin1String("Nokia");
 #else
     m_deviceModel = QLatin1String("Qt");
 #endif
