@@ -83,11 +83,7 @@ QString SelectionModel::kindForFile(const QString &fileName)
 
 bool SelectionModel::containsPath(const QString &path) const
 {
-    foreach (const SelectionItem &it, m_items) {
-        if (!it.path.isEmpty() && it.path.compare(path, Qt::CaseInsensitive) == 0)
-            return true;
-    }
-    return false;
+    return m_pathKeys.contains(pathKey(path));
 }
 
 void SelectionModel::append(const QList<SelectionItem> &items)
@@ -98,6 +94,8 @@ void SelectionModel::append(const QList<SelectionItem> &items)
     foreach (const SelectionItem &it, items) {
         m_items << it;
         m_totalSize += it.size;
+        if (!it.path.isEmpty())
+            m_pathKeys.insert(pathKey(it.path));
     }
     endInsertRows();
     qDebug() << "Selection: now" << m_items.size() << "items," << totalSizeText();
@@ -107,6 +105,7 @@ void SelectionModel::append(const QList<SelectionItem> &items)
 void SelectionModel::addFiles(const QStringList &paths)
 {
     QList<SelectionItem> added;
+    QSet<QString> addedKeys; // the same file twice in one pick
     foreach (const QString &native, paths) {
         QString path = QDir::cleanPath(QDir::fromNativeSeparators(native));
         QFileInfo fi(path);
@@ -114,10 +113,11 @@ void SelectionModel::addFiles(const QStringList &paths)
             qWarning() << "Selection: not a file, skipped:" << native;
             continue;
         }
-        if (containsPath(path)) {
+        if (containsPath(path) || addedKeys.contains(pathKey(path))) {
             qDebug() << "Selection: already selected, skipped:" << native;
             continue;
         }
+        addedKeys.insert(pathKey(path));
         SelectionItem it;
         it.kind = kindForFile(fi.fileName());
         it.path = path;
@@ -146,9 +146,15 @@ void SelectionModel::addFolder(const QString &native)
 
     QList<SelectionItem> added;
     int skipped = 0;
-    QDirIterator iter(root, QDir::Files | QDir::Hidden | QDir::NoSymLinks,
-                      QDirIterator::Subdirectories);
+    bool truncated = false;
+    // Without QDir::Hidden the iterator skips hidden files and does not
+    // descend into hidden folders (system/cache data, not the user's files).
+    QDirIterator iter(root, QDir::Files | QDir::NoSymLinks, QDirIterator::Subdirectories);
     while (iter.hasNext()) {
+        if (added.size() >= MaxFolderFiles) {
+            truncated = true;
+            break;
+        }
         QString path = iter.next();
         if (containsPath(path)) {
             ++skipped;
@@ -168,6 +174,11 @@ void SelectionModel::addFolder(const QString &native)
     if (added.isEmpty())
         qDebug() << "Selection: folder has no new files";
     append(added);
+    if (truncated) {
+        qWarning() << "Selection: folder" << native << "has more than" << MaxFolderFiles
+                   << "files, the rest was not added";
+        emit folderTruncated(QDir::toNativeSeparators(root), MaxFolderFiles);
+    }
 }
 
 void SelectionModel::addText(const QString &text)
@@ -211,6 +222,8 @@ void SelectionModel::remove(int index)
         return;
     beginRemoveRows(QModelIndex(), index, index);
     m_totalSize -= m_items.at(index).size;
+    if (!m_items.at(index).path.isEmpty())
+        m_pathKeys.remove(pathKey(m_items.at(index).path));
     m_items.removeAt(index);
     endRemoveRows();
     qDebug() << "Selection: removed item" << index << "-" << m_items.size() << "left";
@@ -223,6 +236,7 @@ void SelectionModel::clear()
         return;
     beginResetModel();
     m_items.clear();
+    m_pathKeys.clear();
     m_totalSize = 0;
     endResetModel();
     qDebug() << "Selection: cleared";

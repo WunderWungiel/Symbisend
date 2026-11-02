@@ -3,6 +3,7 @@
 
 #include <QAbstractListModel>
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -39,6 +40,9 @@ public:
         SizeTextRole
     };
 
+    // addFolder() limit: walking and listing more would stall the UI.
+    static const int MaxFolderFiles = 1000;
+
     explicit SelectionModel(QObject *parent = 0);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -57,7 +61,8 @@ public slots:
     // missing files are skipped.
     void addFiles(const QStringList &paths);
     // Every file inside the folder, recursively, with relative paths that start
-    // with the folder's name.
+    // with the folder's name. Hidden files and folders are skipped, and at most
+    // MaxFolderFiles new files are added (folderTruncated() says so).
     void addFolder(const QString &path);
     // A text message. Empty text is ignored.
     void addText(const QString &text);
@@ -69,13 +74,18 @@ public slots:
 signals:
     // Also emitted when setText() changes the total size.
     void countChanged();
+    // addFolder() stopped after maxFiles files; the rest was not added.
+    void folderTruncated(const QString &folder, int maxFiles);
 
 private:
     void append(const QList<SelectionItem> &items);
     bool containsPath(const QString &path) const;
+    // Key for m_pathKeys: drive letters and names are case-insensitive.
+    static QString pathKey(const QString &path) { return path.toLower(); }
     static QString kindForFile(const QString &fileName);
 
     QList<SelectionItem> m_items;
+    QSet<QString> m_pathKeys;   // pathKey() of every file item, for containsPath()
     qint64 m_totalSize;
 };
 

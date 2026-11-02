@@ -22,6 +22,11 @@ Page {
             picker.showInfo("Clipboard is empty")
     }
 
+    Connections {
+        target: selection
+        onFolderTruncated: picker.showInfo("Only the first " + maxFiles + " files of the folder were added")
+    }
+
     Column {
         id: header
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }

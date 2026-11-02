@@ -112,7 +112,10 @@ Properties: `count` (int), `totalSize` (number, bytes), `totalSizeText` (string,
 Methods:
 - `addFiles(paths)` — native paths; already selected paths and non-files are skipped
 - `addFolder(path)` — every file inside, recursively (`relativePath` starts with the
-  folder's name)
+  folder's name). Hidden files and hidden folders are skipped. At most 1000 new files
+  are added per folder; if there are more, the rest is left out and signal
+  `folderTruncated(folder, maxFiles)` is emitted (`folder` is the native path; the Send
+  page shows a note)
 - `addText(text)` — a text message; `""` is ignored
 - `setText(index, text)` — edit a text item; `""` removes it
 - `remove(index)`, `clear()`
