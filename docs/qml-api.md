@@ -22,6 +22,16 @@ Roles (use as `model.<role>` in delegates; `alias` clashes with a QML keyword):
 
 Properties: `count` (int).  Methods: `clear()`.
 
+- `peer(fingerprint)` → object with all the roles above plus `logs`, or `{}` if the
+  fingerprint is unknown. `logs` is a list of `{ time, text }`, oldest first, at most 100:
+  one entry for every time the device was confirmed (announcement, `/register`, scan
+  answer), like LocalSend's device details page. `time` is the local short time
+  (`7:27 PM`), `text` is `Discovered via HTTPS (192.168.1.79)` for the first entry and
+  `Updated via HTTPS (192.168.1.79)` for later ones. Logs are cleared along with the peer
+  (expiry, `clear()`, going offline).
+- Signal `peerChanged(fingerprint)` — a peer was added or re-confirmed; call `peer()`
+  again to refresh.
+
 ## `discovery`
 - `scanning` (bool), `scanProgress` (0–100)
 - `serverRunning` (bool) — our HTTP server on port 53317 is up

@@ -6,7 +6,9 @@ PageStackWindow {
     showStatusBar: true
     // The main page uses its own bottom TabBar instead of the toolbar; only
     // pushed pages (e.g. Log) need the real toolbar for their back button.
+    // Pages with their own back button at the top (ownBackButton) hide it too.
     showToolBar: pageStack.depth > 1
+                 && !(pageStack.currentPage && pageStack.currentPage.ownBackButton)
     // Light theme = the inverted Symbian style (background, status bar,
     // toolbar); the pages bind their components to it themselves.
     platformInverted: settings.theme == "light"
@@ -25,7 +27,11 @@ PageStackWindow {
             currentTab: receiveTab
 
             ReceivePage { id: receiveTab }
-            SendPage { id: sendTab }
+            SendPage {
+                id: sendTab
+                onDeviceInfoRequested: mainPage.pageStack.push(Qt.resolvedUrl("DeviceDetailsPage.qml"),
+                                                               { fingerprint: fingerprint })
+            }
             SettingsPage {
                 id: settingsTab
                 onAboutRequested: mainPage.pageStack.push(Qt.resolvedUrl("AboutPage.qml"))

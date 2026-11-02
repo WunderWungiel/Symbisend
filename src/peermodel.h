@@ -6,6 +6,16 @@
 #include <QList>
 #include <QVariantMap>
 
+// One confirmation of a peer (like LocalSend's DeviceLog): the first one
+// discovered it, every later one updated it.
+struct PeerLog
+{
+    QDateTime time;
+    bool discovered;
+    QString protocol;      // "http" or "https"
+    QString host;          // IP the confirmation came from
+};
+
 struct Peer
 {
     QString fingerprint;
@@ -18,6 +28,7 @@ struct Peer
     QString deviceType;
     QString source;        // how we found it: "register", "scan", "multicast"
     QDateTime lastSeen;
+    QList<PeerLog> logs;   // oldest first, capped; kept across upserts
 };
 
 // List of discovered LocalSend devices, keyed by fingerprint.
@@ -56,8 +67,14 @@ public:
     void removeOlderThan(const QDateTime &cutoff);
     Q_INVOKABLE void clear();
 
+    // All data of one peer for the device details page, or an empty map when
+    // the fingerprint is unknown. See docs/qml-api.md.
+    Q_INVOKABLE QVariantMap peer(const QString &fingerprint) const;
+
 signals:
     void countChanged();
+    // A peer was added or re-confirmed (its data or logs changed).
+    void peerChanged(const QString &fingerprint);
 
 private:
     int indexOf(const QString &fingerprint) const;

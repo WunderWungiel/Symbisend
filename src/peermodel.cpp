@@ -1,6 +1,10 @@
 #include "peermodel.h"
 
 #include <QDebug>
+#include <QLocale>
+
+// Same cap as LocalSend's discovery store (MAX_LOGS).
+static const int MaxPeerLogs = 100;
 
 PeerModel::PeerModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -87,18 +91,34 @@ void PeerModel::upsert(const Peer &peer)
         qWarning() << "Ignoring peer without fingerprint at" << peer.ip;
         return;
     }
+    PeerLog log;
+    log.time = QDateTime::currentDateTime();
+    log.protocol = peer.protocol;
+    log.host = peer.ip;
+
     int row = indexOf(peer.fingerprint);
     if (row >= 0) {
+        QList<PeerLog> logs = m_peers.at(row).logs;
+        log.discovered = false;
+        logs.append(log);
+        while (logs.size() > MaxPeerLogs)
+            logs.removeFirst();
         m_peers[row] = peer;
+        m_peers[row].logs = logs;
         emit dataChanged(index(row), index(row));
+        emit peerChanged(peer.fingerprint);
         return;
     }
     qDebug() << "New peer:" << peer.alias << peer.ip << peer.port << peer.protocol
              << "v" + peer.version << "via" << peer.source;
     beginInsertRows(QModelIndex(), m_peers.size(), m_peers.size());
     m_peers.append(peer);
+    log.discovered = true;
+    m_peers.last().logs.clear();
+    m_peers.last().logs.append(log);
     endInsertRows();
     emit countChanged();
+    emit peerChanged(peer.fingerprint);
 }
 
 void PeerModel::removeOlderThan(const QDateTime &cutoff)
@@ -122,4 +142,39 @@ void PeerModel::clear()
     m_peers.clear();
     endResetModel();
     emit countChanged();
+}
+
+QVariantMap PeerModel::peer(const QString &fingerprint) const
+{
+    QVariantMap map;
+    int row = indexOf(fingerprint);
+    if (row < 0)
+        return map;
+    const Peer &p = m_peers.at(row);
+    map.insert(QLatin1String("alias"), p.alias);
+    map.insert(QLatin1String("ip"), p.ip);
+    map.insert(QLatin1String("port"), p.port);
+    map.insert(QLatin1String("protocol"), p.protocol);
+    map.insert(QLatin1String("version"), p.version);
+    map.insert(QLatin1String("deviceModel"), p.deviceModel);
+    map.insert(QLatin1String("deviceType"), p.deviceType);
+    map.insert(QLatin1String("fingerprint"), p.fingerprint);
+    map.insert(QLatin1String("source"), p.source);
+    map.insert(QLatin1String("lastSeen"), p.lastSeen);
+
+    // Same wording as LocalSend's device details page.
+    QVariantList logs;
+    const QLocale locale = QLocale::system();
+    for (int i = 0; i < p.logs.size(); ++i) {
+        const PeerLog &l = p.logs.at(i);
+        QVariantMap entry;
+        entry.insert(QLatin1String("time"), locale.toString(l.time.time(), QLocale::ShortFormat));
+        entry.insert(QLatin1String("text"),
+                     QString::fromLatin1("%1 via %2 (%3)")
+                     .arg(QLatin1String(l.discovered ? "Discovered" : "Updated"),
+                          l.protocol.toUpper(), l.host));
+        logs.append(entry);
+    }
+    map.insert(QLatin1String("logs"), logs);
+    return map;
 }

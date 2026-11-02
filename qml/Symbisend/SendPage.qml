@@ -9,6 +9,9 @@ Page {
     // Light theme = the inverted Symbian style; every component follows it.
     property bool platformInverted: settings.theme == "light"
 
+    // Info button on a device row; main.qml opens DeviceDetailsPage.
+    signal deviceInfoRequested(string fingerprint)
+
     Column {
         id: header
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
@@ -47,7 +50,7 @@ Page {
             deviceType: model.deviceType
             protocol: model.protocol
             system: model.deviceModel
-            onInfoClicked: console.log("SendPage: info clicked for " + model.alias) // TODO: open device details
+            onInfoClicked: page.deviceInfoRequested(model.fingerprint)
         }
     }
 
