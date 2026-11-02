@@ -91,14 +91,17 @@ Page {
                 title: "Server"
                 subTitle: discovery.serverRunning ? "Running" : "Stopped"
 
-                Button {
+                // Icon-only (flat) tool buttons: restart / start, and stop,
+                // which is greyed out while stopped.
+                ToolButton {
                     platformInverted: page.platformInverted
-                    text: discovery.serverRunning ? "Restart" : "Start"
+                    iconSource: discovery.serverRunning ? "toolbar-refresh"
+                                                        : "toolbar-mediacontrol-play"
                     onClicked: discovery.restartServer()
                 }
-                Button {
+                ToolButton {
                     platformInverted: page.platformInverted
-                    text: "Stop"
+                    iconSource: "toolbar-mediacontrol-stop"
                     enabled: discovery.serverRunning
                     onClicked: discovery.stopServer()
                 }
