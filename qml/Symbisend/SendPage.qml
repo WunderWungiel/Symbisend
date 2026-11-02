@@ -34,18 +34,6 @@ Page {
                 onClicked: discovery.refresh()
             }
         }
-        Label {
-            platformInverted: page.platformInverted
-            width: parent.width
-            wrapMode: Text.Wrap
-            font.pixelSize: 18
-            color: page.platformInverted ? platformStyle.colorNormalMidInverted : platformStyle.colorNormalMid
-            text: network.online
-                  ? network.localAddress + " (" + network.connectionName + ")"
-                    + (discovery.serverRunning ? "" : " - server down")
-                    + (discovery.multicastListening ? "" : " - no multicast")
-                  : "Connecting..."
-        }
         ProgressBar {
             platformInverted: page.platformInverted
             width: parent.width
