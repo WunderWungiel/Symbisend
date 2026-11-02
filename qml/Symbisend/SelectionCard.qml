@@ -76,15 +76,21 @@ Rectangle {
         }
 
         // ------------------------------------------------ Edit / Add
-        // Anchored, not in a Row: a Row inside the card, which starts hidden,
-        // lays its children out at width 0 and puts Edit off the left edge.
+        // A ToolButton with icon + text is ~170 px wide in portrait (toolbar
+        // height + 15 x paddingMedium), so two don't fit in the card: cap each
+        // at half the row.
         Item {
+            id: buttonRow
             width: parent.width
             height: addButton.height
 
+            property real spacing: platformStyle.paddingMedium
+            property real maxButtonWidth: (width - spacing) / 2
+
             ToolButton {
                 platformInverted: root.platformInverted
-                anchors { right: addButton.left; rightMargin: platformStyle.paddingMedium }
+                width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
+                anchors { right: addButton.left; rightMargin: buttonRow.spacing }
                 iconSource: root.platformInverted ? "images/edit-inverted.svg" : "images/edit.svg"
                 text: "Edit"
                 onClicked: root.editClicked()
@@ -92,6 +98,7 @@ Rectangle {
             ToolButton {
                 id: addButton
                 platformInverted: root.platformInverted
+                width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
                 anchors.right: parent.right
                 iconSource: "toolbar-add"
                 text: "Add"
