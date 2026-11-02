@@ -50,7 +50,9 @@ Properties: `count` (int).  Methods: `clear()`.
 All read/write unless noted. Settings marked *(stored only)* are not acted on yet.
 
 General:
-- `theme` (string) — `"dark"` (default) or `"light"`; other values are ignored
+- `theme` (string) — `"dark"` (default) or `"light"`; other values are ignored.
+  Applied in QML: light = `platformInverted` on the window and every component
+  (each page has `property bool platformInverted: settings.theme == "light"`).
 - `language` (string) — `"system"` (default) or a language code (`"en"`). No
   translations exist yet *(stored only)*
 

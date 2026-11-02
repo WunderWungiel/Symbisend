@@ -5,8 +5,12 @@ import com.nokia.symbian 1.1
 Page {
     id: page
 
+    // Light theme = the inverted Symbian style; every component follows it.
+    property bool platformInverted: settings.theme == "light"
+
     tools: ToolBarLayout {
         ToolButton {
+            platformInverted: page.platformInverted
             iconSource: "toolbar-back"
             onClicked: page.pageStack.pop()
         }
@@ -37,11 +41,13 @@ Page {
                 source: "images/symbisend.svg"
             }
             Label {
+                platformInverted: page.platformInverted
                 anchors.horizontalCenter: parent.horizontalCenter
                 font.pixelSize: platformStyle.fontSizeLarge
                 text: "Symbisend"
             }
             Label {
+                platformInverted: page.platformInverted
                 width: parent.width
                 wrapMode: Text.Wrap
                 horizontalAlignment: Text.AlignHCenter
@@ -49,6 +55,7 @@ Page {
                       + "Compatible with LocalSend (protocol v2)."
             }
             Label {
+                platformInverted: page.platformInverted
                 width: parent.width
                 wrapMode: Text.Wrap
                 horizontalAlignment: Text.AlignHCenter
@@ -58,6 +65,7 @@ Page {
                                         : "Not connected")
             }
             Button {
+                platformInverted: page.platformInverted
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Show log"
                 onClicked: page.pageStack.push(Qt.resolvedUrl("LogPage.qml"))
@@ -65,5 +73,5 @@ Page {
         }
     }
 
-    ScrollDecorator { flickableItem: flick }
+    ScrollDecorator { flickableItem: flick; platformInverted: page.platformInverted }
 }

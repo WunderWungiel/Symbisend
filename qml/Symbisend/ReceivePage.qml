@@ -6,6 +6,9 @@ import com.nokia.symbian 1.1
 Page {
     id: page
 
+    // Light theme = the inverted Symbian style; every component follows it.
+    property bool platformInverted: settings.theme == "light"
+
     // Everything above this y belongs to the logo + name block.
     property int contentBottom: linkButton.y
 
@@ -49,6 +52,7 @@ Page {
 
         Label {
             id: nameLabel
+            platformInverted: page.platformInverted
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.min(implicitWidth, page.width - 2 * platformStyle.paddingLarge)
             horizontalAlignment: Text.AlignHCenter
@@ -62,6 +66,7 @@ Page {
     // receive). Tapping it only logs.
     Button {
         id: linkButton
+        platformInverted: page.platformInverted
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom

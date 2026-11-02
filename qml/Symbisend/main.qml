@@ -7,6 +7,9 @@ PageStackWindow {
     // The main page uses its own bottom TabBar instead of the toolbar; only
     // pushed pages (e.g. Log) need the real toolbar for their back button.
     showToolBar: pageStack.depth > 1
+    // Light theme = the inverted Symbian style (background, status bar,
+    // toolbar); the pages bind their components to it themselves.
+    platformInverted: settings.theme == "light"
 
     initialPage: Page {
         id: mainPage
@@ -28,11 +31,12 @@ PageStackWindow {
         // (TabButtons outside a ButtonRow use the tab-bar graphics).
         TabBar {
             id: tabBar
+            platformInverted: window.platformInverted
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
 
-            TabButton { tab: receiveTab; iconSource: "toolbar-home" }
-            TabButton { tab: sendTab; iconSource: "toolbar-share" }
-            TabButton { tab: settingsTab; iconSource: "toolbar-settings" }
+            TabButton { tab: receiveTab; iconSource: "toolbar-home"; platformInverted: window.platformInverted }
+            TabButton { tab: sendTab; iconSource: "toolbar-share"; platformInverted: window.platformInverted }
+            TabButton { tab: settingsTab; iconSource: "toolbar-settings"; platformInverted: window.platformInverted }
         }
     }
 }

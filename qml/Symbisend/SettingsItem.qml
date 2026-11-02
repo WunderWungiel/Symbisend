@@ -17,6 +17,7 @@ ListItem {
     default property alias controls: controlRow.children
 
     width: parent ? parent.width : implicitWidth
+    platformInverted: settings.theme == "light"
     height: Math.max(platformStyle.graphicSizeLarge,
                      texts.height + 2 * platformStyle.paddingMedium,
                      controlRow.height + 2 * platformStyle.paddingMedium)

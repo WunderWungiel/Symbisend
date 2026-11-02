@@ -8,6 +8,7 @@ ListHeading {
     property alias text: label.text
 
     width: parent ? parent.width : implicitWidth
+    platformInverted: settings.theme == "light"
 
     ListItemText {
         id: label

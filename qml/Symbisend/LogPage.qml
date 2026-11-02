@@ -4,12 +4,17 @@ import com.nokia.symbian 1.1
 Page {
     id: page
 
+    // Light theme = the inverted Symbian style; every component follows it.
+    property bool platformInverted: settings.theme == "light"
+
     tools: ToolBarLayout {
         ToolButton {
+            platformInverted: page.platformInverted
             iconSource: "toolbar-back"
             onClicked: page.pageStack.pop()
         }
         ToolButton {
+            platformInverted: page.platformInverted
             text: "Clear"
             onClicked: logger.clear()
         }
@@ -29,11 +34,12 @@ Page {
             wrapMode: Text.WrapAnywhere
             font.pixelSize: 14
             font.family: "Nokia Sans"
-            color: "#e0e0e0"
+            color: page.platformInverted ? platformStyle.colorNormalLightInverted
+                                         : platformStyle.colorNormalLight
             text: logger.logText
             onHeightChanged: flick.contentY = Math.max(0, height - flick.height)
         }
     }
 
-    ScrollDecorator { flickableItem: flick }
+    ScrollDecorator { flickableItem: flick; platformInverted: page.platformInverted }
 }

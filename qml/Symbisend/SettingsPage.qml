@@ -5,6 +5,9 @@ import com.nokia.symbian 1.1
 Page {
     id: page
 
+    // Light theme = the inverted Symbian style; every component follows it.
+    property bool platformInverted: settings.theme == "light"
+
     signal aboutRequested
 
     // Choices for the selection rows: what is stored, what is shown.
@@ -88,10 +91,12 @@ Page {
                 subTitle: discovery.serverRunning ? "Running" : "Stopped"
 
                 Button {
+                    platformInverted: page.platformInverted
                     text: discovery.serverRunning ? "Restart" : "Start"
                     onClicked: discovery.restartServer()
                 }
                 Button {
+                    platformInverted: page.platformInverted
                     text: "Stop"
                     enabled: discovery.serverRunning
                     onClicked: discovery.stopServer()
@@ -103,6 +108,7 @@ Page {
                 onClicked: nameDialog.openWith(myDevice.alias)
 
                 Button {
+                    platformInverted: page.platformInverted
                     text: "Random"
                     onClicked: myDevice.randomizeAlias()
                 }
@@ -116,6 +122,7 @@ Page {
                 onClicked: page.aboutRequested()
 
                 Button {
+                    platformInverted: page.platformInverted
                     text: "Open"
                     onClicked: page.aboutRequested()
                 }
@@ -123,12 +130,13 @@ Page {
         }
     }
 
-    ScrollDecorator { flickableItem: flick }
+    ScrollDecorator { flickableItem: flick; platformInverted: page.platformInverted }
 
     // ---------------------------------------------------- dialogs
 
     SelectionDialog {
         id: themeDialog
+        platformInverted: page.platformInverted
         titleText: "Theme"
         model: page.themeNames
         onAccepted: settings.theme = page.themeValues[selectedIndex]
@@ -136,6 +144,7 @@ Page {
 
     SelectionDialog {
         id: languageDialog
+        platformInverted: page.platformInverted
         titleText: "Language"
         model: page.languageNames
         onAccepted: settings.language = page.languageValues[selectedIndex]
@@ -143,12 +152,15 @@ Page {
 
     ContextMenu {
         id: folderMenu
+        platformInverted: page.platformInverted
         MenuLayout {
             MenuItem {
+                platformInverted: page.platformInverted
                 text: "Choose folder..."
                 onClicked: settings.pickDownloadFolder()
             }
             MenuItem {
+                platformInverted: page.platformInverted
                 text: "Use default"
                 enabled: !settings.downloadFolderIsDefault
                 onClicked: settings.resetDownloadFolder()
@@ -158,6 +170,7 @@ Page {
 
     CommonDialog {
         id: nameDialog
+        platformInverted: page.platformInverted
         titleText: "Device name"
         buttonTexts: ["OK", "Cancel"]
 
@@ -172,6 +185,7 @@ Page {
 
             TextField {
                 id: nameField
+                platformInverted: page.platformInverted
                 anchors {
                     left: parent.left; right: parent.right
                     verticalCenter: parent.verticalCenter
