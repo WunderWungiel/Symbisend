@@ -21,6 +21,8 @@ public:
 
     QString alias() const { return m_alias; }
     void setAlias(const QString &alias);
+    // Picks a new random "Adjective Fruit" alias (different from the current one).
+    Q_INVOKABLE void randomizeAlias();
     QString fingerprint() const { return m_fingerprint; }
     QString deviceModel() const { return m_deviceModel; }
     QString deviceType() const { return QLatin1String("mobile"); }

@@ -28,6 +28,10 @@ Properties: `count` (int).  Methods: `clear()`.
 - `multicastListening` (bool) — we receive other devices' announcements
 - `refresh()` — announce + rescan the subnet (also connects if offline)
 - `announce()`, `scan()` — the two halves separately
+- `startServer()`, `stopServer()`, `restartServer()` — the HTTP server and the multicast
+  listener together (whether others can find us / send to us); `serverRunning` reflects
+  the result. While stopped we don't announce ourselves, but `scan()` still works.
+  Stopping is not persisted. `startServer()` while offline connects first.
 
 ## `network`
 - `online` (bool), `localAddress` (string), `connectionName` (string, the access point
@@ -39,8 +43,20 @@ Properties: `count` (int).  Methods: `clear()`.
 
 ## `myDevice` — our identity as other devices see it
 - `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`
+- `randomizeAlias()` — picks a new random "Adjective Fruit" name
+- Changing the alias re-announces us (if the server is running).
 
 ## `settings` — app settings (persisted)
+All read/write unless noted. Settings marked *(stored only)* are not acted on yet.
+
+General:
+- `theme` (string) — `"dark"` (default) or `"light"`; other values are ignored
+- `language` (string) — `"system"` (default) or a language code (`"en"`). No
+  translations exist yet *(stored only)*
+
+Receive:
+- `quickSave` (bool, default false) *(stored only)*
+- `requirePin` (bool, default false) *(stored only)*
 - `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
   received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else
   `C:\Data\Symbisend`; recomputed each launch. If the chosen folder is unavailable
@@ -49,6 +65,9 @@ Properties: `count` (int).  Methods: `clear()`.
 - `pickDownloadFolder()` — opens the native folder picker; returns immediately,
   `downloadFolder` changes when the user confirms (nothing happens on cancel)
 - `resetDownloadFolder()` — back to the default
+- `saveMediaToGallery` (bool, default true) *(stored only)*
+- `autoFinish` (bool, default false) *(stored only)*
+- `saveToHistory` (bool, default true) *(stored only)*
 
 ## `logger` — debug log
 - `logText` (string, last ~300 lines), `logFilePath` (string), `clear()`

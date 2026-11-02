@@ -44,6 +44,13 @@ public:
     Q_INVOKABLE void announce();
     Q_INVOKABLE void scan();
 
+    // Our HTTP server + multicast listener, i.e. whether others can find us
+    // and send to us. Stopping is not persisted: the server runs again after
+    // a restart of the app.
+    Q_INVOKABLE void startServer();
+    Q_INVOKABLE void stopServer();
+    Q_INVOKABLE void restartServer();
+
     // HttpHandler
     HttpResponse handleRequest(const HttpRequest &request);
 
@@ -60,6 +67,7 @@ private slots:
     void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
     void onScanTick();
     void sendAnnouncement();
+    void onAliasChanged();
 
 private:
     enum JobKind { ScanJob, AnnounceReplyJob };
@@ -74,6 +82,8 @@ private:
     };
 
     void stopAll();
+    void startListening();
+    void stopListening();
     void abortJobs();
     static void abortReply(QNetworkReply *reply);
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
@@ -97,6 +107,7 @@ private:
     int m_scanDone;
     int m_activeScanJobs;
     bool m_scanning;
+    bool m_serverEnabled;  // false after stopServer() until startServer()
     QDateTime m_scanStarted;
     QDateTime m_previousScanStarted; // start of the refresh before the current one
     QTimer m_tickTimer;

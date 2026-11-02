@@ -2,6 +2,7 @@
 
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QDebug>
 #include <QSettings>
 #include <QStringList>
 
@@ -67,8 +68,19 @@ void DeviceInfo::setAlias(const QString &alias)
     if (a.isEmpty() || a == m_alias)
         return;
     m_alias = a;
+    qDebug() << "DeviceInfo: alias set to" << m_alias;
     QSettings().setValue(QLatin1String("identity/alias"), m_alias);
     emit aliasChanged();
+}
+
+void DeviceInfo::randomizeAlias()
+{
+    QString a;
+    do {
+        a = randomAlias();
+    } while (a == m_alias);
+    qDebug() << "DeviceInfo: new random alias" << a;
+    setAlias(a);
 }
 
 QVariantMap DeviceInfo::toRegisterMap() const

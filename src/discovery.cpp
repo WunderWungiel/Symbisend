@@ -28,8 +28,9 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *netwo
       m_server(new HttpServer(this, this)),
       m_multicast(new MulticastReceiver(this)),
       m_nam(new QNetworkAccessManager(this)),
-      m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false)
+      m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true)
 {
+    connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
     connect(m_multicast, SIGNAL(datagramReceived(QByteArray,QHostAddress,quint16)),
             this, SLOT(onDatagram(QByteArray,QHostAddress,quint16)));
@@ -73,12 +74,62 @@ void Discovery::onOnlineChanged()
     // one are dead on Symbian even if they still report being open.
     m_nam->setConfiguration(m_network->configuration());
     m_nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    if (m_serverEnabled)
+        startListening();
+    else
+        qDebug() << "Discovery: online, but the server was stopped by the user";
+    refresh();
+}
+
+// (Re)starts the HTTP server and the multicast listener.
+void Discovery::startListening()
+{
     m_server->close();
     m_server->listen(m_device->port());
     m_multicast->start(QHostAddress(QLatin1String(kMulticastGroup)), m_device->port(),
                        m_network->localAddress());
     emit statusChanged();
-    refresh();
+}
+
+void Discovery::stopListening()
+{
+    m_multicast->stop();
+    m_server->close();
+    m_recentReplies.clear();
+    emit statusChanged();
+}
+
+void Discovery::startServer()
+{
+    qDebug() << "Discovery: server (re)start requested";
+    m_serverEnabled = true;
+    if (!m_network->isOnline()) {
+        // onOnlineChanged() starts it once connected.
+        m_network->connectNetwork();
+        return;
+    }
+    startListening();
+    if (isServerRunning())
+        announce();
+}
+
+void Discovery::stopServer()
+{
+    qDebug() << "Discovery: server stop requested";
+    m_serverEnabled = false;
+    stopListening();
+}
+
+void Discovery::restartServer()
+{
+    startServer();
+}
+
+// Let the others pick up our new name right away.
+void Discovery::onAliasChanged()
+{
+    if (m_network->isOnline() && isServerRunning())
+        announce();
 }
 
 // The access manager follows its own session to our access point and is
@@ -102,11 +153,9 @@ void Discovery::stopAll()
     // Requests made while offline fail at once instead of making the access
     // manager reopen its session (and possibly show a connection dialog).
     m_nam->setNetworkAccessible(QNetworkAccessManager::NotAccessible);
-    m_multicast->stop();
-    m_server->close();
+    stopListening();
     abortJobs();
     m_tickTimer.stop();
-    m_recentReplies.clear();
     m_scanStarted = QDateTime();
     m_previousScanStarted = QDateTime();
 }
@@ -145,7 +194,9 @@ void Discovery::refresh()
         m_network->connectNetwork();
         return;
     }
-    announce();
+    // Without our server nobody could answer an announcement.
+    if (isServerRunning())
+        announce();
     scan();
 }
 

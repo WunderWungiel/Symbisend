@@ -11,13 +11,105 @@
 #include <QFileDialog>
 #endif
 
+static const char *kThemeKey = "general/theme";
+static const char *kLanguageKey = "general/language";
+static const char *kQuickSaveKey = "receive/quickSave";
+static const char *kRequirePinKey = "receive/requirePin";
 static const char *kDownloadFolderKey = "transfer/downloadFolder";
+static const char *kSaveMediaToGalleryKey = "receive/saveMediaToGallery";
+static const char *kAutoFinishKey = "receive/autoFinish";
+static const char *kSaveToHistoryKey = "receive/saveToHistory";
 
 Settings::Settings(QObject *parent)
     : QObject(parent)
 {
-    m_custom = QSettings().value(QLatin1String(kDownloadFolderKey)).toString();
+    QSettings s;
+    m_theme = s.value(QLatin1String(kThemeKey), QLatin1String("dark")).toString();
+    if (m_theme != QLatin1String("dark") && m_theme != QLatin1String("light"))
+        m_theme = QLatin1String("dark");
+    m_language = s.value(QLatin1String(kLanguageKey), QLatin1String("system")).toString();
+    if (m_language.isEmpty())
+        m_language = QLatin1String("system");
+    m_quickSave = s.value(QLatin1String(kQuickSaveKey), false).toBool();
+    m_requirePin = s.value(QLatin1String(kRequirePinKey), false).toBool();
+    m_saveMediaToGallery = s.value(QLatin1String(kSaveMediaToGalleryKey), true).toBool();
+    m_autoFinish = s.value(QLatin1String(kAutoFinishKey), false).toBool();
+    m_saveToHistory = s.value(QLatin1String(kSaveToHistoryKey), true).toBool();
+    qDebug() << "Settings: theme" << m_theme << "language" << m_language
+             << "quickSave" << m_quickSave << "requirePin" << m_requirePin
+             << "saveMediaToGallery" << m_saveMediaToGallery
+             << "autoFinish" << m_autoFinish << "saveToHistory" << m_saveToHistory;
+
+    m_custom = s.value(QLatin1String(kDownloadFolderKey)).toString();
     updateDownloadFolder();
+}
+
+bool Settings::store(const char *key, bool *member, bool value)
+{
+    if (*member == value)
+        return false;
+    *member = value;
+    QSettings().setValue(QLatin1String(key), value);
+    qDebug() << "Settings:" << key << "=" << value;
+    return true;
+}
+
+bool Settings::store(const char *key, QString *member, const QString &value)
+{
+    if (*member == value)
+        return false;
+    *member = value;
+    QSettings().setValue(QLatin1String(key), value);
+    qDebug() << "Settings:" << key << "=" << value;
+    return true;
+}
+
+void Settings::setTheme(const QString &theme)
+{
+    if (theme != QLatin1String("dark") && theme != QLatin1String("light")) {
+        qWarning() << "Settings: unknown theme" << theme;
+        return;
+    }
+    if (store(kThemeKey, &m_theme, theme))
+        emit themeChanged();
+}
+
+void Settings::setLanguage(const QString &language)
+{
+    if (language.isEmpty())
+        return;
+    if (store(kLanguageKey, &m_language, language))
+        emit languageChanged();
+}
+
+void Settings::setQuickSave(bool on)
+{
+    if (store(kQuickSaveKey, &m_quickSave, on))
+        emit quickSaveChanged();
+}
+
+void Settings::setRequirePin(bool on)
+{
+    if (store(kRequirePinKey, &m_requirePin, on))
+        emit requirePinChanged();
+}
+
+void Settings::setSaveMediaToGallery(bool on)
+{
+    if (store(kSaveMediaToGalleryKey, &m_saveMediaToGallery, on))
+        emit saveMediaToGalleryChanged();
+}
+
+void Settings::setAutoFinish(bool on)
+{
+    if (store(kAutoFinishKey, &m_autoFinish, on))
+        emit autoFinishChanged();
+}
+
+void Settings::setSaveToHistory(bool on)
+{
+    if (store(kSaveToHistoryKey, &m_saveToHistory, on))
+        emit saveToHistoryChanged();
 }
 
 QString Settings::downloadFolderNative() const
