@@ -38,64 +38,61 @@ Page {
         }
     }
 
-    // ------------------------------------------------ Header
-    Item {
-        id: header
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
-        height: backButton.height
-
-        ToolButton {
-            id: backButton
-            platformInverted: page.platformInverted
-            anchors.left: parent.left
-            iconSource: "toolbar-back"
-            onClicked: page.pageStack.pop()
-        }
-        Label {
-            platformInverted: page.platformInverted
-            anchors {
-                left: backButton.right; leftMargin: platformStyle.paddingMedium
-                right: parent.right; verticalCenter: parent.verticalCenter
-            }
-            elide: Text.ElideRight
-            text: "Device details"
-            font.pixelSize: 26
-        }
-    }
-
+    // Everything scrolls together, header included.
     Flickable {
         id: flick
-        anchors {
-            left: parent.left; right: parent.right
-            top: header.bottom; bottom: parent.bottom
-            topMargin: platformStyle.paddingLarge
-        }
+        anchors.fill: parent
         contentWidth: width
-        contentHeight: content.height + 2 * platformStyle.paddingLarge
+        contentHeight: content.height + platformStyle.paddingLarge
+        flickableDirection: Flickable.VerticalFlick
         clip: true
 
         Column {
             id: content
-            x: platformStyle.paddingLarge
-            width: flick.width - 2 * platformStyle.paddingLarge
+            width: flick.width
             spacing: platformStyle.paddingLarge
 
+            // ------------------------------------------------ Header
+            Item {
+                x: 8
+                width: parent.width - 16
+                height: backButton.height + 8
+
+                ToolButton {
+                    id: backButton
+                    platformInverted: page.platformInverted
+                    anchors { left: parent.left; bottom: parent.bottom }
+                    iconSource: "toolbar-back"
+                    onClicked: page.pageStack.pop()
+                }
+                Label {
+                    platformInverted: page.platformInverted
+                    anchors {
+                        left: backButton.right; leftMargin: platformStyle.paddingMedium
+                        right: parent.right; verticalCenter: backButton.verticalCenter
+                    }
+                    elide: Text.ElideRight
+                    text: "Device details"
+                    font.pixelSize: 26
+                }
+            }
+
             // ------------------------------------------------ Actions
+            // ToolButtons: icon left of the text at tool-bar height. A Button
+            // stacks the icon above the text, which makes it very tall.
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: platformStyle.paddingLarge
 
-                Button {
+                ToolButton {
                     platformInverted: page.platformInverted
-                    width: Math.min(180, (content.width - platformStyle.paddingLarge) / 2)
                     iconSource: page.platformInverted ? "images/favorite-border-inverted.svg"
                                                       : "images/favorite-border.svg"
                     text: "Favourite"
                     onClicked: console.log("DeviceDetailsPage: favourite clicked (not implemented)")
                 }
-                Button {
+                ToolButton {
                     platformInverted: page.platformInverted
-                    width: Math.min(180, (content.width - platformStyle.paddingLarge) / 2)
                     iconSource: page.platformInverted ? "images/verified-user-inverted.svg"
                                                       : "images/verified-user.svg"
                     text: "Verify"
@@ -106,7 +103,8 @@ Page {
             // ------------------------------------------------ Info
             Column {
                 id: info
-                width: parent.width
+                x: platformStyle.paddingLarge
+                width: parent.width - 2 * platformStyle.paddingLarge
                 spacing: platformStyle.paddingSmall
 
                 // Key column as wide as the widest key, like LocalSend's table.
@@ -163,41 +161,56 @@ Page {
             }
 
             // ------------------------------------------------ Logs
-            Column {
-                width: parent.width
-                spacing: platformStyle.paddingSmall
+            // Same section heading as on the Settings page.
+            SettingsHeading {
+                text: "Logs"
+                platformInverted: page.platformInverted
+            }
 
-                Label {
-                    platformInverted: page.platformInverted
-                    font.pixelSize: platformStyle.fontSizeLarge
-                    text: "Logs"
-                }
+            // The log lines sit in a shaded box, like an internal log.
+            Rectangle {
+                x: platformStyle.paddingLarge
+                width: parent.width - 2 * platformStyle.paddingLarge
+                height: logColumn.height + 2 * platformStyle.paddingMedium
+                radius: 3
+                color: page.platformInverted ? "#14000000" : "#1affffff"
 
-                Label {
-                    platformInverted: page.platformInverted
-                    visible: logRepeater.count === 0
-                    color: page.mutedColor
-                    text: "No logs available."
-                }
+                Column {
+                    id: logColumn
+                    x: platformStyle.paddingMedium
+                    y: platformStyle.paddingMedium
+                    width: parent.width - 2 * platformStyle.paddingMedium
+                    spacing: platformStyle.paddingSmall
 
-                Repeater {
-                    id: logRepeater
-                    model: page.device.logs || []
+                    Text {
+                        visible: logRepeater.count === 0
+                        font { family: platformStyle.fontFamilyRegular; pixelSize: platformStyle.fontSizeSmall }
+                        color: page.mutedColor
+                        text: "No logs available."
+                    }
 
-                    Row {
-                        width: parent.width
-                        spacing: platformStyle.paddingSmall
+                    Repeater {
+                        id: logRepeater
+                        model: page.device.logs || []
 
-                        Label {
-                            id: logTime
-                            platformInverted: page.platformInverted
-                            text: "[" + modelData.time + "]"
-                        }
-                        Label {
-                            platformInverted: page.platformInverted
-                            width: parent.width - logTime.width - parent.spacing
-                            wrapMode: Text.Wrap
-                            text: modelData.text
+                        Row {
+                            width: logColumn.width
+                            spacing: platformStyle.paddingSmall
+
+                            Text {
+                                id: logTime
+                                font { family: platformStyle.fontFamilyRegular; pixelSize: platformStyle.fontSizeSmall }
+                                color: page.mutedColor
+                                text: "[" + modelData.time + "]"
+                            }
+                            Text {
+                                width: parent.width - logTime.width - parent.spacing
+                                wrapMode: Text.Wrap
+                                font { family: platformStyle.fontFamilyRegular; pixelSize: platformStyle.fontSizeSmall }
+                                color: page.platformInverted ? platformStyle.colorNormalLightInverted
+                                                             : platformStyle.colorNormalLight
+                                text: modelData.text
+                            }
                         }
                     }
                 }
