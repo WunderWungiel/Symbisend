@@ -77,10 +77,11 @@ ListItem {
                     visible: modelData != ""
                     width: badgeText.paintedWidth + 2 * platformStyle.paddingMedium
                     height: badgeText.paintedHeight + platformStyle.paddingSmall
-                    radius: height / 2
-                    color: "transparent"
-                    border.width: 1
-                    border.color: badgeText.color
+                    // Filled chip without a border, like LocalSend's DeviceBadge:
+                    // a 1px outline with a pill radius renders smeared on
+                    // low-DPI Symbian^3 screens, a solid fill stays crisp.
+                    radius: 3
+                    color: root.platformInverted ? "#1f000000" : "#33ffffff"
 
                     Text {
                         id: badgeText
