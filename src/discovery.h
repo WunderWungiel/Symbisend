@@ -94,6 +94,7 @@ private:
     int m_activeScanJobs;
     bool m_scanning;
     QDateTime m_scanStarted;
+    QDateTime m_previousScanStarted; // start of the refresh before the current one
     QTimer m_tickTimer;
 };
 

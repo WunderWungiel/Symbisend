@@ -92,6 +92,8 @@ void Discovery::stopAll()
     m_scanQueue.clear();
     m_activeScanJobs = 0;
     m_tickTimer.stop();
+    m_scanStarted = QDateTime();
+    m_previousScanStarted = QDateTime();
     if (m_scanning) {
         m_scanning = false;
         emit scanningChanged();
@@ -187,6 +189,7 @@ void Discovery::scan()
     m_scanTotal = m_scanQueue.size();
     m_scanDone = 0;
     m_scanning = true;
+    m_previousScanStarted = m_scanStarted;
     m_scanStarted = QDateTime::currentDateTime();
     qDebug() << "Discovery: scanning" << m_scanTotal << "hosts in"
              << QHostAddress(network).toString() + "/" + QString::number(prefix);
@@ -314,8 +317,12 @@ void Discovery::finishScanIfDone()
         return;
     m_scanning = false;
     qDebug() << "Discovery: scan finished," << m_peers->rowCount() << "device(s) known";
-    // Drop devices not seen at all during this refresh (scan, register or multicast).
-    m_peers->removeOlderThan(m_scanStarted);
+    // Drop devices not seen (scan, register or multicast) during this refresh
+    // *and* the one before it. A single miss is common and not a reason to
+    // drop a device: a slow TLS handshake on the phone, a lost UDP packet, or
+    // a peer outside the scanned /24 whose register reply got lost.
+    if (m_previousScanStarted.isValid())
+        m_peers->removeOlderThan(m_previousScanStarted);
     emit scanningChanged();
 }
 
