@@ -16,12 +16,32 @@ NetworkManager::NetworkManager(QObject *parent)
 
 QString NetworkManager::connectionName() const
 {
-    return m_session ? m_session->configuration().name() : QString();
+    return configuration().name();
 }
 
+// The access point (IAP) actually in use. The session itself is often opened
+// on a service network (SNAP, e.g. "Internet") or a user-choice configuration;
+// those only name a group of access points, see the Qt bearermonitor example.
 QNetworkConfiguration NetworkManager::configuration() const
 {
-    return m_session ? m_session->configuration() : QNetworkConfiguration();
+    if (!m_session)
+        return QNetworkConfiguration();
+    QNetworkConfiguration config = m_session->configuration();
+    if (config.type() == QNetworkConfiguration::InternetAccessPoint)
+        return config;
+    const QString id = m_session->sessionProperty(QLatin1String("ActiveConfiguration")).toString();
+    QNetworkConfiguration active = m_manager.configurationFromIdentifier(id);
+    return active.isValid() ? active : config;
+}
+
+static const char *configTypeName(QNetworkConfiguration::Type type)
+{
+    switch (type) {
+    case QNetworkConfiguration::InternetAccessPoint: return "access point";
+    case QNetworkConfiguration::ServiceNetwork: return "service network";
+    case QNetworkConfiguration::UserChoice: return "user choice";
+    default: return "invalid";
+    }
 }
 
 void NetworkManager::connectNetwork()
@@ -31,7 +51,8 @@ void NetworkManager::connectNetwork()
 
     QNetworkConfiguration config = m_manager.defaultConfiguration();
     qDebug() << "Network: default configuration" << config.name()
-             << "bearer" << config.bearerName() << "valid" << config.isValid();
+             << "(" << configTypeName(config.type()) << ") bearer" << config.bearerName()
+             << "valid" << config.isValid();
 
     if (!m_session) {
         m_session = new QNetworkSession(config, this);
@@ -46,8 +67,10 @@ void NetworkManager::connectNetwork()
 
 void NetworkManager::onSessionOpened()
 {
+    const QNetworkConfiguration active = configuration();
     qDebug() << "Network: session opened on" << m_session->configuration().name()
-             << "(" << m_session->configuration().bearerName() << ")";
+             << "(" << configTypeName(m_session->configuration().type()) << "), access point"
+             << active.name() << "(" << active.bearerName() << ")";
     setDefaultInterfaceForOpenC();
     detectLocalAddress();
     m_online = !m_localAddress.isNull();
@@ -107,7 +130,8 @@ void NetworkManager::setDefaultInterfaceForOpenC()
 #ifdef Q_OS_SYMBIAN
     // The raw multicast socket uses Open C directly; bind Open C to the same
     // access point so it does not prompt or pick another connection.
-    QByteArray name = m_session->configuration().name().toUtf8();
+    // setdefaultif() wants the access point (IAP) name, not a SNAP name.
+    QByteArray name = configuration().name().toUtf8();
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, name.constData(), sizeof(ifr.ifr_name) - 1);
