@@ -3,7 +3,12 @@
 #include <QDebug>
 #include <QTcpSocket>
 
-static const int kMaxRequestSize = 64 * 1024;
+// The request line + headers. LocalSend clients send well under 1 KB.
+static const int kMaxHeaderSize = 16 * 1024;
+// JSON bodies, kept in memory. Room for prepare-upload with a few thousand
+// files (~200 bytes of metadata each); file data itself must not come
+// through here, it will need a streaming path.
+static const int kMaxBodySize = 1024 * 1024;
 // A client gets this long to send its request and to close the connection.
 static const int kConnectionTimeoutMs = 10000;
 static const int kIdleCheckIntervalMs = 2000;
@@ -92,11 +97,13 @@ void HttpServer::onReadyRead()
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
     if (!socket || !m_buffers.contains(socket))
         return;
-    m_buffers[socket].append(socket->readAll());
-    if (m_buffers[socket].size() > kMaxRequestSize) {
+    QByteArray &buf = m_buffers[socket];
+    buf.append(socket->readAll());
+    // Headers that never end; the body size is checked in tryParse().
+    if (buf.indexOf("\r\n\r\n") < 0 && buf.size() > kMaxHeaderSize) {
         HttpResponse r;
-        r.status = 413;
-        r.body = "{\"message\":\"Request too large\"}";
+        r.status = 431;
+        r.body = "{\"message\":\"Request headers too large\"}";
         sendResponse(socket, r);
         return;
     }
@@ -135,10 +142,17 @@ bool HttpServer::tryParse(QTcpSocket *socket)
 
     bool lengthOk = false;
     int contentLength = req.headers.value("content-length", "0").toInt(&lengthOk);
-    if (!lengthOk || contentLength < 0 || contentLength > kMaxRequestSize) {
+    if (!lengthOk || contentLength < 0) {
         HttpResponse r;
         r.status = 400;
         r.body = "{\"message\":\"Invalid Content-Length\"}";
+        sendResponse(socket, r);
+        return true;
+    }
+    if (contentLength > kMaxBodySize) {
+        HttpResponse r;
+        r.status = 413;
+        r.body = "{\"message\":\"Request too large\"}";
         sendResponse(socket, r);
         return true;
     }
@@ -161,6 +175,7 @@ static QByteArray reasonPhrase(int status)
     case 403: return "Forbidden";
     case 404: return "Not Found";
     case 413: return "Payload Too Large";
+    case 431: return "Request Header Fields Too Large";
     default: return status >= 500 ? "Internal Server Error" : "Unknown";
     }
 }

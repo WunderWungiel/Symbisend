@@ -36,7 +36,8 @@ public:
 };
 
 // Very small HTTP/1.1 server: one request per connection, Content-Length
-// bodies only (enough for LocalSend's JSON API endpoints).
+// bodies only (enough for LocalSend's JSON API endpoints). Bodies are held
+// in memory, up to 1 MB; headers up to 16 KB.
 class HttpServer : public QObject
 {
     Q_OBJECT
