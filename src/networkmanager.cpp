@@ -48,9 +48,18 @@ void NetworkManager::connectNetwork()
 {
     if (m_session) {
         const QNetworkSession::State state = m_session->state();
-        if (state == QNetworkSession::Connecting
-                || (m_session->isOpen() && state == QNetworkSession::Connected))
+        if (state == QNetworkSession::Connecting)
             return;
+        if (m_session->isOpen() && state == QNetworkSession::Connected) {
+            if (m_online)
+                return;
+            // Opened, but no IPv4 address was found then (e.g. DHCP not
+            // done yet). The session is fine, so look again instead of
+            // returning here forever.
+            qDebug() << "Network: session open but offline, detecting the address again";
+            onSessionOpened();
+            return;
+        }
         // A session that lost its connection (out of WLAN range, AP switched
         // off) is not reused: start over with the current default
         // configuration, which the user may have changed meanwhile.
