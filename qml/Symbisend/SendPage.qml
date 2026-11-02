@@ -50,22 +50,11 @@ Page {
         clip: true
         model: peerModel
 
-        delegate: ListItem {
-            platformInverted: page.platformInverted
-            Column {
-                anchors.fill: parent.paddingItem
-                ListItemText {
-                    platformInverted: page.platformInverted
-                    role: "Title"
-                    text: model.alias
-                }
-                ListItemText {
-                    platformInverted: page.platformInverted
-                    role: "SubTitle"
-                    text: model.ip + ":" + model.port + "  " + model.protocol + "  "
-                          + model.deviceModel + " (" + model.deviceType + ")  via " + model.source
-                }
-            }
+        delegate: PeerItem {
+            name: model.alias
+            deviceType: model.deviceType
+            protocol: model.protocol
+            system: model.deviceModel
         }
     }
 
