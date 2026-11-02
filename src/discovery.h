@@ -67,11 +67,14 @@ private:
         QString ip;
         int port;
         QString protocol;
+        bool v1;           // peer speaks protocol v1: use /api/localsend/v1/register
         QDateTime deadline;
         bool timedOut;
     };
 
-    void startJob(JobKind kind, const QString &ip, int port, const QString &protocol);
+    void stopAll();
+    void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
+                  bool v1 = false);
     void pumpScanQueue();
     void finishScanIfDone();
     void replyViaUdp();
@@ -85,12 +88,14 @@ private:
     QNetworkAccessManager *m_nam;
 
     QHash<QNetworkReply *, Job> m_jobs;
+    QHash<QString, QDateTime> m_recentReplies; // fingerprint -> when we last answered its announcement
     QList<QString> m_scanQueue;
     int m_scanTotal;
     int m_scanDone;
     int m_activeScanJobs;
     bool m_scanning;
     QDateTime m_scanStarted;
+    QDateTime m_previousScanStarted; // start of the refresh before the current one
     QTimer m_tickTimer;
 };
 

@@ -34,10 +34,13 @@ private slots:
     void onSessionOpened();
     void onSessionClosed();
     void onSessionError(QNetworkSession::SessionError error);
+    void onSessionStateChanged(QNetworkSession::State state);
 
 private:
+    void goOffline(const char *reason);
     void detectLocalAddress();
     void setDefaultInterfaceForOpenC();
+    void resetDefaultInterfaceForOpenC();
 
     QNetworkConfigurationManager m_manager;
     QNetworkSession *m_session;

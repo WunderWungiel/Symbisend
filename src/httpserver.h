@@ -2,9 +2,11 @@
 #define HTTPSERVER_H
 
 #include <QObject>
+#include <QDateTime>
 #include <QHash>
 #include <QHostAddress>
 #include <QTcpServer>
+#include <QTimer>
 
 class QTcpSocket;
 
@@ -42,12 +44,15 @@ public:
     explicit HttpServer(HttpHandler *handler, QObject *parent = 0);
 
     bool listen(quint16 port);
+    // Stops listening and drops all client connections.
+    void close();
     bool isListening() const { return m_server.isListening(); }
 
 private slots:
     void onNewConnection();
     void onReadyRead();
     void onDisconnected();
+    void onIdleCheck();
 
 private:
     bool tryParse(QTcpSocket *socket);
@@ -55,7 +60,9 @@ private:
 
     QTcpServer m_server;
     HttpHandler *m_handler;
-    QHash<QTcpSocket *, QByteArray> m_buffers;
+    QHash<QTcpSocket *, QByteArray> m_buffers;     // requests still being received
+    QHash<QTcpSocket *, QDateTime> m_connectedAt;  // every open client connection
+    QTimer m_idleTimer;
 };
 
 #endif // HTTPSERVER_H

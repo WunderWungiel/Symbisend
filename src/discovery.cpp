@@ -19,6 +19,8 @@ static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
 static const int kScanTimeoutMs = 3000;
 static const int kAnnounceReplyTimeoutMs = 5000;
+// An announcement is sent as a burst of 3 (see announce()); answer it once.
+static const int kAnnounceDedupWindowMs = 5000;
 
 Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, QObject *parent)
     : QObject(parent),
@@ -58,17 +60,47 @@ bool Discovery::isMulticastListening() const
 void Discovery::onOnlineChanged()
 {
     if (!m_network->isOnline()) {
-        m_multicast->stop();
+        qDebug() << "Discovery: offline, stopping";
+        stopAll();
+        // Nothing is reachable any more, and the next network may be another one.
+        m_peers->clear();
         emit statusChanged();
         return;
     }
+    // (Re)bind everything to the new connection: sockets created on the old
+    // one are dead on Symbian even if they still report being open.
     m_nam->setConfiguration(m_network->configuration());
-    if (!m_server->isListening())
-        m_server->listen(m_device->port());
+    m_nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    m_server->close();
+    m_server->listen(m_device->port());
     m_multicast->start(QHostAddress(QLatin1String(kMulticastGroup)), m_device->port(),
                        m_network->localAddress());
     emit statusChanged();
     refresh();
+}
+
+void Discovery::stopAll()
+{
+    m_multicast->stop();
+    m_server->close();
+
+    // abort() emits finished() synchronously; with m_jobs already cleared
+    // onReplyFinished() only deletes the replies (no retries, no UDP replies).
+    QList<QNetworkReply *> replies = m_jobs.keys();
+    m_jobs.clear();
+    foreach (QNetworkReply *reply, replies)
+        reply->abort();
+
+    m_scanQueue.clear();
+    m_activeScanJobs = 0;
+    m_tickTimer.stop();
+    m_recentReplies.clear();
+    m_scanStarted = QDateTime();
+    m_previousScanStarted = QDateTime();
+    if (m_scanning) {
+        m_scanning = false;
+        emit scanningChanged();
+    }
 }
 
 void Discovery::refresh()
@@ -86,10 +118,11 @@ void Discovery::refresh()
 
 void Discovery::announce()
 {
-    // LocalSend sends its announcement a few times, because UDP may be lost.
-    sendAnnouncement();
-    QTimer::singleShot(500, this, SLOT(sendAnnouncement()));
-    QTimer::singleShot(2000, this, SLOT(sendAnnouncement()));
+    // Same burst as the official app (delays of 100, 500 and 2000 ms before
+    // each message): UDP may be lost and peers may not be ready to answer yet.
+    QTimer::singleShot(100, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(100 + 500, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(100 + 500 + 2000, this, SLOT(sendAnnouncement()));
 }
 
 void Discovery::sendAnnouncement()
@@ -126,8 +159,23 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
     bool isAnnounce = map.value(QLatin1String("announce")).toBool()
             || map.value(QLatin1String("announcement")).toBool();
     if (isAnnounce) {
-        qDebug() << "Discovery: announcement from" << peer.alias << peer.ip << "- replying";
-        startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol);
+        const QDateTime now = QDateTime::currentDateTime();
+        // Forget old entries, then skip the repeated messages of one burst.
+        QMutableHashIterator<QString, QDateTime> it(m_recentReplies);
+        while (it.hasNext()) {
+            if (it.next().value().msecsTo(now) >= kAnnounceDedupWindowMs)
+                it.remove();
+        }
+        if (m_recentReplies.contains(peer.fingerprint)) {
+            qDebug() << "Discovery: repeated announcement from" << peer.alias << "- already answered";
+            return;
+        }
+        m_recentReplies.insert(peer.fingerprint, now);
+
+        const bool v1 = PeerModel::isV1(peer.version);
+        qDebug() << "Discovery: announcement from" << peer.alias << peer.ip
+                 << "v" + peer.version << "- replying";
+        startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol, v1);
     }
 }
 
@@ -158,6 +206,7 @@ void Discovery::scan()
     m_scanTotal = m_scanQueue.size();
     m_scanDone = 0;
     m_scanning = true;
+    m_previousScanStarted = m_scanStarted;
     m_scanStarted = QDateTime::currentDateTime();
     qDebug() << "Discovery: scanning" << m_scanTotal << "hosts in"
              << QHostAddress(network).toString() + "/" + QString::number(prefix);
@@ -174,13 +223,15 @@ void Discovery::pumpScanQueue()
     finishScanIfDone();
 }
 
-void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol)
+void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol, bool v1)
 {
     QUrl url;
     url.setScheme(protocol);
     url.setHost(ip);
     url.setPort(port);
-    url.setPath(QLatin1String("/api/localsend/v2/register"));
+    // v1 answers its announcements via /v1/register (extra v2 fields are ignored).
+    url.setPath(v1 ? QLatin1String("/api/localsend/v1/register")
+                   : QLatin1String("/api/localsend/v2/register"));
 
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, QLatin1String("application/json"));
@@ -191,6 +242,7 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.ip = ip;
     job.port = port;
     job.protocol = protocol;
+    job.v1 = v1;
     job.deadline = QDateTime::currentDateTime().addMSecs(
                 kind == ScanJob ? kScanTimeoutMs : kAnnounceReplyTimeoutMs);
     job.timedOut = false;
@@ -225,6 +277,31 @@ void Discovery::onScanTick()
         m_tickTimer.stop();
 }
 
+// Errors that mean a TCP connection was made but the TLS handshake failed,
+// which is what a TLS ClientHello sent to a plain-HTTP server ends in.
+static bool looksLikePlainHttpServer(QNetworkReply::NetworkError error)
+{
+    switch (error) {
+    case QNetworkReply::SslHandshakeFailedError:
+    case QNetworkReply::RemoteHostClosedError:
+    case QNetworkReply::ProtocolFailure:
+    case QNetworkReply::UnknownNetworkError:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// No (LocalSend) server at that address: not worth logging during a scan.
+static bool isNothingThere(QNetworkReply::NetworkError error, bool timedOut)
+{
+    return timedOut
+            || error == QNetworkReply::ConnectionRefusedError
+            || error == QNetworkReply::HostNotFoundError
+            || error == QNetworkReply::TimeoutError
+            || error == QNetworkReply::OperationCanceledError;
+}
+
 void Discovery::onReplyFinished(QNetworkReply *reply)
 {
     reply->deleteLater();
@@ -235,7 +312,6 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         --m_activeScanJobs;
 
     const QNetworkReply::NetworkError error = reply->error();
-    bool handled = false;
 
     if (error == QNetworkReply::NoError) {
         bool ok = false;
@@ -249,22 +325,22 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         } else if (!ok) {
             qWarning() << "Discovery:" << job.ip << "answered with invalid JSON";
         }
-        handled = true;
-    } else if (job.timedOut || error == QNetworkReply::ConnectionRefusedError
-               || error == QNetworkReply::HostNotFoundError) {
-        handled = true; // nothing there
-    } else if (job.protocol == QLatin1String("https")) {
-        // Probably a LocalSend instance with encryption disabled: retry over HTTP.
+    } else if (job.kind == ScanJob && job.protocol == QLatin1String("https")
+               && !job.timedOut && looksLikePlainHttpServer(error)) {
+        // Something answered, but not with TLS: probably a LocalSend instance
+        // with encryption disabled. Retry over HTTP.
         qDebug() << "Discovery:" << job.ip << "https failed (" << int(error) << reply->errorString()
                  << ") - trying http";
-        startJob(job.kind, job.ip, job.port, QLatin1String("http"));
+        startJob(job.kind, job.ip, job.port, QLatin1String("http"), job.v1);
         return;
-    } else {
-        qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error) << reply->errorString();
-        handled = true;
+    } else if (!isNothingThere(error, job.timedOut) || job.kind == AnnounceReplyJob) {
+        qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error)
+                 << reply->errorString();
     }
 
-    if (handled && job.kind == AnnounceReplyJob && error != QNetworkReply::NoError) {
+    if (job.kind == AnnounceReplyJob && error != QNetworkReply::NoError) {
+        // The announcing peer told us its protocol, so there is no point in
+        // switching it (the official app does not either). Fall back to UDP.
         qDebug() << "Discovery: HTTP reply to" << job.ip << "failed, replying via UDP";
         replyViaUdp();
     }
@@ -282,8 +358,12 @@ void Discovery::finishScanIfDone()
         return;
     m_scanning = false;
     qDebug() << "Discovery: scan finished," << m_peers->rowCount() << "device(s) known";
-    // Drop devices not seen at all during this refresh (scan, register or multicast).
-    m_peers->removeOlderThan(m_scanStarted);
+    // Drop devices not seen (scan, register or multicast) during this refresh
+    // *and* the one before it. A single miss is common and not a reason to
+    // drop a device: a slow TLS handshake on the phone, a lost UDP packet, or
+    // a peer outside the scanned /24 whose register reply got lost.
+    if (m_previousScanStarted.isValid())
+        m_peers->removeOlderThan(m_previousScanStarted);
     emit scanningChanged();
 }
 

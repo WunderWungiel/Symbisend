@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QMetaObject>
+#include <QMutexLocker>
 #include <QTextStream>
 #include <cstdio>
 #include <cstdlib>
@@ -28,12 +29,18 @@ static QString pickLogDir()
 #endif
 }
 
+static const int kNotifyDelayMs = 200;
+
 Logger::Logger(QObject *parent)
-    : QObject(parent), m_inHandler(false)
+    : QObject(parent), m_mutex(QMutex::Recursive), m_inHandler(false), m_notifyPending(false)
 {
     m_file.setFileName(pickLogDir() + QLatin1String("/log.txt"));
     // Keep only the current session's log.
     m_file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+
+    m_notifyTimer.setSingleShot(true);
+    m_notifyTimer.setInterval(kNotifyDelayMs);
+    connect(&m_notifyTimer, SIGNAL(timeout()), this, SIGNAL(logChanged()));
 }
 
 Logger *Logger::instance()
@@ -52,6 +59,7 @@ void Logger::install()
 
 QString Logger::logText() const
 {
+    QMutexLocker lock(&m_mutex);
     return m_lines.join(QLatin1String("\n"));
 }
 
@@ -62,22 +70,41 @@ QString Logger::logFilePath() const
 
 void Logger::clear()
 {
-    m_lines.clear();
+    {
+        QMutexLocker lock(&m_mutex);
+        m_lines.clear();
+    }
     emit logChanged();
 }
 
+// GUI thread: start the batching timer (logChanged fires when it expires).
+void Logger::scheduleNotify()
+{
+    {
+        QMutexLocker lock(&m_mutex);
+        m_notifyPending = false;
+    }
+    if (!m_notifyTimer.isActive())
+        m_notifyTimer.start();
+}
+
+// Called with m_mutex held, from any thread.
 void Logger::append(const QString &line)
 {
     if (m_file.isOpen()) {
         QByteArray data = line.toUtf8();
         data.append('\n');
         m_file.write(data);
-        m_file.flush();
+        m_file.flush(); // keep the file complete in case the app crashes
     }
     m_lines.append(line);
     while (m_lines.size() > kMaxLines)
         m_lines.removeFirst();
-    emit logChanged();
+    if (!m_notifyPending) {
+        m_notifyPending = true;
+        // Never touch QML-bound state from here: hop to the GUI thread.
+        QMetaObject::invokeMethod(this, "scheduleNotify", Qt::QueuedConnection);
+    }
 }
 
 void Logger::messageHandler(QtMsgType type, const char *msg)
@@ -99,13 +126,16 @@ void Logger::messageHandler(QtMsgType type, const char *msg)
     fprintf(stderr, "%s\n", line.toLocal8Bit().constData());
 #endif
 
-    // Guard against recursion (e.g. QML binding warnings emitted while the
-    // log page re-evaluates logText).
-    if (self->m_inHandler)
-        return;
-    self->m_inHandler = true;
-    self->append(line);
-    self->m_inHandler = false;
+    {
+        QMutexLocker lock(&self->m_mutex);
+        // A message raised while appending (same thread, since other threads
+        // block on the mutex) is dropped instead of recursing.
+        if (!self->m_inHandler) {
+            self->m_inHandler = true;
+            self->append(line);
+            self->m_inHandler = false;
+        }
+    }
 
     if (type == QtFatalMsg)
         abort();
