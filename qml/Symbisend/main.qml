@@ -6,5 +6,5 @@ PageStackWindow {
     showStatusBar: true
     showToolBar: true
 
-    initialPage: DevicesPage { }
+    initialPage: SendPage { }
 }
