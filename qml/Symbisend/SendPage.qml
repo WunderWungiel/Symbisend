@@ -22,6 +22,14 @@ Page {
             picker.showInfo("Clipboard is empty")
     }
 
+    // Keep the device list current while it is on screen: not on another
+    // tab, under a pushed page, or with the app in the background.
+    Binding {
+        target: discovery
+        property: "autoRefresh"
+        value: page.visible && Qt.application.active
+    }
+
     Connections {
         target: selection
         onFolderTruncated: picker.showInfo("Only the first " + maxFiles + " files of the folder were added")

@@ -37,6 +37,12 @@ Properties: `count` (int).  Methods: `clear()`.
 - `serverRunning` (bool) — our HTTP server on port 53317 is up
 - `multicastListening` (bool) — we receive other devices' announcements
 - `refresh()` — announce + rescan the subnet (also connects if offline)
+- `autoRefresh` (bool, read/write, default false) — while true, `refresh()` runs every
+  60 s, and once right away if the last refresh is older than 15 s. Never connects by
+  itself: does nothing while offline. Devices missing from two refreshes in a row are
+  dropped, so set it while the device list is visible (the Send page binds it to
+  `visible && Qt.application.active`); without it the list is only pruned on manual
+  refreshes.
 - `announce()`, `scan()` — the two halves separately
 - `startServer()`, `stopServer()`, `restartServer()` — the HTTP server and the multicast
   listener together (whether others can find us / send to us); `serverRunning` reflects

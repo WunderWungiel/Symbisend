@@ -30,6 +30,9 @@ class Discovery : public QObject, public HttpHandler
     Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
     Q_PROPERTY(bool serverRunning READ isServerRunning NOTIFY statusChanged)
     Q_PROPERTY(bool multicastListening READ isMulticastListening NOTIFY statusChanged)
+    // While true (the Send page is on screen), refresh() runs every minute so
+    // the list stays current and departed devices expire.
+    Q_PROPERTY(bool autoRefresh READ autoRefresh WRITE setAutoRefresh NOTIFY autoRefreshChanged)
 
 public:
     Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, QObject *parent = 0);
@@ -38,6 +41,8 @@ public:
     int scanProgress() const;
     bool isServerRunning() const;
     bool isMulticastListening() const;
+    bool autoRefresh() const { return m_autoRefresh; }
+    void setAutoRefresh(bool on);
 
     // Announce + rescan the subnet.
     Q_INVOKABLE void refresh();
@@ -58,6 +63,7 @@ signals:
     void scanningChanged();
     void scanProgressChanged();
     void statusChanged();
+    void autoRefreshChanged();
 
 private slots:
     void onOnlineChanged();
@@ -68,6 +74,7 @@ private slots:
     void onScanTick();
     void sendAnnouncement();
     void onAliasChanged();
+    void onAutoRefreshTimer();
 
 private:
     enum JobKind { ScanJob, AnnounceReplyJob };
@@ -114,6 +121,8 @@ private:
     QDateTime m_scanStarted;
     QDateTime m_previousScanStarted; // start of the refresh before the current one
     QTimer m_tickTimer;
+    bool m_autoRefresh;
+    QTimer m_autoRefreshTimer;
 };
 
 #endif // DISCOVERY_H

@@ -19,6 +19,10 @@ static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
 static const int kScanTimeoutMs = 3000;
 static const int kAnnounceReplyTimeoutMs = 5000;
+// Refresh while the device list is on screen (autoRefresh). A device is
+// dropped after missing two refreshes, i.e. within about two minutes.
+static const int kAutoRefreshIntervalMs = 60000;
+static const int kAutoRefreshMinGapMs = 15000;
 // How long past its deadline a request may take to report finished().
 static const int kStuckJobGraceMs = 5000;
 // An announcement is sent as a burst of 3 (see announce()); answer it once.
@@ -31,7 +35,8 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *netwo
       m_multicast(new MulticastReceiver(this)),
       m_udp(0),
       m_nam(new QNetworkAccessManager(this)),
-      m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true)
+      m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true),
+      m_autoRefresh(false)
 {
     connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
@@ -46,6 +51,36 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *netwo
 #endif
     m_tickTimer.setInterval(500);
     connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(onScanTick()));
+    m_autoRefreshTimer.setInterval(kAutoRefreshIntervalMs);
+    connect(&m_autoRefreshTimer, SIGNAL(timeout()), this, SLOT(onAutoRefreshTimer()));
+}
+
+void Discovery::setAutoRefresh(bool on)
+{
+    if (on == m_autoRefresh)
+        return;
+    m_autoRefresh = on;
+    qDebug() << "Discovery: auto refresh" << (on ? "on" : "off");
+    if (on) {
+        m_autoRefreshTimer.start();
+        // Coming back to the list after a while: refresh right away, unless
+        // the last refresh was just now (e.g. switching tabs back and forth).
+        if (!m_scanStarted.isValid()
+                || m_scanStarted.msecsTo(QDateTime::currentDateTime()) >= kAutoRefreshMinGapMs)
+            onAutoRefreshTimer();
+    } else {
+        m_autoRefreshTimer.stop();
+    }
+    emit autoRefreshChanged();
+}
+
+void Discovery::onAutoRefreshTimer()
+{
+    // Never connect from here: an automatic refresh must not pop up the
+    // connection dialog. The user's refresh button does that.
+    if (!m_network->isOnline() || m_scanning)
+        return;
+    refresh();
 }
 
 int Discovery::scanProgress() const
