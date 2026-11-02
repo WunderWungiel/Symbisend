@@ -41,7 +41,8 @@ SOURCES += main.cpp \
     src/networkmanager.cpp \
     src/httpserver.cpp \
     src/multicastreceiver.cpp \
-    src/discovery.cpp \n    src/settings.cpp
+    src/discovery.cpp \
+    src/settings.cpp
 
 HEADERS += \
     src/logger.h \
@@ -51,7 +52,8 @@ HEADERS += \
     src/networkmanager.h \
     src/httpserver.h \
     src/multicastreceiver.h \
-    src/discovery.h \n    src/settings.h
+    src/discovery.h \
+    src/settings.h
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
