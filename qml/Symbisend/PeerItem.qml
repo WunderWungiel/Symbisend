@@ -11,6 +11,9 @@ ListItem {
     property string protocol      // "http" / "https"
     property string system        // LocalSend deviceModel: "Linux", "Samsung", ...
 
+    // Info button on the right; will open the device details page.
+    signal infoClicked
+
     width: parent ? parent.width : implicitWidth
     platformInverted: settings.theme == "light"
     height: Math.max(platformStyle.graphicSizeLarge,
@@ -48,7 +51,8 @@ ListItem {
         anchors {
             left: icon.right
             leftMargin: platformStyle.paddingLarge
-            right: root.paddingItem.right
+            right: infoButton.left
+            rightMargin: platformStyle.paddingMedium
             verticalCenter: parent.verticalCenter
         }
         spacing: platformStyle.paddingSmall
@@ -88,5 +92,13 @@ ListItem {
                 }
             }
         }
+    }
+
+    ToolButton {
+        id: infoButton
+        anchors { right: root.paddingItem.right; verticalCenter: parent.verticalCenter }
+        platformInverted: root.platformInverted
+        iconSource: root.platformInverted ? "images/info-inverted.svg" : "images/info.svg"
+        onClicked: root.infoClicked()
     }
 }

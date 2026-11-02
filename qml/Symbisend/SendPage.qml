@@ -47,6 +47,7 @@ Page {
             deviceType: model.deviceType
             protocol: model.protocol
             system: model.deviceModel
+            onInfoClicked: console.log("SendPage: info clicked for " + model.alias) // TODO: open device details
         }
     }
 
