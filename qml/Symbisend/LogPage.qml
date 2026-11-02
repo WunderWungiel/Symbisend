@@ -1,6 +1,7 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
+// Debug log (the last ~300 lines). Opened from Settings > Other.
 Page {
     id: page
 
@@ -22,21 +23,22 @@ Page {
 
     Flickable {
         id: flick
-        anchors.fill: parent
-        anchors.margins: 6
+        anchors { fill: parent; margins: platformStyle.paddingMedium }
         contentWidth: width
         contentHeight: logLabel.height
+        // Vertical only, and no rubber-banding past the first/last line.
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
         clip: true
 
-        Text {
+        Label {
             id: logLabel
+            platformInverted: page.platformInverted
             width: flick.width
             wrapMode: Text.WrapAnywhere
-            font.pixelSize: 14
-            font.family: "Nokia Sans"
-            color: page.platformInverted ? platformStyle.colorNormalLightInverted
-                                         : platformStyle.colorNormalLight
+            font.pixelSize: platformStyle.fontSizeSmall
             text: logger.logText
+            // Follow the newest lines.
             onHeightChanged: flick.contentY = Math.max(0, height - flick.height)
         }
     }

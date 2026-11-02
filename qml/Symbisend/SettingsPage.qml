@@ -9,6 +9,7 @@ Page {
     property bool platformInverted: settings.theme == "light"
 
     signal aboutRequested
+    signal logRequested
 
     // Choices for the selection rows: what is stored, what is shown.
     property variant themeValues: ["dark", "light"]
@@ -125,6 +126,16 @@ Page {
                     platformInverted: page.platformInverted
                     text: "Open"
                     onClicked: page.aboutRequested()
+                }
+            }
+            SettingsItem {
+                title: "Log"
+                onClicked: page.logRequested()
+
+                Button {
+                    platformInverted: page.platformInverted
+                    text: "Open"
+                    onClicked: page.logRequested()
                 }
             }
         }

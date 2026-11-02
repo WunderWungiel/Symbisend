@@ -14,6 +14,11 @@ PageStackWindow {
     initialPage: Page {
         id: mainPage
 
+        // Never shown (showToolBar is false on this page), but required: for a
+        // page without tools the ToolBar shrinks itself to height 0, and the
+        // next pushed page's tools then get height 0 too - no back button.
+        tools: ToolBarLayout {}
+
         TabGroup {
             id: tabGroup
             anchors { top: parent.top; left: parent.left; right: parent.right; bottom: tabBar.top }
@@ -24,6 +29,7 @@ PageStackWindow {
             SettingsPage {
                 id: settingsTab
                 onAboutRequested: mainPage.pageStack.push(Qt.resolvedUrl("AboutPage.qml"))
+                onLogRequested: mainPage.pageStack.push(Qt.resolvedUrl("LogPage.qml"))
             }
         }
 
