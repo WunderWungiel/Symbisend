@@ -4,11 +4,16 @@
 #include <QTcpSocket>
 
 static const int kMaxRequestSize = 64 * 1024;
+// A client gets this long to send its request and to close the connection.
+static const int kConnectionTimeoutMs = 10000;
+static const int kIdleCheckIntervalMs = 2000;
 
 HttpServer::HttpServer(HttpHandler *handler, QObject *parent)
     : QObject(parent), m_handler(handler)
 {
     connect(&m_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+    m_idleTimer.setInterval(kIdleCheckIntervalMs);
+    connect(&m_idleTimer, SIGNAL(timeout()), this, SLOT(onIdleCheck()));
 }
 
 bool HttpServer::listen(quint16 port)
@@ -26,19 +31,27 @@ void HttpServer::close()
     if (m_server.isListening())
         qDebug() << "HTTP: server closed";
     m_server.close();
-    QList<QTcpSocket *> sockets = m_buffers.keys();
+    m_idleTimer.stop();
+    QList<QTcpSocket *> sockets = m_connectedAt.keys();
     m_buffers.clear();
-    foreach (QTcpSocket *socket, sockets)
-        socket->abort(); // deleted via disconnected() -> onDisconnected()
+    m_connectedAt.clear();
+    foreach (QTcpSocket *socket, sockets) {
+        socket->disconnect(this);
+        socket->abort();
+        socket->deleteLater();
+    }
 }
 
 void HttpServer::onNewConnection()
 {
     while (QTcpSocket *socket = m_server.nextPendingConnection()) {
         m_buffers.insert(socket, QByteArray());
+        m_connectedAt.insert(socket, QDateTime::currentDateTime());
         connect(socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
         connect(socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     }
+    if (!m_idleTimer.isActive())
+        m_idleTimer.start();
 }
 
 void HttpServer::onDisconnected()
@@ -47,7 +60,31 @@ void HttpServer::onDisconnected()
     if (!socket)
         return;
     m_buffers.remove(socket);
+    m_connectedAt.remove(socket);
     socket->deleteLater();
+}
+
+// Drops clients that never finish their request or never close the
+// connection, so they cannot pile up.
+void HttpServer::onIdleCheck()
+{
+    const QDateTime now = QDateTime::currentDateTime();
+    QList<QTcpSocket *> stale;
+    for (QHash<QTcpSocket *, QDateTime>::const_iterator it = m_connectedAt.constBegin();
+         it != m_connectedAt.constEnd(); ++it) {
+        if (it.value().msecsTo(now) >= kConnectionTimeoutMs)
+            stale.append(it.key());
+    }
+    foreach (QTcpSocket *socket, stale) {
+        qDebug() << "HTTP: dropping idle connection from" << socket->peerAddress().toString();
+        m_buffers.remove(socket);
+        m_connectedAt.remove(socket);
+        socket->disconnect(this);
+        socket->abort();
+        socket->deleteLater();
+    }
+    if (m_connectedAt.isEmpty())
+        m_idleTimer.stop();
 }
 
 void HttpServer::onReadyRead()
@@ -96,7 +133,15 @@ bool HttpServer::tryParse(QTcpSocket *socket)
         req.headers.insert(line.left(colon).trimmed().toLower(), line.mid(colon + 1).trimmed());
     }
 
-    int contentLength = req.headers.value("content-length", "0").toInt();
+    bool lengthOk = false;
+    int contentLength = req.headers.value("content-length", "0").toInt(&lengthOk);
+    if (!lengthOk || contentLength < 0 || contentLength > kMaxRequestSize) {
+        HttpResponse r;
+        r.status = 400;
+        r.body = "{\"message\":\"Invalid Content-Length\"}";
+        sendResponse(socket, r);
+        return true;
+    }
     if (buf.size() < headerEnd + 4 + contentLength)
         return false; // wait for the rest of the body
     req.body = buf.mid(headerEnd + 4, contentLength);
