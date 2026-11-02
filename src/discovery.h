@@ -72,6 +72,7 @@ private:
         bool timedOut;
     };
 
+    void stopAll();
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
                   bool v1 = false);
     void pumpScanQueue();

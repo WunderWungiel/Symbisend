@@ -42,6 +42,8 @@ public:
     explicit HttpServer(HttpHandler *handler, QObject *parent = 0);
 
     bool listen(quint16 port);
+    // Stops listening and drops all client connections.
+    void close();
     bool isListening() const { return m_server.isListening(); }
 
 private slots:

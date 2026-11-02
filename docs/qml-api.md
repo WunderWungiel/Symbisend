@@ -30,8 +30,12 @@ Properties: `count` (int).  Methods: `clear()`.
 - `announce()`, `scan()` — the two halves separately
 
 ## `network`
-- `online` (bool), `localAddress` (string), `connectionName` (string, e.g. the WLAN name)
+- `online` (bool), `localAddress` (string), `connectionName` (string, the access point
+  actually in use, e.g. the WLAN name)
 - `connectNetwork()`
+- When the connection is lost (out of range, AP off) `online` turns false, `peerModel` is
+  cleared and discovery stops. There is no automatic reconnect: `connectNetwork()` or
+  `discovery.refresh()` reconnects, and discovery restarts by itself once online again.
 
 ## `myDevice` — our identity as other devices see it
 - `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`

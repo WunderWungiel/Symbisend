@@ -46,21 +46,35 @@ static const char *configTypeName(QNetworkConfiguration::Type type)
 
 void NetworkManager::connectNetwork()
 {
-    if (m_session && (m_session->isOpen() || m_session->state() == QNetworkSession::Connecting))
-        return;
+    if (m_session) {
+        const QNetworkSession::State state = m_session->state();
+        if (state == QNetworkSession::Connecting
+                || (m_session->isOpen() && state == QNetworkSession::Connected))
+            return;
+        // A session that lost its connection (out of WLAN range, AP switched
+        // off) is not reused: start over with the current default
+        // configuration, which the user may have changed meanwhile.
+        qDebug() << "Network: dropping old session, state" << int(state);
+        m_session->disconnect(this);
+        m_session->deleteLater();
+        m_session = 0;
+    }
 
     QNetworkConfiguration config = m_manager.defaultConfiguration();
     qDebug() << "Network: default configuration" << config.name()
              << "(" << configTypeName(config.type()) << ") bearer" << config.bearerName()
              << "valid" << config.isValid();
 
-    if (!m_session) {
-        m_session = new QNetworkSession(config, this);
-        connect(m_session, SIGNAL(opened()), this, SLOT(onSessionOpened()));
-        connect(m_session, SIGNAL(closed()), this, SLOT(onSessionClosed()));
-        connect(m_session, SIGNAL(error(QNetworkSession::SessionError)),
-                this, SLOT(onSessionError(QNetworkSession::SessionError)));
-    }
+    m_session = new QNetworkSession(config, this);
+    connect(m_session, SIGNAL(opened()), this, SLOT(onSessionOpened()));
+    connect(m_session, SIGNAL(closed()), this, SLOT(onSessionClosed()));
+    connect(m_session, SIGNAL(error(QNetworkSession::SessionError)),
+            this, SLOT(onSessionError(QNetworkSession::SessionError)));
+    // Losing the link is reported via stateChanged/error(SessionAbortedError),
+    // not necessarily via closed(). Roaming signals are deliberately not
+    // connected, so Qt does not migrate the session to another access point.
+    connect(m_session, SIGNAL(stateChanged(QNetworkSession::State)),
+            this, SLOT(onSessionStateChanged(QNetworkSession::State)));
     qDebug() << "Network: opening session...";
     m_session->open();
 }
@@ -81,14 +95,36 @@ void NetworkManager::onSessionOpened()
 
 void NetworkManager::onSessionClosed()
 {
-    qDebug() << "Network: session closed";
-    m_online = false;
-    emit onlineChanged();
+    goOffline("session closed");
 }
 
 void NetworkManager::onSessionError(QNetworkSession::SessionError error)
 {
     qWarning() << "Network: session error" << int(error) << m_session->errorString();
+    if (error == QNetworkSession::SessionAbortedError)
+        goOffline("session aborted (connection lost)");
+}
+
+void NetworkManager::onSessionStateChanged(QNetworkSession::State state)
+{
+    qDebug() << "Network: session state" << int(state);
+    if (state == QNetworkSession::Disconnected || state == QNetworkSession::NotAvailable)
+        goOffline("connection lost");
+}
+
+// Going offline is reported once, however many of closed()/error()/
+// stateChanged() announce it. Reconnecting is left to the user (refresh),
+// like Qt's own Symbian examples do, so we never pop up connection dialogs
+// in a loop.
+void NetworkManager::goOffline(const char *reason)
+{
+    if (!m_online)
+        return;
+    qWarning() << "Network: offline -" << reason;
+    m_online = false;
+    m_localAddress = QHostAddress();
+    resetDefaultInterfaceForOpenC();
+    emit onlineChanged();
 }
 
 void NetworkManager::detectLocalAddress()
@@ -137,5 +173,13 @@ void NetworkManager::setDefaultInterfaceForOpenC()
     strncpy(ifr.ifr_name, name.constData(), sizeof(ifr.ifr_name) - 1);
     int rc = setdefaultif(&ifr);
     qDebug() << "Network: Open C setdefaultif(" << name << ") ->" << rc;
+#endif
+}
+
+void NetworkManager::resetDefaultInterfaceForOpenC()
+{
+#ifdef Q_OS_SYMBIAN
+    int rc = setdefaultif(0);
+    qDebug() << "Network: Open C setdefaultif(NULL) ->" << rc;
 #endif
 }

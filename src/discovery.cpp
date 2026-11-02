@@ -58,17 +58,44 @@ bool Discovery::isMulticastListening() const
 void Discovery::onOnlineChanged()
 {
     if (!m_network->isOnline()) {
-        m_multicast->stop();
+        qDebug() << "Discovery: offline, stopping";
+        stopAll();
+        // Nothing is reachable any more, and the next network may be another one.
+        m_peers->clear();
         emit statusChanged();
         return;
     }
+    // (Re)bind everything to the new connection: sockets created on the old
+    // one are dead on Symbian even if they still report being open.
     m_nam->setConfiguration(m_network->configuration());
-    if (!m_server->isListening())
-        m_server->listen(m_device->port());
+    m_nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    m_server->close();
+    m_server->listen(m_device->port());
     m_multicast->start(QHostAddress(QLatin1String(kMulticastGroup)), m_device->port(),
                        m_network->localAddress());
     emit statusChanged();
     refresh();
+}
+
+void Discovery::stopAll()
+{
+    m_multicast->stop();
+    m_server->close();
+
+    // abort() emits finished() synchronously; with m_jobs already cleared
+    // onReplyFinished() only deletes the replies (no retries, no UDP replies).
+    QList<QNetworkReply *> replies = m_jobs.keys();
+    m_jobs.clear();
+    foreach (QNetworkReply *reply, replies)
+        reply->abort();
+
+    m_scanQueue.clear();
+    m_activeScanJobs = 0;
+    m_tickTimer.stop();
+    if (m_scanning) {
+        m_scanning = false;
+        emit scanningChanged();
+    }
 }
 
 void Discovery::refresh()

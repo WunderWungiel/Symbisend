@@ -21,6 +21,17 @@ bool HttpServer::listen(quint16 port)
     return true;
 }
 
+void HttpServer::close()
+{
+    if (m_server.isListening())
+        qDebug() << "HTTP: server closed";
+    m_server.close();
+    QList<QTcpSocket *> sockets = m_buffers.keys();
+    m_buffers.clear();
+    foreach (QTcpSocket *socket, sockets)
+        socket->abort(); // deleted via disconnected() -> onDisconnected()
+}
+
 void HttpServer::onNewConnection()
 {
     while (QTcpSocket *socket = m_server.nextPendingConnection()) {
