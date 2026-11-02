@@ -34,14 +34,6 @@ Page {
                 onClicked: discovery.refresh()
             }
         }
-        ProgressBar {
-            platformInverted: page.platformInverted
-            width: parent.width
-            visible: discovery.scanning
-            minimumValue: 0
-            maximumValue: 100
-            value: discovery.scanProgress
-        }
     }
 
     ListView {
