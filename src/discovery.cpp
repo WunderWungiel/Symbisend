@@ -19,6 +19,8 @@ static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
 static const int kScanTimeoutMs = 3000;
 static const int kAnnounceReplyTimeoutMs = 5000;
+// How long past its deadline a request may take to report finished().
+static const int kStuckJobGraceMs = 5000;
 // An announcement is sent as a burst of 3 (see announce()); answer it once.
 static const int kAnnounceDedupWindowMs = 5000;
 
@@ -390,6 +392,31 @@ void Discovery::onScanTick()
     // abort() emits finished() synchronously, so do it outside the iteration.
     foreach (QNetworkReply *reply, expired)
         abortReply(reply);
+
+    // A reply that neither finished nor could be aborted (it already had an
+    // error, see abortReply()) would hold its scan slot forever, and the scan
+    // - with the refresh button, which is disabled while scanning - would
+    // never end. Forget such jobs a while after their deadline; should the
+    // reply still finish, onReplyFinished() only deletes it.
+    const QDateTime giveUp = now.addMSecs(-kStuckJobGraceMs);
+    QList<QNetworkReply *> stuck;
+    for (QHash<QNetworkReply *, Job>::const_iterator it = m_jobs.constBegin(); it != m_jobs.constEnd(); ++it) {
+        if (it.value().timedOut && it.value().deadline < giveUp)
+            stuck.append(it.key());
+    }
+    foreach (QNetworkReply *reply, stuck) {
+        const Job job = m_jobs.take(reply);
+        qWarning() << "Discovery:" << job.ip << job.protocol << "request never finished"
+                   << "(error" << int(reply->error()) << ") - giving up on it";
+        if (job.kind == ScanJob) {
+            --m_activeScanJobs;
+            ++m_scanDone;
+            emit scanProgressChanged();
+        }
+    }
+    if (!stuck.isEmpty())
+        pumpScanQueue();
+
     if (m_jobs.isEmpty() && !m_scanning)
         m_tickTimer.stop();
 }
