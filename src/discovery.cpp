@@ -19,6 +19,8 @@ static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
 static const int kScanTimeoutMs = 3000;
 static const int kAnnounceReplyTimeoutMs = 5000;
+// An announcement is sent as a burst of 3 (see announce()); answer it once.
+static const int kAnnounceDedupWindowMs = 5000;
 
 Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, QObject *parent)
     : QObject(parent),
@@ -92,6 +94,7 @@ void Discovery::stopAll()
     m_scanQueue.clear();
     m_activeScanJobs = 0;
     m_tickTimer.stop();
+    m_recentReplies.clear();
     m_scanStarted = QDateTime();
     m_previousScanStarted = QDateTime();
     if (m_scanning) {
@@ -115,10 +118,11 @@ void Discovery::refresh()
 
 void Discovery::announce()
 {
-    // LocalSend sends its announcement a few times, because UDP may be lost.
-    sendAnnouncement();
-    QTimer::singleShot(500, this, SLOT(sendAnnouncement()));
-    QTimer::singleShot(2000, this, SLOT(sendAnnouncement()));
+    // Same burst as the official app (delays of 100, 500 and 2000 ms before
+    // each message): UDP may be lost and peers may not be ready to answer yet.
+    QTimer::singleShot(100, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(100 + 500, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(100 + 500 + 2000, this, SLOT(sendAnnouncement()));
 }
 
 void Discovery::sendAnnouncement()
@@ -155,6 +159,19 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
     bool isAnnounce = map.value(QLatin1String("announce")).toBool()
             || map.value(QLatin1String("announcement")).toBool();
     if (isAnnounce) {
+        const QDateTime now = QDateTime::currentDateTime();
+        // Forget old entries, then skip the repeated messages of one burst.
+        QMutableHashIterator<QString, QDateTime> it(m_recentReplies);
+        while (it.hasNext()) {
+            if (it.next().value().msecsTo(now) >= kAnnounceDedupWindowMs)
+                it.remove();
+        }
+        if (m_recentReplies.contains(peer.fingerprint)) {
+            qDebug() << "Discovery: repeated announcement from" << peer.alias << "- already answered";
+            return;
+        }
+        m_recentReplies.insert(peer.fingerprint, now);
+
         const bool v1 = PeerModel::isV1(peer.version);
         qDebug() << "Discovery: announcement from" << peer.alias << peer.ip
                  << "v" + peer.version << "- replying";

@@ -88,6 +88,7 @@ private:
     QNetworkAccessManager *m_nam;
 
     QHash<QNetworkReply *, Job> m_jobs;
+    QHash<QString, QDateTime> m_recentReplies; // fingerprint -> when we last answered its announcement
     QList<QString> m_scanQueue;
     int m_scanTotal;
     int m_scanDone;
