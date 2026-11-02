@@ -1,0 +1,44 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+Symbisend is a [LocalSend](https://localsend.org) (protocol v2) client for Symbian^3/Anna/Belle phones, written in Qt 4 C++ with a Qt Quick 1.1 / Symbian Qt Quick Components UI. A MeeGo Harmattan port is planned (`qtc_packaging/debian_harmattan/`, `Symbisend_harmattan.desktop`), so C++ should stay platform-neutral and keep Symbian-specific code behind `#ifdef Q_OS_SYMBIAN`. Currently implemented: device discovery only (no file transfer yet).
+
+## Build
+
+```bat
+build_symbian.bat            :: release (default)
+build_symbian.bat debug
+```
+
+- Uses the Qt SDK at `C:\QtSDK\Symbian\SDKs\Symbian3Qt474` (Qt **4.7.4**, GCCE, `symbian-sbsv2` spec) and produces a self-signed `Symbisend.sis` in the repo root.
+- **In-source build only** — Qt 4.7 + sbsv2 does not support shadow builds. qmake/sbsv2 output (`Makefile`, `bld.inf`, `*.mmp`, `*.pkg`, `*.rss`, `moc_*.cpp`, `*.sis`, …) lands in the repo root and is gitignored.
+- When adding source files, add them to `SOURCES`/`HEADERS` in `Symbisend.pro`.
+- There are no tests or linters. Verification happens on a real device (Nokia 808, Belle, Qt 4.8 runtime): hand over the `.sis` and say what to look for on the in-app Log page / log file (`E:/Symbisend/`, falling back to `F:` or `C:/Data`).
+
+## Platform constraints (compile against Qt 4.7.4, run on 4.8)
+
+- No `QJsonDocument` — use `src/json.h` (`Json::parseObject` / `Json::serialize`), which goes through `QScriptEngine`'s `JSON` object (hence `QT += script`).
+- No `QUdpSocket::joinMulticastGroup()` — `MulticastReceiver` uses a raw Open C / POSIX BSD socket polled by a timer (disabled on Windows via `SYMBISEND_NO_RAW_MULTICAST`). `NetworkManager::setDefaultInterfaceForOpenC()` calls `setdefaultif()` so that Open C uses the same access point as the Qt `QNetworkSession`.
+- Old C++ (pre-C++11): no `auto`, lambdas, `nullptr`, or new-style `connect`; use `SIGNAL()/SLOT()`.
+- TLS: a system-level patch on the phone provides TLS 1.2/1.3. Do not add TLS code; only `ignoreSslErrors` for LocalSend's self-signed certificates. Our own server speaks plain `http`.
+
+## Architecture
+
+`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI.
+
+Flow:
+1. `NetworkManager` opens a `QNetworkSession` (Symbian access point), finds the local IPv4 address/prefix, and emits `onlineChanged`.
+2. On going online, `Discovery` starts `HttpServer` on port 53317, joins multicast group `224.0.0.167:53317` via `MulticastReceiver`, and runs `refresh()` (= `announce()` + `scan()`).
+3. Peers are found three ways, all ending in `PeerModel::upsert()` (keyed by fingerprint, `source` records how it was found):
+   - incoming multicast announcements → reply by POSTing `/register` to the sender;
+   - incoming `/register` and `/info` requests to our server (`Discovery` implements `HttpHandler::handleRequest`);
+   - HTTP(S) subnet scan fallback via `QNetworkAccessManager` (bounded concurrency, per-request timeout, driven by `onScanTick`).
+4. `DeviceInfo` holds our identity (alias, fingerprint persisted in `QSettings`) and builds register/announce JSON bodies.
+5. `Logger` installs a Qt message handler: every `qDebug`/`qWarning` goes to the log file and the last ~300 lines are shown on the Log page. Log liberally with a `Component:` prefix — it is the main debugging channel on device.
+
+`HttpServer` is a minimal HTTP/1.1 server: one request per connection, `Content-Length` bodies only.
+
+`qmlapplicationviewer/` is Qt Creator–generated boilerplate; don't modify it or the `qtcAddDeployment()` lines in the `.pro`.
