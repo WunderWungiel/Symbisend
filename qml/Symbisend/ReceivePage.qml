@@ -34,6 +34,17 @@ Page {
             fillMode: Image.PreserveAspectFit
             smooth: true
             source: "images/symbisend.svg"
+
+            // Slow clockwise spin, one turn per 20 s. Paused (not reset) while
+            // another tab is shown or the app is in the background.
+            NumberAnimation on rotation {
+                from: 0
+                to: 360
+                duration: 20000
+                loops: Animation.Infinite
+                running: true
+                paused: !(page.visible && Qt.application.active)
+            }
         }
 
         Label {
