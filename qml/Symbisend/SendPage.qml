@@ -1,38 +1,33 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
-// Bare functional UI - meant to be restyled/replaced. See docs/qml-api.md.
+// Send tab: nearby LocalSend devices. Bare functional UI - meant to be
+// restyled/replaced. See docs/qml-api.md.
 Page {
     id: page
-
-    tools: ToolBarLayout {
-        ToolButton {
-            iconSource: "toolbar-back"
-            onClicked: Qt.quit()
-        }
-        ToolButton {
-            iconSource: "toolbar-refresh"
-            enabled: !discovery.scanning
-            onClicked: discovery.refresh()
-        }
-        ToolButton {
-            text: "Log"
-            onClicked: page.pageStack.push(Qt.resolvedUrl("LogPage.qml"))
-        }
-        ToolButton {
-            iconSource: "toolbar-settings"
-            onClicked: page.pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
-        }
-    }
 
     Column {
         id: header
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
         spacing: 4
 
-        Label {
-            text: myDevice.alias
-            font.pixelSize: 26
+        Item {
+            width: parent.width
+            height: refreshButton.height
+
+            Label {
+                anchors { left: parent.left; right: refreshButton.left; verticalCenter: parent.verticalCenter }
+                elide: Text.ElideRight
+                text: "Nearby devices"
+                font.pixelSize: 26
+            }
+            ToolButton {
+                id: refreshButton
+                anchors.right: parent.right
+                iconSource: "toolbar-refresh"
+                enabled: !discovery.scanning
+                onClicked: discovery.refresh()
+            }
         }
         Label {
             width: parent.width

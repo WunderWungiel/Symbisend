@@ -6,5 +6,48 @@ PageStackWindow {
     showStatusBar: true
     showToolBar: true
 
-    initialPage: SendPage { }
+    // Set to true to show text under the tab icons (portrait only; Symbian
+    // hides tab labels in landscape when an icon is present).
+    property bool showTabLabels: false
+
+    initialPage: Page {
+        id: mainPage
+
+        tools: ToolBarLayout {
+            ToolButton {
+                iconSource: "toolbar-back"
+                onClicked: Qt.quit()
+            }
+            ButtonRow {
+                TabButton {
+                    tab: receiveTab
+                    iconSource: "images/tab-receive.svg"
+                    text: window.showTabLabels ? "Receive" : ""
+                }
+                TabButton {
+                    tab: sendTab
+                    iconSource: "images/tab-send.svg"
+                    text: window.showTabLabels ? "Send" : ""
+                }
+                TabButton {
+                    tab: settingsTab
+                    iconSource: "images/tab-settings.svg"
+                    text: window.showTabLabels ? "Settings" : ""
+                }
+            }
+        }
+
+        TabGroup {
+            id: tabGroup
+            anchors.fill: parent
+            currentTab: receiveTab
+
+            ReceivePage { id: receiveTab }
+            SendPage { id: sendTab }
+            SettingsPage {
+                id: settingsTab
+                onLogRequested: mainPage.pageStack.push(Qt.resolvedUrl("LogPage.qml"))
+            }
+        }
+    }
 }

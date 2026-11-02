@@ -1,16 +1,12 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
-// Bare functional UI - meant to be restyled/replaced. See docs/qml-api.md.
+// Settings tab. Bare functional UI - meant to be restyled/replaced.
+// See docs/qml-api.md.
 Page {
     id: page
 
-    tools: ToolBarLayout {
-        ToolButton {
-            iconSource: "toolbar-back"
-            onClicked: page.pageStack.pop()
-        }
-    }
+    signal logRequested
 
     Column {
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
@@ -43,6 +39,16 @@ Page {
             text: "Use default"
             enabled: !settings.downloadFolderIsDefault
             onClicked: settings.resetDownloadFolder()
+        }
+
+        Label {
+            text: "Debugging"
+            font.pixelSize: 24
+        }
+        Button {
+            width: parent.width
+            text: "Show log"
+            onClicked: page.logRequested()
         }
     }
 }
