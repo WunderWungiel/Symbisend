@@ -46,46 +46,16 @@ Page {
         }
     }
 
-    // "Receive via link" card - not implemented yet (LocalSend's web share
+    // "Receive via link" - not implemented yet (LocalSend's web share
     // receive). Tapping it only logs.
-    Rectangle {
+    Button {
         id: linkCard
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
             bottomMargin: 2 * platformStyle.paddingLarge
         }
-        width: Math.min(page.width - 2 * platformStyle.paddingLarge,
-                        cardRow.width + 4 * platformStyle.paddingLarge)
-        height: cardRow.height + 2 * platformStyle.paddingLarge
-        radius: platformStyle.paddingMedium
-        color: cardMouse.pressed ? "#40ffffff" : "#1fffffff"
-        border { width: 1; color: "#33ffffff" }
-
-        Row {
-            id: cardRow
-            anchors.centerIn: parent
-            spacing: platformStyle.paddingLarge
-
-            Image {
-                anchors.verticalCenter: parent.verticalCenter
-                width: platformStyle.graphicSizeSmall
-                height: platformStyle.graphicSizeSmall
-                sourceSize.width: width
-                sourceSize.height: height
-                smooth: true
-                source: "images/web.svg"
-            }
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Receive via link"
-            }
-        }
-
-        MouseArea {
-            id: cardMouse
-            anchors.fill: parent
-            onClicked: console.log("ReceivePage: Receive via link is not implemented yet")
-        }
+        text: "Receive via link"
+        onClicked: console.log("ReceivePage: Receive via link is not implemented yet")
     }
 }
