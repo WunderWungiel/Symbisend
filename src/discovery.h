@@ -91,13 +91,16 @@ private:
     void pumpScanQueue();
     void finishScanIfDone();
     void replyViaUdp();
+    void sendDatagram(const QByteArray &data);
+    void resetUdpSocket(bool create);
 
     DeviceInfo *m_device;
     PeerModel *m_peers;
     NetworkManager *m_network;
     HttpServer *m_server;
     MulticastReceiver *m_multicast;
-    QUdpSocket m_udp;
+    // Sends announcements. Recreated for every connection (see onOnlineChanged()).
+    QUdpSocket *m_udp;
     QNetworkAccessManager *m_nam;
 
     QHash<QNetworkReply *, Job> m_jobs;

@@ -27,6 +27,7 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *netwo
       m_device(device), m_peers(peers), m_network(network),
       m_server(new HttpServer(this, this)),
       m_multicast(new MulticastReceiver(this)),
+      m_udp(0),
       m_nam(new QNetworkAccessManager(this)),
       m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true)
 {
@@ -74,6 +75,7 @@ void Discovery::onOnlineChanged()
     // one are dead on Symbian even if they still report being open.
     m_nam->setConfiguration(m_network->configuration());
     m_nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    resetUdpSocket(true);
     if (m_serverEnabled)
         startListening();
     else
@@ -155,6 +157,7 @@ void Discovery::stopAll()
     m_nam->setNetworkAccessible(QNetworkAccessManager::NotAccessible);
     stopListening();
     abortJobs();
+    resetUdpSocket(false);
     m_tickTimer.stop();
     m_scanStarted = QDateTime();
     m_previousScanStarted = QDateTime();
@@ -219,20 +222,40 @@ void Discovery::sendAnnouncement()
         qDebug() << "Discovery: announcement skipped (offline or server stopped)";
         return;
     }
-    QByteArray data = Json::serialize(m_device->toAnnounceMap(true));
-    qint64 n = m_udp.writeDatagram(data, QHostAddress(QLatin1String(kMulticastGroup)), m_device->port());
-    if (n < 0)
-        qWarning() << "Discovery: announce failed:" << m_udp.errorString();
-    else
-        qDebug() << "Discovery: announcement sent (" << n << "bytes)";
+    sendDatagram(Json::serialize(m_device->toAnnounceMap(true)));
 }
 
 void Discovery::replyViaUdp()
 {
     if (!m_network->isOnline())
         return;
-    QByteArray data = Json::serialize(m_device->toAnnounceMap(false));
-    m_udp.writeDatagram(data, QHostAddress(QLatin1String(kMulticastGroup)), m_device->port());
+    sendDatagram(Json::serialize(m_device->toAnnounceMap(false)));
+}
+
+void Discovery::sendDatagram(const QByteArray &data)
+{
+    if (!m_udp)
+        resetUdpSocket(true);
+    qint64 n = m_udp->writeDatagram(data, QHostAddress(QLatin1String(kMulticastGroup)), m_device->port());
+    if (n < 0)
+        qWarning() << "Discovery: multicast send failed:" << m_udp->errorString();
+    else
+        qDebug() << "Discovery: multicast message sent (" << n << "bytes)";
+}
+
+// The sending socket's engine is created on the first writeDatagram() and,
+// on Symbian, tied to the connection that was up then. close() does not
+// drop that engine for a socket that was never bound (it stays in
+// UnconnectedState), so a socket from an earlier connection keeps writing
+// into the dead one. Replace the whole object instead.
+void Discovery::resetUdpSocket(bool create)
+{
+    if (m_udp) {
+        m_udp->deleteLater();
+        m_udp = 0;
+    }
+    if (create)
+        m_udp = new QUdpSocket(this);
 }
 
 void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, quint16)
