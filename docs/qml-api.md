@@ -128,4 +128,9 @@ Methods:
 - `formatSize(bytes)` → string, e.g. `formatSize(1300000)` = `1.2 MB`
 
 ## `logger` — debug log
-- `logText` (string, last ~300 lines), `logFilePath` (string), `clear()`
+- `model` — list model of the last ~300 lines, oldest first, role `line` (string). Use it
+  as a ListView model: lines arrive in batches (every ~200 ms at most), and only new lines
+  are added, so the view doesn't re-layout the whole log.
+- `logText` (string, the same lines joined with newlines; rebuilt on every read, so
+  prefer `model` for display), `logFilePath` (string), `clear()`
+- Signal `logChanged()` after every batch and after `clear()`.

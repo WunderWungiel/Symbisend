@@ -31,8 +31,66 @@ static QString pickLogDir()
 
 static const int kNotifyDelayMs = 200;
 
+// ---------------------------------------------------------------- LogModel
+
+LogModel::LogModel(int maxLines, QObject *parent)
+    : QAbstractListModel(parent), m_maxLines(maxLines)
+{
+    QHash<int, QByteArray> roles;
+    roles[LineRole] = "line";
+    setRoleNames(roles);
+}
+
+int LogModel::rowCount(const QModelIndex &parent) const
+{
+    return parent.isValid() ? 0 : m_lines.size();
+}
+
+QVariant LogModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid() || index.row() < 0 || index.row() >= m_lines.size())
+        return QVariant();
+    if (role == LineRole || role == Qt::DisplayRole)
+        return m_lines.at(index.row());
+    return QVariant();
+}
+
+void LogModel::appendLines(const QStringList &lines)
+{
+    if (lines.isEmpty())
+        return;
+    if (lines.size() >= m_maxLines) {
+        // The batch alone replaces everything.
+        beginResetModel();
+        m_lines = lines.mid(lines.size() - m_maxLines);
+        endResetModel();
+        return;
+    }
+    beginInsertRows(QModelIndex(), m_lines.size(), m_lines.size() + lines.size() - 1);
+    m_lines += lines;
+    endInsertRows();
+    const int excess = m_lines.size() - m_maxLines;
+    if (excess > 0) {
+        beginRemoveRows(QModelIndex(), 0, excess - 1);
+        m_lines.erase(m_lines.begin(), m_lines.begin() + excess);
+        endRemoveRows();
+    }
+}
+
+void LogModel::clear()
+{
+    if (m_lines.isEmpty())
+        return;
+    beginResetModel();
+    m_lines.clear();
+    endResetModel();
+}
+
+// ---------------------------------------------------------------- Logger
+
 Logger::Logger(QObject *parent)
-    : QObject(parent), m_mutex(QMutex::Recursive), m_inHandler(false), m_notifyPending(false)
+    : QObject(parent), m_mutex(QMutex::Recursive), m_inHandler(false), m_notifyPending(false),
+      m_model(new LogModel(kMaxLines, this))
 {
     m_file.setFileName(pickLogDir() + QLatin1String("/log.txt"));
     // Keep only the current session's log.
@@ -40,7 +98,7 @@ Logger::Logger(QObject *parent)
 
     m_notifyTimer.setSingleShot(true);
     m_notifyTimer.setInterval(kNotifyDelayMs);
-    connect(&m_notifyTimer, SIGNAL(timeout()), this, SIGNAL(logChanged()));
+    connect(&m_notifyTimer, SIGNAL(timeout()), this, SLOT(flushPending()));
 }
 
 Logger *Logger::instance()
@@ -57,10 +115,10 @@ void Logger::install()
     qInstallMsgHandler(&Logger::messageHandler);
 }
 
+// GUI thread.
 QString Logger::logText() const
 {
-    QMutexLocker lock(&m_mutex);
-    return m_lines.join(QLatin1String("\n"));
+    return m_model->lines().join(QLatin1String("\n"));
 }
 
 QString Logger::logFilePath() const
@@ -72,20 +130,34 @@ void Logger::clear()
 {
     {
         QMutexLocker lock(&m_mutex);
-        m_lines.clear();
+        m_pending.clear();
     }
+    m_model->clear();
     emit logChanged();
 }
 
-// GUI thread: start the batching timer (logChanged fires when it expires).
+// GUI thread: start the batching timer (flushPending() runs when it expires).
 void Logger::scheduleNotify()
 {
-    {
-        QMutexLocker lock(&m_mutex);
-        m_notifyPending = false;
-    }
     if (!m_notifyTimer.isActive())
         m_notifyTimer.start();
+}
+
+// GUI thread: move the queued lines into the model. Lines logged while the
+// model updates (e.g. by a QML binding) are queued for the next batch.
+void Logger::flushPending()
+{
+    QStringList lines;
+    {
+        QMutexLocker lock(&m_mutex);
+        lines = m_pending; // implicitly shared; QList::swap() is Qt 4.8+
+        m_pending.clear();
+        m_notifyPending = false;
+    }
+    if (lines.isEmpty())
+        return;
+    m_model->appendLines(lines);
+    emit logChanged();
 }
 
 // Called with m_mutex held, from any thread.
@@ -97,9 +169,9 @@ void Logger::append(const QString &line)
         m_file.write(data);
         m_file.flush(); // keep the file complete in case the app crashes
     }
-    m_lines.append(line);
-    while (m_lines.size() > kMaxLines)
-        m_lines.removeFirst();
+    m_pending.append(line);
+    while (m_pending.size() > kMaxLines)
+        m_pending.removeFirst();
     if (!m_notifyPending) {
         m_notifyPending = true;
         // Never touch QML-bound state from here: hop to the GUI thread.

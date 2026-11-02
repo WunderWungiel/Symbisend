@@ -21,27 +21,30 @@ Page {
         }
     }
 
-    Flickable {
-        id: flick
+    // One delegate per line: new lines only lay out themselves, instead of
+    // the whole log being one big re-wrapped text.
+    ListView {
+        id: list
         anchors { fill: parent; margins: platformStyle.paddingMedium }
-        contentWidth: width
-        contentHeight: logLabel.height
-        // Vertical only, and no rubber-banding past the first/last line.
-        flickableDirection: Flickable.VerticalFlick
+        // No rubber-banding past the first/last line.
         boundsBehavior: Flickable.StopAtBounds
         clip: true
+        model: logger.model
 
-        Label {
-            id: logLabel
+        // Follow the newest lines, unless the user scrolled up to read.
+        property bool follow: true
+        onMovementEnded: follow = atYEnd
+        onCountChanged: if (follow) positionViewAtEnd()
+        Component.onCompleted: positionViewAtEnd()
+
+        delegate: Label {
             platformInverted: page.platformInverted
-            width: flick.width
+            width: list.width
             wrapMode: Text.WrapAnywhere
             font.pixelSize: platformStyle.fontSizeSmall
-            text: logger.logText
-            // Follow the newest lines.
-            onHeightChanged: flick.contentY = Math.max(0, height - flick.height)
+            text: model.line
         }
     }
 
-    ScrollDecorator { flickableItem: flick; platformInverted: page.platformInverted }
+    ScrollDecorator { flickableItem: list; platformInverted: page.platformInverted }
 }
