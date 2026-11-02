@@ -479,6 +479,12 @@ void Sender::finish(const QString &state, const QString &error)
         m_bytesDone = m_bytesTotal;
     }
     m_sessionId.clear();
+    // Sent: the selection was copied at send(), so it can go. Kept after
+    // declined/failed/cancelled so the user can try again.
+    if (state == QLatin1String("finished")) {
+        qDebug() << "Sender: clearing the selection";
+        m_selection->clear();
+    }
     setState(state, error);
     emit progressChanged();
 }

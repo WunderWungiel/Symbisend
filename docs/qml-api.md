@@ -129,8 +129,8 @@ Methods:
 
 ## `sender` — sending the selection to a device
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by
-one, streamed from disk). The selection is copied when sending starts and stays selected
-afterwards.
+one, streamed from disk). The selection is copied when sending starts; it is cleared when
+the transfer ends in `finished` and kept after `declined`, `failed` or `cancelled` (to retry).
 - `send(fingerprint)` → bool — starts sending `selection` to that peer. Returns false
   (state `failed`, `errorText` says why) when already busy, nothing is selected, offline,
   the peer is unknown, or it speaks protocol v1 (not supported yet).
