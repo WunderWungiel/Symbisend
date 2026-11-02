@@ -213,6 +213,12 @@ void Discovery::announce()
 
 void Discovery::sendAnnouncement()
 {
+    // The burst's timers outlive stopServer() and going offline: don't
+    // announce a server that isn't there, or write to a dead connection.
+    if (!m_network->isOnline() || !isServerRunning()) {
+        qDebug() << "Discovery: announcement skipped (offline or server stopped)";
+        return;
+    }
     QByteArray data = Json::serialize(m_device->toAnnounceMap(true));
     qint64 n = m_udp.writeDatagram(data, QHostAddress(QLatin1String(kMulticastGroup)), m_device->port());
     if (n < 0)
@@ -223,6 +229,8 @@ void Discovery::sendAnnouncement()
 
 void Discovery::replyViaUdp()
 {
+    if (!m_network->isOnline())
+        return;
     QByteArray data = Json::serialize(m_device->toAnnounceMap(false));
     m_udp.writeDatagram(data, QHostAddress(QLatin1String(kMulticastGroup)), m_device->port());
 }
