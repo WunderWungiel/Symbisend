@@ -108,7 +108,9 @@ void MulticastReceiver::poll()
     if (m_fd < 0)
         return;
     char buffer[kMaxDatagram];
-    for (int i = 0; i < 32; ++i) { // bounded per tick
+    // Bounded per tick. m_fd is re-checked because a slot connected to
+    // datagramReceived() may have called stop().
+    for (int i = 0; i < 32 && m_fd >= 0; ++i) {
         struct sockaddr_in from;
         socklen_t fromLen = sizeof(from);
         ssize_t n = ::recvfrom(m_fd, buffer, sizeof(buffer), 0,
