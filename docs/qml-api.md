@@ -82,15 +82,41 @@ Receive:
 - `saveToHistory` (bool, default true) *(stored only)*
 
 ## `picker` — what to send (Send page buttons)
-Native pickers; for now the results are only logged, nothing is sent yet.
+Native pickers. Their results go straight into `selection` (connected in `main.cpp`).
 - `pickFile()` — native file picker (memory, then browse), one file
 - `pickMedia(kind)` — the gallery (Photos) picker, several items; `kind` is `"image"` or
   `"video"` (the gallery picker shows one type at a time)
 - `pickFolder()` — native folder picker
 - The three `pick*()` methods return immediately; on confirm the result arrives as signal
   `filesPicked(paths)` (list of native paths, e.g. `E:\Images\a.jpg`) or
-  `folderPicked(path)`. Nothing is emitted on cancel.
-- `clipboardText()` → string — the clipboard's text (`""` if empty); also logged
+  `folderPicked(path)`, and is added to `selection`. Nothing is emitted on cancel.
+- `clipboardText()` → string — the clipboard's text (`""` if empty); also logged. Not
+  added to the selection by itself: call `selection.addText()`.
+- `showInfo(text)` — a native information note (Avkon `CAknInformationNote`, e.g.
+  "Clipboard is empty"); returns at once, the note hides by itself
+
+## `selection` — what will be sent (ListView model)
+Everything picked on the Send page, in the order added. Nothing is sent yet.
+
+| role           | type   | example                                         |
+|----------------|--------|-------------------------------------------------|
+| `kind`         | string | `file`, `image`, `video` (by extension) or `text` |
+| `name`         | string | `a.jpg`; for text, the text itself              |
+| `path`         | string | native path `E:\Images\a.jpg`; `""` for text    |
+| `relativePath` | string | `a.jpg`, or `Trip/day1/a.jpg` for folder contents |
+| `text`         | string | the message (text items only)                   |
+| `size`         | number | bytes (UTF-8 length for text)                   |
+| `sizeText`     | string | `1.2 MB`                                        |
+
+Properties: `count` (int), `totalSize` (number, bytes), `totalSizeText` (string, `3.4 MB`).
+Methods:
+- `addFiles(paths)` — native paths; already selected paths and non-files are skipped
+- `addFolder(path)` — every file inside, recursively (`relativePath` starts with the
+  folder's name)
+- `addText(text)` — a text message; `""` is ignored
+- `setText(index, text)` — edit a text item; `""` removes it
+- `remove(index)`, `clear()`
+- `formatSize(bytes)` → string, e.g. `formatSize(1300000)` = `1.2 MB`
 
 ## `logger` — debug log
 - `logText` (string, last ~300 lines), `logFilePath` (string), `clear()`

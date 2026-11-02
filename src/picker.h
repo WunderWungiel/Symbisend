@@ -29,6 +29,9 @@ public:
     Q_INVOKABLE void pickFolder();
     // The clipboard's text ("" if empty).
     Q_INVOKABLE QString clipboardText() const;
+    // A short native information note (Avkon CAknInformationNote on Symbian,
+    // a message box elsewhere). Returns at once; the note hides by itself.
+    Q_INVOKABLE void showInfo(const QString &text);
 
 signals:
     void filesPicked(const QStringList &paths);

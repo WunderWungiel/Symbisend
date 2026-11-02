@@ -22,6 +22,8 @@ symbian:TARGET.CAPABILITY += NetworkServices
 
 # Native Avkon file/folder pickers (AknCommonDialogsDynMem)
 symbian:LIBS += -lcommondialogs
+# Native information notes (CAknInformationNote)
+symbian:LIBS += -lavkon -leikdlg -leikctl
 
 # Gallery (Photos) fetcher for the Send page's Media button
 symbian:LIBS += -lmgfetch -lbafl
@@ -52,7 +54,9 @@ SOURCES += main.cpp \
     src/httpserver.cpp \
     src/multicastreceiver.cpp \
     src/discovery.cpp \
-    src/settings.cpp \n    src/picker.cpp
+    src/settings.cpp \
+    src/picker.cpp \
+    src/selectionmodel.cpp
 
 HEADERS += \
     src/logger.h \
@@ -63,7 +67,9 @@ HEADERS += \
     src/httpserver.h \
     src/multicastreceiver.h \
     src/discovery.h \
-    src/settings.h \n    src/picker.h
+    src/settings.h \
+    src/picker.h \
+    src/selectionmodel.h
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

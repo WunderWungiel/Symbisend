@@ -8,11 +8,13 @@
 
 #ifdef Q_OS_SYMBIAN
 #include <AknCommonDialogsDynMem.h>
+#include <aknnotewrappers.h>
 #include <MGFetch.h>
 #include <badesca.h>
 #else
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QMessageBox>
 #endif
 
 #ifdef Q_OS_SYMBIAN
@@ -67,6 +69,23 @@ QString Picker::clipboardText() const
                  << (text.length() > kMaxLogged ? text.left(kMaxLogged) + QLatin1String("...") : text);
     }
     return text;
+}
+
+void Picker::showInfo(const QString &text)
+{
+    qDebug() << "Picker: info note:" << text;
+#ifdef Q_OS_SYMBIAN
+    // Non-waiting note: ExecuteLD() returns at once and the note deletes
+    // itself when it times out.
+    TRAPD(err, {
+        CAknInformationNote *note = new (ELeave) CAknInformationNote(EFalse);
+        note->ExecuteLD(toPtr(text));
+    });
+    if (err != KErrNone)
+        qWarning() << "Picker: info note failed, error" << err;
+#else
+    QMessageBox::information(0, QLatin1String("Symbisend"), text);
+#endif
 }
 
 void Picker::reportFiles(const char *what, const QStringList &paths)

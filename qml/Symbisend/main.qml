@@ -31,6 +31,7 @@ PageStackWindow {
                 id: sendTab
                 onDeviceInfoRequested: mainPage.pageStack.push(Qt.resolvedUrl("DeviceDetailsPage.qml"),
                                                                { fingerprint: fingerprint })
+                onEditSelectionRequested: mainPage.pageStack.push(Qt.resolvedUrl("SelectionPage.qml"))
             }
             SettingsPage {
                 id: settingsTab

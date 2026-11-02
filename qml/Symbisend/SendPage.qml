@@ -11,6 +11,16 @@ Page {
 
     // Info button on a device row; main.qml opens DeviceDetailsPage.
     signal deviceInfoRequested(string fingerprint)
+    // Edit button on the Selection card; main.qml opens SelectionPage.
+    signal editSelectionRequested()
+
+    function paste() {
+        var text = picker.clipboardText() // logged by C++
+        if (text.length > 0)
+            selection.addText(text)
+        else
+            picker.showInfo("Clipboard is empty")
+    }
 
     Column {
         id: header
@@ -38,12 +48,13 @@ Page {
             }
         }
 
-        // What to send. For now each one only opens its picker/dialog and
-        // logs the result (see Picker in docs/qml-api.md).
+        // What to send. Picked items go into `selection`; once there is
+        // something, the Selection card replaces the buttons.
         Row {
             id: sendOptions
             width: parent.width
             spacing: platformStyle.paddingSmall
+            visible: selection.count === 0
 
             property real buttonWidth: (width - 4 * spacing) / 5
 
@@ -63,13 +74,13 @@ Page {
                 width: sendOptions.buttonWidth
                 label: "Paste"
                 icon: "send-paste"
-                onClicked: picker.clipboardText() // logged by C++
+                onClicked: page.paste()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
                 label: "Text"
                 icon: "send-text"
-                onClicked: textDialog.openEmpty()
+                onClicked: textDialog.openNew()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
@@ -77,6 +88,14 @@ Page {
                 icon: "send-folder"
                 onClicked: picker.pickFolder()
             }
+        }
+
+        SelectionCard {
+            width: parent.width
+            visible: selection.count > 0
+            platformInverted: page.platformInverted
+            onEditClicked: page.editSelectionRequested()
+            onAddClicked: addMenu.open()
         }
     }
 
@@ -123,37 +142,46 @@ Page {
         }
     }
 
-    CommonDialog {
-        id: textDialog
+    // The Selection card's Add button: every option of the button row.
+    ContextMenu {
+        id: addMenu
         platformInverted: page.platformInverted
-        titleText: "Send text"
-        buttonTexts: ["OK", "Cancel"]
-
-        function openEmpty() {
-            textArea.text = ""
-            open()
-        }
-
-        content: Item {
-            width: textDialog.platformContentMaximumWidth
-            height: textArea.height + 2 * platformStyle.paddingLarge
-
-            TextArea {
-                id: textArea
+        MenuLayout {
+            MenuItem {
                 platformInverted: page.platformInverted
-                anchors {
-                    left: parent.left; right: parent.right
-                    verticalCenter: parent.verticalCenter
-                    margins: platformStyle.paddingLarge
-                }
-                height: 4 * platformStyle.fontSizeLarge + 2 * platformStyle.paddingLarge
-                placeholderText: "Enter text"
+                text: "File"
+                onClicked: picker.pickFile()
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Images"
+                onClicked: picker.pickMedia("image")
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Videos"
+                onClicked: picker.pickMedia("video")
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Paste"
+                onClicked: page.paste()
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Text"
+                onClicked: textDialog.openNew()
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Folder"
+                onClicked: picker.pickFolder()
             }
         }
+    }
 
-        onButtonClicked: {
-            if (index == 0)
-                console.log("SendPage: text to send, " + textArea.text.length + " chars: " + textArea.text)
-        }
+    SendTextDialog {
+        id: textDialog
+        platformInverted: page.platformInverted
     }
 }

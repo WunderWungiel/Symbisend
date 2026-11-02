@@ -11,6 +11,7 @@
 #include "src/discovery.h"
 #include "src/settings.h"
 #include "src/picker.h"
+#include "src/selectionmodel.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -25,6 +26,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     Settings settings;
     Picker picker;
+    SelectionModel selection;
+    // Everything picked on the Send page goes into the selection.
+    QObject::connect(&picker, SIGNAL(filesPicked(QStringList)), &selection, SLOT(addFiles(QStringList)));
+    QObject::connect(&picker, SIGNAL(folderPicked(QString)), &selection, SLOT(addFolder(QString)));
     DeviceInfo device;
     PeerModel peers;
     NetworkManager network;
@@ -40,6 +45,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("discovery"), &discovery);
     ctx->setContextProperty(QLatin1String("settings"), &settings);
     ctx->setContextProperty(QLatin1String("picker"), &picker);
+    ctx->setContextProperty(QLatin1String("selection"), &selection);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));
