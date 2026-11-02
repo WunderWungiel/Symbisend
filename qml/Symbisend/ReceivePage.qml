@@ -7,7 +7,7 @@ Page {
     id: page
 
     // Everything above this y belongs to the logo + name block.
-    property int contentBottom: page.height
+    property int contentBottom: linkCard.y
 
     Column {
         id: identity
@@ -43,6 +43,49 @@ Page {
             elide: Text.ElideRight
             font.pixelSize: platformStyle.fontSizeLarge
             text: myDevice.alias
+        }
+    }
+
+    // "Receive via link" card - not implemented yet (LocalSend's web share
+    // receive). Tapping it only logs.
+    Rectangle {
+        id: linkCard
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+            bottomMargin: 2 * platformStyle.paddingLarge
+        }
+        width: Math.min(page.width - 2 * platformStyle.paddingLarge,
+                        cardRow.width + 4 * platformStyle.paddingLarge)
+        height: cardRow.height + 2 * platformStyle.paddingLarge
+        radius: platformStyle.paddingMedium
+        color: cardMouse.pressed ? "#40ffffff" : "#1fffffff"
+        border { width: 1; color: "#33ffffff" }
+
+        Row {
+            id: cardRow
+            anchors.centerIn: parent
+            spacing: platformStyle.paddingLarge
+
+            Image {
+                anchors.verticalCenter: parent.verticalCenter
+                width: platformStyle.graphicSizeSmall
+                height: platformStyle.graphicSizeSmall
+                sourceSize.width: width
+                sourceSize.height: height
+                smooth: true
+                source: "images/web.svg"
+            }
+            Label {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Receive via link"
+            }
+        }
+
+        MouseArea {
+            id: cardMouse
+            anchors.fill: parent
+            onClicked: console.log("ReceivePage: Receive via link is not implemented yet")
         }
     }
 }
