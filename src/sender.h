@@ -1,0 +1,134 @@
+#ifndef SENDER_H
+#define SENDER_H
+
+#include <QObject>
+#include <QDateTime>
+#include <QList>
+#include <QNetworkAccessManager>
+#include <QStringList>
+#include <QTimer>
+
+#include "peermodel.h"
+#include "selectionmodel.h"
+
+class QNetworkReply;
+class QSslError;
+class DeviceInfo;
+class NetworkManager;
+
+// Sends the selection to one peer (LocalSend v2 upload API):
+//  1. POST /prepare-upload with the file list. The receiver answers once its
+//     user accepted (or at once with quick save): a session id and a token
+//     per accepted file, 204 (nothing to transfer, e.g. a text message),
+//     401 (PIN), 403 (declined), 409 (busy), ...
+//  2. POST /upload for every accepted file, one after another, streamed from
+//     disk.
+//  3. POST /cancel when the user cancels or an upload fails.
+// One transfer at a time. See docs/qml-api.md.
+class Sender : public QObject
+{
+    Q_OBJECT
+    // "idle", "waiting" (for the receiver to accept), "pin" (receiver wants a
+    // PIN: submitPin()), "sending", "finished", "declined", "failed", "cancelled"
+    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    // waiting, pin or sending
+    Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
+    Q_PROPERTY(QString peerAlias READ peerAlias NOTIFY stateChanged)
+    // Why it failed / was declined; also "Wrong PIN" in state "pin".
+    Q_PROPERTY(QString errorText READ errorText NOTIFY stateChanged)
+    // Accepted files (a declined part of the selection is not counted).
+    Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
+    // 1-based index of the file being uploaded, 0 before the first one.
+    Q_PROPERTY(int fileIndex READ fileIndex NOTIFY progressChanged)
+    Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
+    // Bytes of the accepted files; qreal for sizes over 2 GB.
+    Q_PROPERTY(qreal bytesSent READ bytesSent NOTIFY progressChanged)
+    Q_PROPERTY(qreal bytesTotal READ bytesTotal NOTIFY progressChanged)
+    // 0..1 over all accepted files.
+    Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
+    // Estimated seconds left, updated every second while sending; -1 unknown.
+    Q_PROPERTY(int remainingSeconds READ remainingSeconds NOTIFY progressChanged)
+
+public:
+    Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
+           NetworkManager *network, QObject *parent = 0);
+
+    QString state() const { return m_state; }
+    bool isBusy() const;
+    QString peerAlias() const { return m_peer.alias; }
+    QString errorText() const { return m_errorText; }
+    int fileCount() const { return m_queue.size(); }
+    int fileIndex() const { return m_current + 1; }
+    QString fileName() const;
+    qreal bytesSent() const { return qreal(m_bytesDone + m_currentSent); }
+    qreal bytesTotal() const { return qreal(m_bytesTotal); }
+    qreal progress() const;
+    int remainingSeconds() const { return m_remainingSeconds; }
+
+    // Starts sending the current selection to the peer. Returns false (with
+    // errorText set and state "failed") if that is not possible right now:
+    // already busy, nothing selected, offline, unknown or v1 peer.
+    Q_INVOKABLE bool send(const QString &fingerprint);
+    // State "pin": asks again with this PIN.
+    Q_INVOKABLE void submitPin(const QString &pin);
+    // Stops the transfer (and tells the receiver, if it accepted already).
+    Q_INVOKABLE void cancel();
+
+signals:
+    void stateChanged();
+    void progressChanged();
+
+private slots:
+    void onPrepareFinished();
+    void onUploadProgress(qint64 sent, qint64 total);
+    void onUploadFinished();
+    void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
+    void onTick();
+    void onOnlineChanged();
+
+private:
+    struct OutFile {
+        QString id;
+        QString fileName;   // relative path for folder contents
+        QString path;       // empty for text
+        QString text;
+        qint64 size;
+        QString token;      // from prepare-upload
+    };
+
+    QUrl url(const QString &route) const;
+    void postPrepare();
+    void startNextUpload();
+    void finish(const QString &state, const QString &error = QString());
+    void setState(const QString &state, const QString &error = QString());
+    void sendCancel();
+    void dropReply();
+    static QString mimeType(const QString &fileName);
+    static QString isoTime(const QDateTime &t);
+
+    DeviceInfo *m_device;
+    PeerModel *m_peers;
+    SelectionModel *m_selection;
+    NetworkManager *m_network;
+    QNetworkAccessManager *m_nam;
+
+    QString m_state;
+    QString m_errorText;
+    Peer m_peer;
+    QList<OutFile> m_files;   // everything offered
+    QList<OutFile> m_queue;   // the accepted ones
+    QString m_pin;
+    bool m_pinSent;
+    QString m_sessionId;
+    QNetworkReply *m_reply;   // the one request in flight (owns the upload's QFile)
+    int m_current;            // index into m_queue, -1 before the first
+    qint64 m_bytesTotal;
+    qint64 m_bytesDone;       // completed files
+    qint64 m_currentSent;     // of the current file
+    QDateTime m_sendingSince;
+    QDateTime m_lastActivity; // last upload progress (stall detection)
+    int m_remainingSeconds;
+    QTimer m_tick;
+};
+
+#endif // SENDER_H

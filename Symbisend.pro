@@ -56,7 +56,8 @@ SOURCES += main.cpp \
     src/discovery.cpp \
     src/settings.cpp \
     src/picker.cpp \
-    src/selectionmodel.cpp
+    src/selectionmodel.cpp \
+    src/sender.cpp
 
 HEADERS += \
     src/logger.h \
@@ -69,7 +70,8 @@ HEADERS += \
     src/discovery.h \
     src/settings.h \
     src/picker.h \
-    src/selectionmodel.h
+    src/selectionmodel.h \
+    src/sender.h
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

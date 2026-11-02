@@ -41,7 +41,7 @@ Properties: `count` (int).  Methods: `clear()`.
   60 s, and once right away if the last refresh is older than 15 s. Never connects by
   itself: does nothing while offline. Devices missing from two refreshes in a row are
   dropped, so set it while the device list is visible (the Send page binds it to
-  `visible && Qt.application.active`); without it the list is only pruned on manual
+  `visible && Qt.application.active && !sender.busy`); without it the list is only pruned on manual
   refreshes.
 - `announce()`, `scan()` — the two halves separately
 - `startServer()`, `stopServer()`, `restartServer()` — the HTTP server and the multicast
@@ -102,7 +102,7 @@ Native pickers. Their results go straight into `selection` (connected in `main.c
   "Clipboard is empty"); returns at once, the note hides by itself
 
 ## `selection` — what will be sent (ListView model)
-Everything picked on the Send page, in the order added. Nothing is sent yet.
+Everything picked on the Send page, in the order added; `sender.send()` sends it.
 
 | role           | type   | example                                         |
 |----------------|--------|-------------------------------------------------|
@@ -126,6 +126,37 @@ Methods:
 - `setText(index, text)` — edit a text item; `""` removes it
 - `remove(index)`, `clear()`
 - `formatSize(bytes)` → string, e.g. `formatSize(1300000)` = `1.2 MB`
+
+## `sender` — sending the selection to a device
+One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by
+one, streamed from disk). The selection is copied when sending starts and stays selected
+afterwards.
+- `send(fingerprint)` → bool — starts sending `selection` to that peer. Returns false
+  (state `failed`, `errorText` says why) when already busy, nothing is selected, offline,
+  the peer is unknown, or it speaks protocol v1 (not supported yet).
+- `cancel()` — stops a running transfer and tells the receiver.
+- `submitPin(pin)` — in state `pin`: asks again with that PIN.
+- `state` (string):
+  - `idle` — nothing sent yet
+  - `waiting` — the receiver's user hasn't accepted yet (no timeout; with quick save this
+    passes at once)
+  - `pin` — the receiver wants a PIN; `errorText` is `Wrong PIN` after a wrong one
+  - `sending` — uploading
+  - `finished` — everything accepted was sent (also: a text message was shown, or the
+    receiver accepted nothing)
+  - `declined` — the receiver said no
+  - `failed` — see `errorText` (busy receiver, connection lost, no progress for 60 s, ...)
+  - `cancelled` — by us
+- `busy` (bool) — `waiting`, `pin` or `sending`
+- `peerAlias`, `errorText` (string)
+- `fileCount` (int, accepted files), `fileIndex` (int, 1-based, the file being uploaded),
+  `fileName` (string, its relative path; `Text` for a text message)
+- `bytesSent`, `bytesTotal` (number, bytes of the accepted files), `progress` (0–1)
+- `remainingSeconds` (int) — estimated time left from the average speed so far; -1 while
+  unknown (before 2 s of sending). Progress properties update every 0.5 s.
+- Signals `stateChanged()`, `progressChanged()`.
+
+The Send page calls `send()` when a device is tapped and opens `SendDialog.qml`.
 
 ## `logger` — debug log
 - `model` — list model of the last ~300 lines, oldest first, role `line` (string). Use it

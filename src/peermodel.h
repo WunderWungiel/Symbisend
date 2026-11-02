@@ -70,6 +70,8 @@ public:
     // All data of one peer for the device details page, or an empty map when
     // the fingerprint is unknown. See docs/qml-api.md.
     Q_INVOKABLE QVariantMap peer(const QString &fingerprint) const;
+    // Copies the peer into *out; false if the fingerprint is unknown.
+    bool find(const QString &fingerprint, Peer *out) const;
 
 signals:
     void countChanged();

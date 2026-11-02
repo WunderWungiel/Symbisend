@@ -12,6 +12,7 @@
 #include "src/settings.h"
 #include "src/picker.h"
 #include "src/selectionmodel.h"
+#include "src/sender.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -34,6 +35,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     PeerModel peers;
     NetworkManager network;
     Discovery discovery(&device, &peers, &network);
+    Sender sender(&device, &peers, &selection, &network);
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
     QmlApplicationViewer viewer;
@@ -46,6 +48,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("settings"), &settings);
     ctx->setContextProperty(QLatin1String("picker"), &picker);
     ctx->setContextProperty(QLatin1String("selection"), &selection);
+    ctx->setContextProperty(QLatin1String("sender"), &sender);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));

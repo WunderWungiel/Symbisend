@@ -134,6 +134,15 @@ void PeerModel::removeOlderThan(const QDateTime &cutoff)
     }
 }
 
+bool PeerModel::find(const QString &fingerprint, Peer *out) const
+{
+    const int row = indexOf(fingerprint);
+    if (row < 0)
+        return false;
+    *out = m_peers.at(row);
+    return true;
+}
+
 void PeerModel::clear()
 {
     if (m_peers.isEmpty())

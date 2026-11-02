@@ -27,7 +27,20 @@ Page {
     Binding {
         target: discovery
         property: "autoRefresh"
-        value: page.visible && Qt.application.active
+        // No scans while sending: they would compete with the upload.
+        value: page.visible && Qt.application.active && !sender.busy
+    }
+
+    // Tap on a device: send the selection to it.
+    function sendTo(fingerprint) {
+        if (selection.count === 0) {
+            picker.showInfo("Select something to send first")
+            return
+        }
+        if (sender.send(fingerprint))
+            sendDialog.open()
+        else if (sender.errorText != "")
+            picker.showInfo(sender.errorText)
     }
 
     Connections {
@@ -124,6 +137,7 @@ Page {
             protocol: model.protocol
             system: model.deviceModel
             onInfoClicked: page.deviceInfoRequested(model.fingerprint)
+            onClicked: page.sendTo(model.fingerprint)
         }
     }
 
@@ -191,6 +205,11 @@ Page {
                 onClicked: picker.pickFolder()
             }
         }
+    }
+
+    SendDialog {
+        id: sendDialog
+        platformInverted: page.platformInverted
     }
 
     SendTextDialog {
