@@ -7,16 +7,17 @@ Page {
     id: page
 
     // Everything above this y belongs to the logo + name block.
-    property int contentBottom: linkCard.y
+    property int contentBottom: linkButton.y
 
     Column {
         id: identity
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: platformStyle.paddingLarge
 
-        // Centered on the page; pushed up only if it would run into whatever
-        // sits below it (contentBottom).
-        y: Math.max(0, Math.min(Math.round((page.height - height) / 2),
+        // Centered slightly above the middle of the page (at 42% of its
+        // height); pushed further up only if it would run into whatever sits
+        // below it (contentBottom).
+        y: Math.max(0, Math.min(Math.round(page.height * 0.42 - height / 2),
                                 page.contentBottom - platformStyle.paddingLarge - height))
 
         Image {
@@ -49,11 +50,11 @@ Page {
     // "Receive via link" - not implemented yet (LocalSend's web share
     // receive). Tapping it only logs.
     Button {
-        id: linkCard
+        id: linkButton
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
-            bottomMargin: 2 * platformStyle.paddingLarge
+            bottomMargin: Math.max(2 * platformStyle.paddingLarge, Math.round(page.height * 0.1))
         }
         text: "Receive via link"
         onClicked: console.log("ReceivePage: Receive via link is not implemented yet")
