@@ -22,6 +22,15 @@ ListItem {
                      texts.height + 2 * platformStyle.paddingMedium,
                      controlRow.height + 2 * platformStyle.paddingMedium)
 
+    // ListItemText replaces its colour binding with a fixed value the first
+    // time the row is pressed, so a later theme change would leave the text
+    // in the old theme's colour (unreadable). Re-apply it on theme changes.
+    function textColor(isSubTitle) {
+        if (root.platformInverted)
+            return isSubTitle ? platformStyle.colorNormalMidInverted : platformStyle.colorNormalLightInverted
+        return isSubTitle ? platformStyle.colorNormalMid : platformStyle.colorNormalLight
+    }
+
     Column {
         id: texts
         anchors {
@@ -36,6 +45,7 @@ ListItem {
             mode: root.mode
             role: "Title"
             platformInverted: root.platformInverted
+            onPlatformInvertedChanged: color = root.textColor(false)
             elide: Text.ElideRight
             text: root.title
         }
@@ -45,6 +55,7 @@ ListItem {
             mode: root.mode
             role: "SubTitle"
             platformInverted: root.platformInverted
+            onPlatformInvertedChanged: color = root.textColor(true)
             elide: Text.ElideRight
             text: root.subTitle
         }
