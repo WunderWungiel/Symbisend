@@ -32,6 +32,11 @@ CommonDialog {
     }
     buttonTexts: [busy ? "Cancel" : "Close"]
 
+    // Size the dialog from the column explicitly: the default sizing reads
+    // childrenRect, which lags behind when rows appear (state changes,
+    // file name wrapping) and the last row ended up under the button.
+    height: privateTitleHeight + contentColumn.height + privateButtonsHeight
+
     onButtonClicked: {
         if (busy)
             sender.cancel()
@@ -41,6 +46,7 @@ CommonDialog {
     onSendStateChanged: if (sendState == "pin") pinField.text = ""
 
     content: Column {
+        id: contentColumn
         width: root.platformContentMaximumWidth
         spacing: platformStyle.paddingMedium
 
