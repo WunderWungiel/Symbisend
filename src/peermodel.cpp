@@ -55,8 +55,12 @@ Peer PeerModel::peerFromMap(const QVariantMap &map, const QString &ip,
     p.ip = ip;
     p.port = map.contains(QLatin1String("port"))
             ? map.value(QLatin1String("port")).toInt() : fallbackPort;
-    p.protocol = map.value(QLatin1String("protocol"), fallbackProtocol).toString();
+    // v1 messages carry neither "version" nor "protocol"/"port"; v1 is plain HTTP only.
     p.version = map.value(QLatin1String("version"), QLatin1String("1.0")).toString();
+    if (map.contains(QLatin1String("protocol")))
+        p.protocol = map.value(QLatin1String("protocol")).toString();
+    else
+        p.protocol = isV1(p.version) ? QString::fromLatin1("http") : fallbackProtocol;
     p.deviceModel = map.value(QLatin1String("deviceModel")).toString();
     p.deviceType = map.value(QLatin1String("deviceType")).toString();
     p.source = source;

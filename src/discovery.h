@@ -67,11 +67,13 @@ private:
         QString ip;
         int port;
         QString protocol;
+        bool v1;           // peer speaks protocol v1: use /api/localsend/v1/register
         QDateTime deadline;
         bool timedOut;
     };
 
-    void startJob(JobKind kind, const QString &ip, int port, const QString &protocol);
+    void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
+                  bool v1 = false);
     void pumpScanQueue();
     void finishScanIfDone();
     void replyViaUdp();

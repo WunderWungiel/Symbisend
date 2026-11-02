@@ -126,8 +126,10 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
     bool isAnnounce = map.value(QLatin1String("announce")).toBool()
             || map.value(QLatin1String("announcement")).toBool();
     if (isAnnounce) {
-        qDebug() << "Discovery: announcement from" << peer.alias << peer.ip << "- replying";
-        startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol);
+        const bool v1 = PeerModel::isV1(peer.version);
+        qDebug() << "Discovery: announcement from" << peer.alias << peer.ip
+                 << "v" + peer.version << "- replying";
+        startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol, v1);
     }
 }
 
@@ -174,13 +176,15 @@ void Discovery::pumpScanQueue()
     finishScanIfDone();
 }
 
-void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol)
+void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol, bool v1)
 {
     QUrl url;
     url.setScheme(protocol);
     url.setHost(ip);
     url.setPort(port);
-    url.setPath(QLatin1String("/api/localsend/v2/register"));
+    // v1 answers its announcements via /v1/register (extra v2 fields are ignored).
+    url.setPath(v1 ? QLatin1String("/api/localsend/v1/register")
+                   : QLatin1String("/api/localsend/v2/register"));
 
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, QLatin1String("application/json"));
@@ -191,6 +195,7 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.ip = ip;
     job.port = port;
     job.protocol = protocol;
+    job.v1 = v1;
     job.deadline = QDateTime::currentDateTime().addMSecs(
                 kind == ScanJob ? kScanTimeoutMs : kAnnounceReplyTimeoutMs);
     job.timedOut = false;
@@ -257,7 +262,7 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         // Probably a LocalSend instance with encryption disabled: retry over HTTP.
         qDebug() << "Discovery:" << job.ip << "https failed (" << int(error) << reply->errorString()
                  << ") - trying http";
-        startJob(job.kind, job.ip, job.port, QLatin1String("http"));
+        startJob(job.kind, job.ip, job.port, QLatin1String("http"), job.v1);
         return;
     } else {
         qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error) << reply->errorString();
