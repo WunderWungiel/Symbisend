@@ -20,6 +20,9 @@ symbian:TARGET.UID3 = 0xE62546C5
 # Allow network access on Symbian
 symbian:TARGET.CAPABILITY += NetworkServices
 
+# Native Avkon folder picker (AknCommonDialogsDynMem)
+symbian:LIBS += -lcommondialogs
+
 symbian:TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
 
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
@@ -38,7 +41,7 @@ SOURCES += main.cpp \
     src/networkmanager.cpp \
     src/httpserver.cpp \
     src/multicastreceiver.cpp \
-    src/discovery.cpp
+    src/discovery.cpp \n    src/settings.cpp
 
 HEADERS += \
     src/logger.h \
@@ -48,7 +51,7 @@ HEADERS += \
     src/networkmanager.h \
     src/httpserver.h \
     src/multicastreceiver.h \
-    src/discovery.h
+    src/discovery.h \n    src/settings.h
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

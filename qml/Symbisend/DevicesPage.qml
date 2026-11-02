@@ -19,6 +19,10 @@ Page {
             text: "Log"
             onClicked: page.pageStack.push(Qt.resolvedUrl("LogPage.qml"))
         }
+        ToolButton {
+            iconSource: "toolbar-settings"
+            onClicked: page.pageStack.push(Qt.resolvedUrl("SettingsPage.qml"))
+        }
     }
 
     Column {

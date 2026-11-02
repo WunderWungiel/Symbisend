@@ -40,5 +40,15 @@ Properties: `count` (int).  Methods: `clear()`.
 ## `myDevice` — our identity as other devices see it
 - `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`
 
+## `settings` — app settings (persisted)
+- `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
+  received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else
+  `C:\Data\Symbisend`; recomputed each launch. If the chosen folder is unavailable
+  (card removed) the default is used, but the choice is kept.
+- `downloadFolderIsDefault` (bool) — false once the user picked a folder
+- `pickDownloadFolder()` — opens the native folder picker; returns immediately,
+  `downloadFolder` changes when the user confirms (nothing happens on cancel)
+- `resetDownloadFolder()` — back to the default
+
 ## `logger` — debug log
 - `logText` (string, last ~300 lines), `logFilePath` (string), `clear()`

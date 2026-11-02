@@ -9,6 +9,7 @@
 #include "src/peermodel.h"
 #include "src/networkmanager.h"
 #include "src/discovery.h"
+#include "src/settings.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -21,6 +22,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "Symbisend starting, Qt runtime" << qVersion() << "(built with" << QT_VERSION_STR << ")";
     qDebug() << "Log file:" << Logger::instance()->logFilePath();
 
+    Settings settings;
     DeviceInfo device;
     PeerModel peers;
     NetworkManager network;
@@ -34,6 +36,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("peerModel"), &peers);
     ctx->setContextProperty(QLatin1String("network"), &network);
     ctx->setContextProperty(QLatin1String("discovery"), &discovery);
+    ctx->setContextProperty(QLatin1String("settings"), &settings);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));
