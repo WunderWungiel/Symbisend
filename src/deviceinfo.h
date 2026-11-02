@@ -1,0 +1,44 @@
+#ifndef DEVICEINFO_H
+#define DEVICEINFO_H
+
+#include <QObject>
+#include <QVariantMap>
+
+// Our own LocalSend identity (alias, fingerprint, ...), persisted in QSettings.
+class DeviceInfo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString alias READ alias WRITE setAlias NOTIFY aliasChanged)
+    Q_PROPERTY(QString fingerprint READ fingerprint CONSTANT)
+    Q_PROPERTY(QString deviceModel READ deviceModel CONSTANT)
+    Q_PROPERTY(int port READ port CONSTANT)
+
+public:
+    static const int DefaultPort = 53317;
+    static const char *ProtocolVersion;
+
+    explicit DeviceInfo(QObject *parent = 0);
+
+    QString alias() const { return m_alias; }
+    void setAlias(const QString &alias);
+    QString fingerprint() const { return m_fingerprint; }
+    QString deviceModel() const { return m_deviceModel; }
+    QString deviceType() const { return QLatin1String("mobile"); }
+    int port() const { return DefaultPort; }
+    QString protocol() const { return QLatin1String("http"); }
+
+    // Body for /register requests and responses (v2).
+    QVariantMap toRegisterMap() const;
+    // Body for UDP multicast announcements / replies.
+    QVariantMap toAnnounceMap(bool announce) const;
+
+signals:
+    void aliasChanged();
+
+private:
+    QString m_alias;
+    QString m_fingerprint;
+    QString m_deviceModel;
+};
+
+#endif // DEVICEINFO_H

@@ -1,0 +1,45 @@
+#include <QtGui/QApplication>
+#include <QtDeclarative/QDeclarativeContext>
+#include <QDateTime>
+#include <QDebug>
+
+#include "qmlapplicationviewer.h"
+#include "src/logger.h"
+#include "src/deviceinfo.h"
+#include "src/peermodel.h"
+#include "src/networkmanager.h"
+#include "src/discovery.h"
+
+Q_DECL_EXPORT int main(int argc, char *argv[])
+{
+    QScopedPointer<QApplication> app(createApplication(argc, argv));
+    app->setOrganizationName(QLatin1String("Symbisend"));
+    app->setApplicationName(QLatin1String("Symbisend"));
+    qsrand(QDateTime::currentDateTime().toTime_t() ^ quintptr(app.data()));
+
+    Logger::install();
+    qDebug() << "Symbisend starting, Qt runtime" << qVersion() << "(built with" << QT_VERSION_STR << ")";
+    qDebug() << "Log file:" << Logger::instance()->logFilePath();
+
+    DeviceInfo device;
+    PeerModel peers;
+    NetworkManager network;
+    Discovery discovery(&device, &peers, &network);
+    qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
+
+    QmlApplicationViewer viewer;
+    QDeclarativeContext *ctx = viewer.rootContext();
+    ctx->setContextProperty(QLatin1String("logger"), Logger::instance());
+    ctx->setContextProperty(QLatin1String("myDevice"), &device);
+    ctx->setContextProperty(QLatin1String("peerModel"), &peers);
+    ctx->setContextProperty(QLatin1String("network"), &network);
+    ctx->setContextProperty(QLatin1String("discovery"), &discovery);
+
+    viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
+    viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));
+    viewer.showExpanded();
+
+    network.connectNetwork();
+
+    return app->exec();
+}
