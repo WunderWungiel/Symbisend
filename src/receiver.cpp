@@ -10,6 +10,7 @@
 #include "historymodel.h"
 #include "json.h"
 #include "networkmanager.h"
+#include "sender.h"
 #include "settings.h"
 #include "webshare.h"
 
@@ -41,6 +42,7 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
       m_totalSize(0),
       m_isMessage(false),
       m_pendingRequest(0),
+      m_toGallery(false),
       m_remainingSeconds(-1)
 {
     m_server->addHandler(this);
@@ -81,7 +83,19 @@ QString Receiver::message() const
 
 QString Receiver::folder() const
 {
+    if (m_usedFolders.size() == 1)
+        return QDir::toNativeSeparators(m_usedFolders.first());
     return QDir::toNativeSeparators(m_folder.isEmpty() ? m_settings->downloadFolder() : m_folder);
+}
+
+QStringList Receiver::folders() const
+{
+    if (m_usedFolders.isEmpty())
+        return QStringList() << folder();
+    QStringList list;
+    foreach (const QString &f, m_usedFolders)
+        list.append(QDir::toNativeSeparators(f));
+    return list;
 }
 
 int Receiver::filesDone() const
@@ -301,6 +315,19 @@ HttpResponse Receiver::startSession()
                QString::fromLatin1("Can't create the folder %1").arg(QDir::toNativeSeparators(m_folder)));
         return HttpResponse::message(500, QLatin1String("Cannot save files"));
     }
+    // Like the official app: media go to the gallery unless the files come
+    // with folders (a sent folder stays together in the download folder).
+    m_toGallery = m_settings->saveMediaToGallery();
+    if (m_toGallery) {
+        foreach (const InFile &f, m_files) {
+            if (f.fileName.contains(QLatin1Char('/')) || f.fileName.contains(QLatin1Char('\\'))) {
+                qDebug() << "Receiver: files come with folders - not saving media to the gallery";
+                m_toGallery = false;
+                break;
+            }
+        }
+    }
+    m_usedFolders.clear();
     m_sessionId = randomToken();
     QVariantMap tokens;
     for (int i = 0; i < m_files.size(); ++i) {
@@ -311,7 +338,8 @@ HttpResponse Receiver::startSession()
     answer.insert(QLatin1String("sessionId"), m_sessionId);
     answer.insert(QLatin1String("files"), tokens);
 
-    qDebug() << "Receiver: session" << m_sessionId << "- saving to" << m_folder;
+    qDebug() << "Receiver: session" << m_sessionId << "- saving to" << m_folder
+             << (m_toGallery ? "(media to the gallery)" : "");
     m_receivingSince = m_lastActivity = QDateTime::currentDateTime();
     m_remainingSeconds = -1;
     setState(QLatin1String("receiving"));
@@ -366,7 +394,19 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
     if (f.status == Done || f.status == Receiving)
         return HttpResponse::message(409, QLatin1String("File already received"));
 
-    const QString path = uniquePath(m_folder + QLatin1Char('/') + safeRelativePath(f.fileName));
+    QString base = m_folder;
+    const int kind = m_toGallery ? mediaKind(f) : 0;
+    if (kind) {
+        const QString gallery = m_settings->mediaFolder(kind == 2);
+        if (QDir().mkpath(gallery))
+            base = gallery;
+        else
+            qWarning() << "Receiver: cannot create" << gallery << "- saving" << f.fileName
+                       << "to the download folder";
+    }
+    if (!m_usedFolders.contains(base))
+        m_usedFolders.append(base);
+    const QString path = uniquePath(base + QLatin1Char('/') + safeRelativePath(f.fileName));
     QDir().mkpath(QFileInfo(path).absolutePath());
     QFile *out = new QFile(path);
     if (!out->open(QIODevice::WriteOnly)) {
@@ -576,11 +616,31 @@ void Receiver::reset()
     m_isMessage = false;
     m_sessionId.clear();
     m_folder.clear();
+    m_toGallery = false;
+    m_usedFolders.clear();
     m_currentName.clear();
     m_remainingSeconds = -1;
 }
 
 // ---------------------------------------------------------------- helpers
+
+// 1 for an image, 2 for a video, 0 otherwise. Like the official app this
+// goes by the announced MIME type ("image/...", "video/..."); a missing or
+// generic type ("application/octet-stream", e.g. from some browsers) is
+// guessed from the file name.
+int Receiver::mediaKind(const InFile &f)
+{
+    QString type = f.fileType.trimmed().toLower();
+    if (type == QLatin1String("image") || type == QLatin1String("video")) // protocol v1
+        type += QLatin1Char('/');
+    if (type.isEmpty() || type == QLatin1String("application/octet-stream"))
+        type = Sender::mimeType(f.fileName);
+    if (type.startsWith(QLatin1String("image/")))
+        return 1;
+    if (type.startsWith(QLatin1String("video/")))
+        return 2;
+    return 0;
+}
 
 // A path below the download folder made from the sender's file name: no
 // "..", no absolute paths, no characters Symbian/Windows file names can't

@@ -218,7 +218,7 @@ Dialog {
                             + " from " + receiver.peerAlias
                             // Own line for the folder: Qt allows a line break after
                             // "\", so "F:\Symbisend" would otherwise split there.
-                            + "\nto " + receiver.folder
+                            + "\nto " + receiver.folders.join("\n")
                 return receiver.errorText
             }
         }

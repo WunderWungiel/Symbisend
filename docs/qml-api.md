@@ -91,7 +91,15 @@ Receive:
 - `pickDownloadFolder()` — opens the native folder picker; returns immediately,
   `downloadFolder` changes when the user confirms (nothing happens on cancel)
 - `resetDownloadFolder()` — back to the default
-- `saveMediaToGallery` (bool, default true) *(stored only)*
+- `saveMediaToGallery` (bool, default true) — received images and videos go to the
+  phone's media folders instead of `downloadFolder`, like the official app: images to
+  `Images\Symbisend`, videos to `Videos\Symbisend` on the download folder's drive
+  (`F:\Images\Symbisend`, `C:\Data\Videos\Symbisend`, ...), where the Photos app finds
+  them; on desktop the system pictures/movies folder + `Symbisend`. A file counts as media
+  by its announced `fileType` (`image/*`, `video/*`; a missing or
+  `application/octet-stream` type is guessed from the extension). Not applied when the
+  transfer contains folders (any `fileName` with `/`): then everything stays together in
+  `downloadFolder`. If a media folder can't be created, the file goes to `downloadFolder`.
 - `autoFinish` (bool, default false) — applied in QML (`ReceiveDialog.qml`): after files
   were received (`receiver.state` `finished`, not a message) the Close button counts down
   3 s and the dialog closes by itself, like the official app. Failed/cancelled transfers
@@ -181,7 +189,8 @@ The Send page calls `send()` when a device is tapped and opens `SendDialog.qml`.
 ## `receiver` — receiving from other devices
 Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port
 53317, while `discovery.serverRunning`). One session at a time; while busy, other senders
-are told we're busy. Files go to `settings.downloadFolder`, folders inside it are created
+are told we're busy. Files go to `settings.downloadFolder` (images/videos to the media
+folders with `settings.saveMediaToGallery`), folders inside it are created
 as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one becomes
 `a (1).jpg`. Unfinished files are deleted.
 - `state` (string):
@@ -202,7 +211,10 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `isMessage` (bool), `message` (string) — the offer is a single text message (like the
   official app: one `text/*` file with a preview). It is shown, not saved: accepting it
   goes straight to `finished`.
-- `folder` (string, native separators) — where the files go / went
+- `folder` (string, native separators) — where the files go / went: the download folder,
+  or the media folder if every saved file went to the same one
+- `folders` (string list, native separators) — every folder files were saved to (e.g.
+  `F:\Images\Symbisend` and `F:\Symbisend` for photos plus a PDF); final once `finished`
 - `filesDone` (int, files saved), `fileName` (string, the file coming in now)
 - `bytesReceived`, `bytesTotal` (number), `progress` (0–1), `remainingSeconds` (int, -1
   while unknown). Progress properties update every 0.5 s.

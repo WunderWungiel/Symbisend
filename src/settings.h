@@ -73,6 +73,12 @@ public:
     QString downloadFolder() const { return m_downloadFolder; }
     QString downloadFolderNative() const;
     bool downloadFolderIsDefault() const { return m_custom.isEmpty(); }
+    // Where received images (video false) or videos go when
+    // saveMediaToGallery is on, Qt-style. Symbian: the phone's standard media
+    // folders on the download folder's drive ("F:/Images/Symbisend",
+    // "E:/Videos/Symbisend", "C:/Data/Images/Symbisend"), which the Photos app
+    // indexes like the camera's. Elsewhere: the system pictures/movies folder.
+    QString mediaFolder(bool video) const;
 
     // Opens the native folder picker (asynchronously: returns at once, the
     // property changes when the user confirms a folder).

@@ -8,6 +8,7 @@
 #ifdef Q_OS_SYMBIAN
 #include <AknCommonDialogsDynMem.h>
 #else
+#include <QDesktopServices>
 #include <QFileDialog>
 #endif
 
@@ -182,6 +183,25 @@ QString Settings::defaultDownloadFolder()
     return QLatin1String("C:/Data/Symbisend");
 #else
     return QDir::homePath() + QLatin1String("/Downloads/Symbisend");
+#endif
+}
+
+QString Settings::mediaFolder(bool video) const
+{
+    const QString sub = QLatin1String(video ? "Videos/Symbisend" : "Images/Symbisend");
+#ifdef Q_OS_SYMBIAN
+    // Same drive as the download folder; on C: user files live under C:/Data.
+    QString drive = m_downloadFolder.left(2).toUpper();
+    if (drive.size() != 2 || drive.at(1) != QLatin1Char(':'))
+        drive = QLatin1String("C:");
+    if (drive == QLatin1String("C:"))
+        drive = QLatin1String("C:/Data");
+    return drive + QLatin1Char('/') + sub;
+#else
+    const QString base = QDesktopServices::storageLocation(
+                video ? QDesktopServices::MoviesLocation : QDesktopServices::PicturesLocation);
+    return base.isEmpty() ? m_downloadFolder + QLatin1Char('/') + sub
+                          : QDir::fromNativeSeparators(base) + QLatin1String("/Symbisend");
 #endif
 }
 

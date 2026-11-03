@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QHostAddress>
 #include <QList>
+#include <QStringList>
 #include <QTimer>
 #include <QVariantList>
 
@@ -57,7 +58,11 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(QString message READ message NOTIFY stateChanged)
 
     // Receiving.
+    // Where the files go: settings.downloadFolder, or the gallery folder if
+    // every file saved so far went there. folders: every folder used (the
+    // download folder and/or settings' media folders), final once finished.
     Q_PROPERTY(QString folder READ folder NOTIFY stateChanged)
+    Q_PROPERTY(QStringList folders READ folders NOTIFY stateChanged)
     Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
     Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
     Q_PROPERTY(qreal bytesReceived READ bytesReceived NOTIFY progressChanged)
@@ -86,6 +91,7 @@ public:
     bool isMessage() const { return m_isMessage; }
     QString message() const;
     QString folder() const;
+    QStringList folders() const;
     int filesDone() const;
     QString fileName() const { return m_currentName; }
     qreal bytesReceived() const;
@@ -143,6 +149,7 @@ private:
     void finish(const QString &state, const QString &error = QString());
     void setState(const QString &state, const QString &error = QString());
     void reset();
+    static int mediaKind(const InFile &f);
     static QString safeRelativePath(const QString &fileName);
     static QString uniquePath(const QString &path);
     static QString randomToken();
@@ -168,6 +175,8 @@ private:
     quint32 m_pendingRequest;         // the prepare-upload waiting for the user, 0 if none
     QString m_sessionId;
     QString m_folder;                 // Qt separators, set when accepted
+    bool m_toGallery;                 // images/videos go to settings' media folders
+    QStringList m_usedFolders;        // base folders files were saved to, Qt separators
     QHash<quint32, Upload> m_uploads; // running uploads by request id
     QString m_currentName;
     QDateTime m_receivingSince;

@@ -50,6 +50,10 @@ class Sender : public QObject
     Q_PROPERTY(int remainingSeconds READ remainingSeconds NOTIFY progressChanged)
 
 public:
+    // MIME type from the file name's extension, "application/octet-stream"
+    // if unknown.
+    static QString mimeType(const QString &fileName);
+
     Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
            NetworkManager *network, QObject *parent = 0);
 
@@ -103,7 +107,6 @@ private:
     void setState(const QString &state, const QString &error = QString());
     void sendCancel();
     void dropReply();
-    static QString mimeType(const QString &fileName);
     static QString isoTime(const QDateTime &t);
 
     DeviceInfo *m_device;
