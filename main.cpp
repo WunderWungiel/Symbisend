@@ -15,6 +15,7 @@
 #include "src/sender.h"
 #include "src/receiver.h"
 #include "src/webshare.h"
+#include "src/tlsrandom.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -26,6 +27,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     Logger::install();
     qDebug() << "Symbisend starting, Qt runtime" << qVersion() << "(built with" << QT_VERSION_STR << ")";
     qDebug() << "Log file:" << Logger::instance()->logFilePath();
+    TlsRandom::init();
 
     Settings settings;
     Picker picker;

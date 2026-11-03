@@ -53,6 +53,9 @@ symbian:CONFIG += qt-components
 
 INCLUDEPATH += src
 
+# mbedTLS, compiled in (no system-wide TLS library needed)
+include(external/mbedtls/mbedtls.pri)
+
 SOURCES += main.cpp \
     src/logger.cpp \
     src/json.cpp \
@@ -68,7 +71,8 @@ SOURCES += main.cpp \
     src/sender.cpp \
     src/receiver.cpp \
     src/webshare.cpp \
-    src/clientidentity.cpp
+    src/clientidentity.cpp \
+    src/tlsrandom.cpp
 
 HEADERS += \
     src/logger.h \
@@ -85,7 +89,8 @@ HEADERS += \
     src/sender.h \
     src/receiver.h \
     src/webshare.h \
-    src/clientidentity.h
+    src/clientidentity.h \
+    src/tlsrandom.h
 
 # Pages served to web browsers (official LocalSend assets, see web/README.md)
 RESOURCES += web.qrc

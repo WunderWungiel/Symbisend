@@ -1,0 +1,3 @@
+[submodule "external/mbedtls/upstream"]
+	path = external/mbedtls/upstream
+	url = https://github.com/shinovon/mbedtls-symbian.git
