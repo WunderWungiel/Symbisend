@@ -1,5 +1,5 @@
 @echo off
-:: Builds Symbisend for Symbian^3/Anna/Belle (Qt 4.7.4 SDK, GCCE) and produces a self-signed .sis.
+:: Builds Symbisend for Symbian^3/Anna/Belle (Qt 4.7.4 SDK, GCCE) and produces an unsigned .sis.
 :: In-source build: Qt 4.7 + sbsv2 does not support shadow builds.
 :: Usage: build_symbian.bat [release|debug]   (default: release)
 setlocal
@@ -12,10 +12,14 @@ pushd "%PROJDIR%"
 
 qmake.exe Symbisend.pro -r -spec symbian-sbsv2 "CONFIG+=%CONF%" || goto :fail
 make %CONF%-gcce -w || goto :fail
-:: -d: keep the developer-certificate capabilities (ReadDeviceData, ... for the
-:: gallery picker) instead of stripping them; the self-signed .sis then needs a
-:: phone that accepts unsigned packages.
-make sis QT_SIS_TARGET=%CONF%-gcce QT_SIS_OPTIONS=-d || goto :fail
+:: -o: create only the unsigned package. The app needs developer-certificate
+:: capabilities (ReadDeviceData, ... for the gallery picker) that a self-signed
+:: certificate cannot grant, so don't sign; the phone accepts unsigned packages.
+:: (-o also skips the automatic capability patching.)
+if exist Symbisend.sis del Symbisend.sis
+make sis QT_SIS_TARGET=%CONF%-gcce QT_SIS_OPTIONS=-o || goto :fail
+:: createpackage names it Symbisend_unsigned.sis; keep the usual name.
+move /y Symbisend_unsigned.sis Symbisend.sis >nul || goto :fail
 
 echo.
 echo === Build OK ===

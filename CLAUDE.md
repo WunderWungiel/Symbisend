@@ -13,7 +13,7 @@ build_symbian.bat            :: release (default)
 build_symbian.bat debug
 ```
 
-- Uses the Qt SDK at `C:\QtSDK\Symbian\SDKs\Symbian3Qt474` (Qt **4.7.4**, GCCE, `symbian-sbsv2` spec) and produces a self-signed `Symbisend.sis` in the repo root. The app needs developer-certificate capabilities (`ReadDeviceData`, … for the gallery picker), so the script passes `QT_SIS_OPTIONS=-d` to keep them; the "self-signing viability failed" warning is expected, and the phone accepts unsigned packages.
+- Uses the Qt SDK at `C:\QtSDK\Symbian\SDKs\Symbian3Qt474` (Qt **4.7.4**, GCCE, `symbian-sbsv2` spec) and produces an **unsigned** `Symbisend.sis` in the repo root. The app needs developer-certificate capabilities (`ReadDeviceData`, … for the gallery picker) that self-signing can't grant, so the script passes `QT_SIS_OPTIONS=-o` (unsigned only, no capability patching) and renames `Symbisend_unsigned.sis`; the phone accepts unsigned packages.
 - **In-source build only** — Qt 4.7 + sbsv2 does not support shadow builds. qmake/sbsv2 output (`Makefile`, `bld.inf`, `*.mmp`, `*.pkg`, `*.rss`, `moc_*.cpp`, `*.sis`, …) lands in the repo root and is gitignored.
 - When adding source files, add them to `SOURCES`/`HEADERS` in `Symbisend.pro`.
 - There are no tests or linters. Verification happens on a real device (Nokia 808, Belle, Qt 4.8 runtime): hand over the `.sis` and say what to look for on the in-app Log page / log file (`E:/Symbisend/`, falling back to `F:` or `C:/Data`).
