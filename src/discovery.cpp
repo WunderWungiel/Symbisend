@@ -356,12 +356,23 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
         qWarning() << "Discovery: invalid multicast datagram from" << sender.toString();
         return;
     }
-    if (map.value(QLatin1String("fingerprint")).toString() == m_device->fingerprint())
+    const QString fingerprint = map.value(QLatin1String("fingerprint")).toString();
+    if (fingerprint == m_device->fingerprint())
         return; // our own announcement looped back
 
-    Peer peer = PeerModel::peerFromMap(map, sender.toString(), m_device->port(),
+    // The announcement carries no IP. If the socket couldn't tell us the
+    // sender, use the address we already know for this device, if any.
+    QString ip = sender.isNull() ? QString() : sender.toString();
+    if (ip.isEmpty()) {
+        Peer known;
+        if (m_peers->find(fingerprint, &known))
+            ip = known.ip;
+    }
+
+    Peer peer = PeerModel::peerFromMap(map, ip, m_device->port(),
                                        QLatin1String("https"), QLatin1String("multicast"));
-    m_peers->upsert(peer);
+    if (!ip.isEmpty())
+        m_peers->upsert(peer);
 
     bool isAnnounce = map.value(QLatin1String("announce")).toBool()
             || map.value(QLatin1String("announcement")).toBool();
@@ -379,6 +390,14 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
         }
         m_recentReplies.insert(peer.fingerprint, now);
 
+        if (ip.isEmpty()) {
+            // The spec's fallback: answer by multicast; the peer registers
+            // us from the address it sees.
+            qDebug() << "Discovery: announcement from" << peer.alias
+                     << "with unknown address - replying via multicast";
+            replyViaUdp();
+            return;
+        }
         const bool v1 = PeerModel::isV1(peer.version);
         qDebug() << "Discovery: announcement from" << peer.alias << peer.ip
                  << "v" + peer.version << "- replying";

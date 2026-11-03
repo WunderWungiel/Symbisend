@@ -10,6 +10,9 @@
 #  include <netinet/in.h>
 #  include <arpa/inet.h>
 #  include <fcntl.h>
+#  include <sys/ioctl.h>
+#  include <sys/select.h>
+#  include <sys/time.h>
 #  include <unistd.h>
 #  include <errno.h>
 #  include <string.h>
@@ -19,7 +22,8 @@ static const int kPollIntervalMs = 250;
 static const int kMaxDatagram = 8192;
 
 MulticastReceiver::MulticastReceiver(QObject *parent)
-    : QObject(parent), m_fd(-1), m_badReadLogged(false)
+    : QObject(parent), m_fd(-1), m_badReadLogged(false), m_oddAddressLogged(false),
+      m_selectErrorLogged(false)
 {
     m_pollTimer.setInterval(kPollIntervalMs);
     connect(&m_pollTimer, SIGNAL(timeout()), this, SLOT(poll()));
@@ -84,12 +88,22 @@ bool MulticastReceiver::start(const QHostAddress &group, quint16 port, const QHo
         }
     }
 
+    // Non-blocking is only a second line of defence: poll() checks with
+    // select() before every read. On the 808 Open C refuses both ways
+    // (fcntl errno 13, ioctl errno 78), so this is logged at debug level.
     int flags = ::fcntl(fd, F_GETFL, 0);
-    if (flags < 0 || ::fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0)
-        qWarning() << "Multicast: could not set O_NONBLOCK, errno" << errno;
+    if (flags < 0 || ::fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
+        int err = errno;
+        int nonBlocking = 1;
+        if (::ioctl(fd, FIONBIO, &nonBlocking) != 0)
+            qDebug() << "Multicast: socket stays blocking (errno" << err << "/" << errno
+                     << "), reads are guarded by select()";
+    }
 
     m_fd = fd;
     m_badReadLogged = false;
+    m_oddAddressLogged = false;
+    m_selectErrorLogged = false;
     m_pollTimer.start();
     qDebug() << "Multicast: joined" << group.toString() << "port" << port;
     return true;
@@ -112,6 +126,27 @@ void MulticastReceiver::poll()
     // Bounded per tick. m_fd is re-checked because a slot connected to
     // datagramReceived() may have called stop().
     for (int i = 0; i < 32 && m_fd >= 0; ++i) {
+        // Open C refuses both O_NONBLOCK and FIONBIO (see start()), so the
+        // socket may be blocking: only read when select() says a datagram
+        // is waiting, or recvfrom() could freeze the UI thread.
+        fd_set readable;
+        FD_ZERO(&readable);
+        FD_SET(m_fd, &readable);
+        struct timeval noWait;
+        noWait.tv_sec = 0;
+        noWait.tv_usec = 0;
+        int ready = ::select(m_fd + 1, &readable, 0, 0, &noWait);
+        if (ready < 0) {
+            if (errno != EINTR && !m_selectErrorLogged) {
+                m_selectErrorLogged = true;
+                qWarning() << "Multicast: select failed, errno" << errno
+                           << "- further ones not logged";
+            }
+            return;
+        }
+        if (ready == 0 || !FD_ISSET(m_fd, &readable))
+            return; // nothing waiting
+
         struct sockaddr_in from;
         memset(&from, 0, sizeof(from));
         socklen_t fromLen = sizeof(from);
@@ -123,19 +158,35 @@ void MulticastReceiver::poll()
             return;
         }
         // When the WLAN link goes down, Open C's recvfrom() "succeeds" with
-        // no datagram behind it: empty data and/or no IPv4 sender. Drop
-        // those; going offline stops the receiver shortly after.
-        if (n == 0 || fromLen < socklen_t(sizeof(from)) || from.sin_family != AF_INET) {
+        // no datagram behind it. Drop those; going offline stops the
+        // receiver shortly after.
+        if (n == 0) {
             if (!m_badReadLogged) {
                 m_badReadLogged = true;
-                qWarning() << "Multicast: bogus read (" << int(n) << "bytes, address length"
-                           << int(fromLen) << "family" << int(from.sin_family)
-                           << ") - link down? Ignoring further ones";
+                qWarning() << "Multicast: empty read - link down? Ignoring further ones";
             }
             return;
         }
-        QHostAddress sender(ntohl(from.sin_addr.s_addr));
-        emit datagramReceived(QByteArray(buffer, int(n)), sender, ntohs(from.sin_port));
+
+        // Open C's sockaddr_in is 28 bytes (AF_INET is 0x0800 there), but
+        // recvfrom() reports only the 8 it fills: family, port, address. So
+        // don't compare the length with sizeof(from); it used to drop every
+        // datagram. Never drop a datagram over its address either: Discovery
+        // copes with a null (unknown) sender.
+        QHostAddress sender;
+        quint16 senderPort = 0;
+        const socklen_t minLen = socklen_t(reinterpret_cast<const char *>(&from.sin_addr)
+                                           - reinterpret_cast<const char *>(&from)
+                                           + sizeof(from.sin_addr));
+        if (from.sin_family == AF_INET && fromLen >= minLen && from.sin_addr.s_addr != 0) {
+            sender = QHostAddress(ntohl(from.sin_addr.s_addr));
+            senderPort = ntohs(from.sin_port);
+        } else if (!m_oddAddressLogged) {
+            m_oddAddressLogged = true;
+            qWarning() << "Multicast: unusable sender address (family" << int(from.sin_family)
+                       << ", length" << int(fromLen) << ") - further ones not logged";
+        }
+        emit datagramReceived(QByteArray(buffer, int(n)), sender, senderPort);
     }
 }
 
