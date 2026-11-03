@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>qml/Symbisend/AboutPage.qml</file>
         <file>qml/Symbisend/DeviceDetailsPage.qml</file>
+        <file>qml/Symbisend/HistoryPage.qml</file>
         <file>qml/Symbisend/LogPage.qml</file>
         <file>qml/Symbisend/PeerItem.qml</file>
         <file>qml/Symbisend/ReceiveDialog.qml</file>
@@ -36,8 +37,12 @@
         <file>qml/Symbisend/images/edit.svg</file>
         <file>qml/Symbisend/images/favorite-border-inverted.svg</file>
         <file>qml/Symbisend/images/favorite-border.svg</file>
+        <file>qml/Symbisend/images/history-inverted.svg</file>
+        <file>qml/Symbisend/images/history.svg</file>
         <file>qml/Symbisend/images/info-inverted.svg</file>
         <file>qml/Symbisend/images/info.svg</file>
+        <file>qml/Symbisend/images/more-vert-inverted.svg</file>
+        <file>qml/Symbisend/images/more-vert.svg</file>
         <file>qml/Symbisend/images/send-file-inverted.svg</file>
         <file>qml/Symbisend/images/send-file.svg</file>
         <file>qml/Symbisend/images/send-folder-inverted.svg</file>

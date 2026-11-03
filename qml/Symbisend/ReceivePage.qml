@@ -11,6 +11,8 @@ Page {
 
     // "Receive via link" was tapped (main.qml opens ReceiveLinkPage).
     signal linkRequested
+    // The History button was tapped (main.qml opens HistoryPage).
+    signal historyRequested
 
     // Everything above this y belongs to the logo + name block.
     property int contentBottom: linkButton.y
@@ -63,6 +65,19 @@ Page {
             font.pixelSize: platformStyle.fontSizeLarge
             text: myDevice.alias
         }
+    }
+
+    // History of received files (HistoryPage), top right.
+    ToolButton {
+        id: historyButton
+        platformInverted: page.platformInverted
+        anchors {
+            top: parent.top; topMargin: 4
+            right: parent.right; rightMargin: platformStyle.paddingMedium
+        }
+        iconSource: page.platformInverted ? "images/history-inverted.svg" : "images/history.svg"
+        text: "History"
+        onClicked: page.historyRequested()
     }
 
     // "Receive via link": browsers upload to us (ReceiveLinkPage).

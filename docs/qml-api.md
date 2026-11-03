@@ -213,6 +213,22 @@ Network:
 
 `main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`.
 
+## `history` — received files and messages (ListView model)
+Newest first, at most 200 entries (older ones are dropped), persisted in `QSettings`
+(`history/entries`). `receiver` adds every file once it is saved and every accepted text
+message.
+- `count` (int)
+- Roles:
+  - `kind` (string) — `image`, `video`, `file` (from the extension) or `text`
+  - `fileName` (string) — name of the saved file (`a (1).jpg` if it was renamed); empty
+    for text
+  - `path` (string, native separators) — the saved file; empty for text
+  - `text` (string) — text messages only
+  - `size` (number, bytes; UTF-8 length for text), `sizeText` (string, `1.2 MB`)
+  - `time` (date), `timeText` (string, the phone's short date + time format)
+  - `senderAlias` (string) — the device that sent it
+- Signal `countChanged()`.
+
 ## `webShare` — "Receive via link" (browsers send files to us)
 Like the official app: while active, opening `url` in any browser on the network shows
 LocalSend's own upload page (`web/upload.html`, copied unchanged from the official app),

@@ -53,7 +53,7 @@ QString SelectionModel::totalSizeText() const
     return formatSize(qreal(m_totalSize));
 }
 
-QString SelectionModel::formatSize(qreal bytes) const
+QString SelectionModel::formatBytes(qreal bytes)
 {
     // Same steps as LocalSend's byte formatting: 1024-based, one decimal.
     if (bytes < 1024)

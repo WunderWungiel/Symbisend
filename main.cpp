@@ -13,6 +13,7 @@
 #include "src/settings.h"
 #include "src/picker.h"
 #include "src/selectionmodel.h"
+#include "src/historymodel.h"
 #include "src/sender.h"
 #include "src/receiver.h"
 #include "src/webshare.h"
@@ -38,6 +39,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QObject::connect(&picker, SIGNAL(folderPicked(QString)), &selection, SLOT(addFolder(QString)));
     DeviceInfo device;
     PeerModel peers;
+    HistoryModel history;
     NetworkManager network;
     // Also picks http/https for the server (settings.encryption, webShare.encrypted).
     Discovery discovery(&device, &peers, &network, &settings);
@@ -45,7 +47,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Serves / and /i18n.json (the browser pages) on discovery's HTTP server.
     WebShare webShare(&discovery, &settings, &network, device.port());
     // Serves prepare-upload/upload/cancel on discovery's HTTP server.
-    Receiver receiver(discovery.httpServer(), &settings, &network, &webShare);
+    Receiver receiver(discovery.httpServer(), &settings, &network, &webShare, &history);
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
     QmlApplicationViewer viewer;
@@ -61,6 +63,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("sender"), &sender);
     ctx->setContextProperty(QLatin1String("receiver"), &receiver);
     ctx->setContextProperty(QLatin1String("webShare"), &webShare);
+    ctx->setContextProperty(QLatin1String("history"), &history);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));

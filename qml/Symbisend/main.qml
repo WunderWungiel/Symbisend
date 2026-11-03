@@ -29,6 +29,7 @@ PageStackWindow {
             ReceivePage {
                 id: receiveTab
                 onLinkRequested: mainPage.pageStack.push(Qt.resolvedUrl("ReceiveLinkPage.qml"))
+                onHistoryRequested: mainPage.pageStack.push(Qt.resolvedUrl("HistoryPage.qml"))
             }
             SendPage {
                 id: sendTab

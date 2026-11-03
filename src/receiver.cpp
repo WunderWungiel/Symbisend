@@ -7,6 +7,7 @@
 #include <QStringList>
 #include <QUuid>
 
+#include "historymodel.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
@@ -32,9 +33,10 @@ static QString route(const HttpRequest &request)
 }
 
 Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
-                   WebShare *webShare, QObject *parent)
+                   WebShare *webShare, HistoryModel *history, QObject *parent)
     : QObject(parent),
       m_server(server), m_settings(settings), m_network(network), m_webShare(webShare),
+      m_history(history),
       m_state(QLatin1String("idle")),
       m_totalSize(0),
       m_isMessage(false),
@@ -287,6 +289,8 @@ HttpResponse Receiver::startSession()
 {
     if (m_isMessage) {
         // Nothing to upload: the message is all there is.
+        if (m_history)
+            m_history->addText(message(), m_peerAlias);
         finish(QLatin1String("finished"));
         return HttpResponse(204);
     }
@@ -422,6 +426,8 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
         return HttpResponse::message(400, QLatin1String("Incomplete file"));
     }
     closeUpload(request.id, true);
+    if (f.status == Done && m_history)
+        m_history->addFile(f.savedPath, f.size, m_peerAlias);
     qDebug() << "Receiver: saved" << QDir::toNativeSeparators(f.savedPath)
              << "(" << filesDone() << "of" << m_files.size() << ")";
     m_lastActivity = QDateTime::currentDateTime();

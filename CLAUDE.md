@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Symbisend is a [LocalSend](https://localsend.org) (protocol v2) client for Symbian^3/Anna/Belle phones, written in Qt 4 C++ with a Qt Quick 1.1 / Symbian Qt Quick Components UI. A MeeGo Harmattan port is planned (`qtc_packaging/debian_harmattan/`, `Symbisend_harmattan.desktop`), so C++ should stay platform-neutral and keep Symbian-specific code behind `#ifdef Q_OS_SYMBIAN`. Currently implemented: device discovery, choosing what to send, sending (`Sender`), receiving (`Receiver`), and "Receive via link" (`WebShare`: browsers upload through the official LocalSend page in `web/`). Not yet: "Share via link".
+Symbisend is a [LocalSend](https://localsend.org) (protocol v2) client for Symbian^3/Anna/Belle phones, written in Qt 4 C++ with a Qt Quick 1.1 / Symbian Qt Quick Components UI. A MeeGo Harmattan port is planned (`qtc_packaging/debian_harmattan/`, `Symbisend_harmattan.desktop`), so C++ should stay platform-neutral and keep Symbian-specific code behind `#ifdef Q_OS_SYMBIAN`. Currently implemented: device discovery, choosing what to send, sending (`Sender`), receiving (`Receiver`, with a history of received items in `HistoryModel`), and "Receive via link" (`WebShare`: browsers upload through the official LocalSend page in `web/`). Not yet: "Share via link".
 
 ## Build
 
@@ -30,7 +30,7 @@ build_symbian.bat debug
 
 ## Architecture
 
-`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`, `settings`, `picker`, `selection`, `sender`, `receiver`, `webShare`. `Picker` (native file/gallery/folder pickers) feeds `SelectionModel` (what will be sent) through signals connected in `main.cpp`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI. The QML and its images are compiled into the binary through `qml.qrc` (loaded from `qrc:/qml/Symbisend/main.qml`; `DEPLOYMENTFOLDERS` is empty), so **every new file under `qml/Symbisend/` must be added to `qml.qrc`**, or it is missing at runtime (black screen / "is not a type").
+`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`, `settings`, `picker`, `selection`, `sender`, `receiver`, `webShare`, `history`. `Picker` (native file/gallery/folder pickers) feeds `SelectionModel` (what will be sent) through signals connected in `main.cpp`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI. The QML and its images are compiled into the binary through `qml.qrc` (loaded from `qrc:/qml/Symbisend/main.qml`; `DEPLOYMENTFOLDERS` is empty), so **every new file under `qml/Symbisend/` must be added to `qml.qrc`**, or it is missing at runtime (black screen / "is not a type").
 
 Flow:
 1. `NetworkManager` opens a `QNetworkSession` (Symbian access point), finds the local IPv4 address/prefix, and emits `onlineChanged`.

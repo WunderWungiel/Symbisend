@@ -12,6 +12,7 @@
 #include "httpserver.h"
 
 class QFile;
+class HistoryModel;
 class NetworkManager;
 class Settings;
 class WebShare;
@@ -65,8 +66,9 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(int remainingSeconds READ remainingSeconds NOTIFY progressChanged)
 
 public:
+    // history (may be 0) gets every saved file and accepted message.
     Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
-             WebShare *webShare, QObject *parent = 0);
+             WebShare *webShare, HistoryModel *history, QObject *parent = 0);
     ~Receiver();
 
     QString state() const { return m_state; }
@@ -149,6 +151,7 @@ private:
     Settings *m_settings;
     NetworkManager *m_network;
     WebShare *m_webShare;
+    HistoryModel *m_history;
 
     QString m_state;
     QString m_errorText;

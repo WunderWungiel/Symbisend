@@ -67,6 +67,7 @@ SOURCES += main.cpp \
     src/settings.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
+    src/historymodel.cpp \
     src/sender.cpp \
     src/receiver.cpp \
     src/webshare.cpp \
@@ -86,6 +87,7 @@ HEADERS += \
     src/settings.h \
     src/picker.h \
     src/selectionmodel.h \
+    src/historymodel.h \
     src/sender.h \
     src/receiver.h \
     src/webshare.h \

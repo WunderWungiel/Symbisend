@@ -54,7 +54,10 @@ public:
     const QList<SelectionItem> &items() const { return m_items; }
 
     // "1.2 MB", like LocalSend.
-    Q_INVOKABLE QString formatSize(qreal bytes) const;
+    Q_INVOKABLE QString formatSize(qreal bytes) const { return formatBytes(bytes); }
+    static QString formatBytes(qreal bytes);
+    // "image", "video" or "file", from the file name's extension.
+    static QString kindForFile(const QString &fileName);
 
 public slots:
     // Files picked with the file or gallery picker. Already selected paths and
@@ -82,7 +85,6 @@ private:
     bool containsPath(const QString &path) const;
     // Key for m_pathKeys: drive letters and names are case-insensitive.
     static QString pathKey(const QString &path) { return path.toLower(); }
-    static QString kindForFile(const QString &fileName);
 
     QList<SelectionItem> m_items;
     QSet<QString> m_pathKeys;   // pathKey() of every file item, for containsPath()
