@@ -20,7 +20,7 @@ Rectangle {
     property real verticalPadding: platformStyle.paddingMedium
 
     height: column.height + 2 * verticalPadding
-    radius: 3
+    radius: 8
     color: platformInverted ? "#14000000" : "#1affffff"
 
     Column {
