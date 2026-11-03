@@ -90,6 +90,9 @@ Receive:
 - `saveMediaToGallery` (bool, default true) *(stored only)*
 - `autoFinish` (bool, default false) *(stored only)*
 - `saveToHistory` (bool, default true) *(stored only)*
+- `receiveViaLinkAutoAccept` (bool, default false) — while `webShare.receiveActive`, every
+  file offer is accepted at once (like `quickSave`; messages are still shown). The
+  official app's "Automatically accept requests" on its Receive via link page.
 
 ## `picker` — what to send (Send page buttons)
 Native pickers. Their results go straight into `selection` (connected in `main.cpp`).
@@ -195,6 +198,24 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - Signals `stateChanged()`, `progressChanged()`.
 
 `main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`.
+
+## `webShare` — "Receive via link" (browsers send files to us)
+Like the official app: while active, opening `url` in any browser on the network shows
+LocalSend's own upload page (`web/upload.html`, copied unchanged from the official app),
+which sends the chosen files through the normal `prepare-upload`/`upload` endpoints, so
+they arrive through `receiver` as a sender with `peerAlias` `Web Browser`,
+`peerDeviceType` `web`. While inactive, `/` answers with LocalSend's 403 page.
+- `receiveActive` (bool, read-only)
+- `url` (string) — `http://<our IP>:53317`, or `""` while offline. Plain http (our server
+  has no TLS; the official app also uses http for links by default).
+- `pin` (string, read/write, `""` = none) — while active, required from every sender
+  (browsers ask for it), replacing `settings.pin`. `startReceive()` sets it to
+  `settings.pin` if `settings.requirePin`, else `""`; changing it doesn't touch the
+  settings. `stop()` clears it.
+- `startReceive()`, `stop()` — `ReceiveLinkPage.qml` calls them when it opens / closes.
+- Signals `receiveActiveChanged()`, `urlChanged()`, `pinChanged()`.
+- Also see `settings.receiveViaLinkAutoAccept`. Not implemented yet: "Share via link"
+  (browsers downloading from us).
 
 ## `logger` — debug log
 - `model` — list model of the last ~300 lines, oldest first, role `line` (string). Use it

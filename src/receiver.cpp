@@ -10,6 +10,7 @@
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
+#include "webshare.h"
 
 static const int kTickMs = 500;
 // No upload running and none started for this long: the sender is gone.
@@ -30,9 +31,10 @@ static QString route(const HttpRequest &request)
     return request.path.startsWith(prefix) ? request.path.mid(prefix.size()) : QString();
 }
 
-Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *network, QObject *parent)
+Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
+                   WebShare *webShare, QObject *parent)
     : QObject(parent),
-      m_server(server), m_settings(settings), m_network(network),
+      m_server(server), m_settings(settings), m_network(network), m_webShare(webShare),
       m_state(QLatin1String("idle")),
       m_totalSize(0),
       m_isMessage(false),
@@ -181,9 +183,14 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
     }
 
     const QString ip = request.remoteAddress.toString();
-    if (m_settings->requirePin()) {
+    // While the link is active its PIN applies to everyone (official app:
+    // the web share PIN replaces the receive PIN).
+    const bool viaLink = m_webShare && m_webShare->isReceiveActive();
+    const QString requiredPin = viaLink ? m_webShare->pin()
+                                        : (m_settings->requirePin() ? m_settings->pin() : QString());
+    if (!requiredPin.isEmpty()) {
         const QString pin = request.queryValue(QLatin1String("pin"));
-        if (pin != m_settings->pin()) {
+        if (pin != requiredPin) {
             int wrong = m_wrongPins.value(ip);
             if (!pin.isEmpty())
                 m_wrongPins.insert(ip, ++wrong);
@@ -242,6 +249,10 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
 
     if (m_settings->quickSave() && !m_isMessage) {
         qDebug() << "Receiver: quick save - accepting at once";
+        return startSession();
+    }
+    if (viaLink && m_settings->receiveViaLinkAutoAccept() && !m_isMessage) {
+        qDebug() << "Receiver: receive via link with auto accept - accepting at once";
         return startSession();
     }
     m_pendingRequest = request.id;

@@ -26,7 +26,10 @@ PageStackWindow {
             anchors { top: parent.top; left: parent.left; right: parent.right; bottom: tabBar.top }
             currentTab: receiveTab
 
-            ReceivePage { id: receiveTab }
+            ReceivePage {
+                id: receiveTab
+                onLinkRequested: mainPage.pageStack.push(Qt.resolvedUrl("ReceiveLinkPage.qml"))
+            }
             SendPage {
                 id: sendTab
                 onDeviceInfoRequested: mainPage.pageStack.push(Qt.resolvedUrl("DeviceDetailsPage.qml"),

@@ -10,7 +10,8 @@
 // it is the default for the drives present right now (F: > E: > C:/Data),
 // recomputed on every launch so inserting a memory card is picked up.
 //
-// quickSave, requirePin/pin and downloadFolder are used by Receiver; the
+// quickSave, requirePin/pin, downloadFolder and receiveViaLinkAutoAccept are
+// used by Receiver; the
 // other receive settings are stored only for now.
 class Settings : public QObject
 {
@@ -30,6 +31,8 @@ class Settings : public QObject
     Q_PROPERTY(bool saveMediaToGallery READ saveMediaToGallery WRITE setSaveMediaToGallery NOTIFY saveMediaToGalleryChanged)
     Q_PROPERTY(bool autoFinish READ autoFinish WRITE setAutoFinish NOTIFY autoFinishChanged)
     Q_PROPERTY(bool saveToHistory READ saveToHistory WRITE setSaveToHistory NOTIFY saveToHistoryChanged)
+    // While "Receive via link" is on, accept every request at once.
+    Q_PROPERTY(bool receiveViaLinkAutoAccept READ receiveViaLinkAutoAccept WRITE setReceiveViaLinkAutoAccept NOTIFY receiveViaLinkAutoAcceptChanged)
 
 public:
     explicit Settings(QObject *parent = 0);
@@ -55,6 +58,8 @@ public:
     void setAutoFinish(bool on);
     bool saveToHistory() const { return m_saveToHistory; }
     void setSaveToHistory(bool on);
+    bool receiveViaLinkAutoAccept() const { return m_receiveViaLinkAutoAccept; }
+    void setReceiveViaLinkAutoAccept(bool on);
 
     // Qt-style path ("F:/Symbisend") for C++ code that writes files.
     QString downloadFolder() const { return m_downloadFolder; }
@@ -77,6 +82,7 @@ signals:
     void saveMediaToGalleryChanged();
     void autoFinishChanged();
     void saveToHistoryChanged();
+    void receiveViaLinkAutoAcceptChanged();
 
 private slots:
     void runFolderPicker();
@@ -97,6 +103,7 @@ private:
     bool m_saveMediaToGallery;
     bool m_autoFinish;
     bool m_saveToHistory;
+    bool m_receiveViaLinkAutoAccept;
 
     QString m_custom;          // user's choice, "" = use default
     QString m_downloadFolder;  // effective folder

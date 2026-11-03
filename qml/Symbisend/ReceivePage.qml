@@ -9,6 +9,9 @@ Page {
     // Light theme = the inverted Symbian style; every component follows it.
     property bool platformInverted: settings.theme == "light"
 
+    // "Receive via link" was tapped (main.qml opens ReceiveLinkPage).
+    signal linkRequested
+
     // Everything above this y belongs to the logo + name block.
     property int contentBottom: linkButton.y
 
@@ -62,8 +65,7 @@ Page {
         }
     }
 
-    // "Receive via link" - not implemented yet (LocalSend's web share
-    // receive). Tapping it only logs.
+    // "Receive via link": browsers upload to us (ReceiveLinkPage).
     Button {
         id: linkButton
         platformInverted: page.platformInverted
@@ -73,6 +75,6 @@ Page {
             bottomMargin: Math.max(2 * platformStyle.paddingLarge, Math.round(page.height * 0.1))
         }
         text: "Receive via link"
-        onClicked: console.log("ReceivePage: Receive via link is not implemented yet")
+        onClicked: page.linkRequested()
     }
 }

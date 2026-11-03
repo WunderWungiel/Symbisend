@@ -14,6 +14,7 @@
 class QFile;
 class NetworkManager;
 class Settings;
+class WebShare;
 
 // Receives files from other devices (LocalSend v2 upload API, our side):
 //  1. POST /prepare-upload: the sender's info and file list. Answered once
@@ -23,7 +24,10 @@ class Settings;
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
 //     download folder.
 //  3. POST /cancel?sessionId when the sender gives up.
-// One session at a time. See docs/qml-api.md.
+// One session at a time. While "Receive via link" is on (WebShare), browsers
+// send through the same endpoints; the link's PIN replaces the settings PIN
+// and settings.receiveViaLinkAutoAccept works like quick save, as in the
+// official app. See docs/qml-api.md.
 class Receiver : public QObject, public HttpHandler
 {
     Q_OBJECT
@@ -62,7 +66,7 @@ class Receiver : public QObject, public HttpHandler
 
 public:
     Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
-             QObject *parent = 0);
+             WebShare *webShare, QObject *parent = 0);
     ~Receiver();
 
     QString state() const { return m_state; }
@@ -144,6 +148,7 @@ private:
     HttpServer *m_server;
     Settings *m_settings;
     NetworkManager *m_network;
+    WebShare *m_webShare;
 
     QString m_state;
     QString m_errorText;

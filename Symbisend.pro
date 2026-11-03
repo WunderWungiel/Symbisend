@@ -67,6 +67,7 @@ SOURCES += main.cpp \
     src/selectionmodel.cpp \
     src/sender.cpp \
     src/receiver.cpp \
+    src/webshare.cpp \
     src/clientidentity.cpp
 
 HEADERS += \
@@ -83,7 +84,11 @@ HEADERS += \
     src/selectionmodel.h \
     src/sender.h \
     src/receiver.h \
+    src/webshare.h \
     src/clientidentity.h
+
+# Pages served to web browsers (official LocalSend assets, see web/README.md)
+RESOURCES += web.qrc
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

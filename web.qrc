@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>web/upload.html</file>
+        <file>web/error-403.html</file>
+    </qresource>
+</RCC>

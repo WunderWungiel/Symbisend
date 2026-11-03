@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Symbisend is a [LocalSend](https://localsend.org) (protocol v2) client for Symbian^3/Anna/Belle phones, written in Qt 4 C++ with a Qt Quick 1.1 / Symbian Qt Quick Components UI. A MeeGo Harmattan port is planned (`qtc_packaging/debian_harmattan/`, `Symbisend_harmattan.desktop`), so C++ should stay platform-neutral and keep Symbian-specific code behind `#ifdef Q_OS_SYMBIAN`. Currently implemented: device discovery, choosing what to send, sending (`Sender`), and receiving (`Receiver`; not "receive via link").
+Symbisend is a [LocalSend](https://localsend.org) (protocol v2) client for Symbian^3/Anna/Belle phones, written in Qt 4 C++ with a Qt Quick 1.1 / Symbian Qt Quick Components UI. A MeeGo Harmattan port is planned (`qtc_packaging/debian_harmattan/`, `Symbisend_harmattan.desktop`), so C++ should stay platform-neutral and keep Symbian-specific code behind `#ifdef Q_OS_SYMBIAN`. Currently implemented: device discovery, choosing what to send, sending (`Sender`), receiving (`Receiver`), and "Receive via link" (`WebShare`: browsers upload through the official LocalSend page in `web/`). Not yet: "Share via link".
 
 ## Build
 
@@ -28,7 +28,7 @@ build_symbian.bat debug
 
 ## Architecture
 
-`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`, `settings`, `picker`, `selection`, `sender`, `receiver`. `Picker` (native file/gallery/folder pickers) feeds `SelectionModel` (what will be sent) through signals connected in `main.cpp`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI.
+`main.cpp` builds the object graph and exposes it to QML as context properties: `logger`, `myDevice`, `peerModel`, `network`, `discovery`, `settings`, `picker`, `selection`, `sender`, `receiver`, `webShare`. `Picker` (native file/gallery/folder pickers) feeds `SelectionModel` (what will be sent) through signals connected in `main.cpp`. **`docs/qml-api.md` is the contract between C++ and QML** — update it whenever a context property, Q_PROPERTY, role or Q_INVOKABLE changes. The QML in `qml/Symbisend/` is a deliberately bare functional placeholder; the user designs the real UI.
 
 Flow:
 1. `NetworkManager` opens a `QNetworkSession` (Symbian access point), finds the local IPv4 address/prefix, and emits `onlineChanged`.
@@ -40,7 +40,7 @@ Flow:
 4. `DeviceInfo` holds our identity (alias, fingerprint persisted in `QSettings`) and builds register/announce JSON bodies.
 5. `Logger` installs a Qt message handler: every `qDebug`/`qWarning` goes to the log file and the last ~300 lines are shown on the Log page. Log liberally with a `Component:` prefix — it is the main debugging channel on device.
 
-`HttpServer` is a minimal HTTP/1.1 server: one request per connection, `Content-Length` or chunked bodies. Several `HttpHandler`s share it (`Discovery`: `/register`, `/info`; `Receiver`: `/prepare-upload`, `/upload`, `/cancel`). A handler may answer later (return status 0, then `HttpServer::respond()`; prepare-upload waits for the user) and may take the body as a stream (`streamsBody()`/`bodyData()`; uploads go straight to disk). Buffered bodies are capped at 1 MB.
+`HttpServer` is a minimal HTTP/1.1 server: one request per connection, `Content-Length` or chunked bodies. Several `HttpHandler`s share it (`Discovery`: `/register`, `/info`; `Receiver`: `/prepare-upload`, `/upload`, `/cancel`; `WebShare`: `/`, `/i18n.json`). The browser pages in `web/` are the official LocalSend assets, unchanged, compiled in via `web.qrc` — keep them identical to upstream (see `web/README.md`). A handler may answer later (return status 0, then `HttpServer::respond()`; prepare-upload waits for the user) and may take the body as a stream (`streamsBody()`/`bodyData()`; uploads go straight to disk). Buffered bodies are capped at 1 MB.
 
 ### Icons
 
