@@ -37,6 +37,14 @@ symbian:TARGET.CAPABILITY += ReadUserData WriteUserData UserEnvironment LocalSer
 
 symbian:TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
 
+# TLS client certificate (src/clientidentity.cpp), created with OpenSSL's
+# libcrypto, the library Qt's SSL uses too (Open C on Symbian).
+symbian|unix {
+    DEFINES += SYMBISEND_CLIENT_CERT
+    symbian:LIBS += -llibcrypto
+    else:LIBS += -lcrypto
+}
+
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
 CONFIG += qdeclarative-boostable
 
@@ -57,7 +65,8 @@ SOURCES += main.cpp \
     src/settings.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
-    src/sender.cpp
+    src/sender.cpp \
+    src/clientidentity.cpp
 
 HEADERS += \
     src/logger.h \
@@ -71,7 +80,8 @@ HEADERS += \
     src/settings.h \
     src/picker.h \
     src/selectionmodel.h \
-    src/sender.h
+    src/sender.h \
+    src/clientidentity.h
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

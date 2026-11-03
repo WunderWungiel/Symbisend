@@ -6,6 +6,8 @@
 #include <QSettings>
 #include <QStringList>
 
+#include "clientidentity.h"
+
 const char *DeviceInfo::ProtocolVersion = "2.0";
 
 static QString randomAlias()
@@ -49,6 +51,14 @@ DeviceInfo::DeviceInfo(QObject *parent)
         settings.setValue(QLatin1String("identity/alias"), m_alias);
     }
     m_fingerprint = settings.value(QLatin1String("identity/fingerprint")).toString();
+    // With TLS the fingerprint must be the hash of our client certificate
+    // (the official server checks it), so that one wins.
+    const QString certFingerprint = ClientIdentity::install();
+    if (!certFingerprint.isEmpty() && certFingerprint != m_fingerprint) {
+        qDebug() << "DeviceInfo: fingerprint is now the client certificate's";
+        m_fingerprint = certFingerprint;
+        settings.setValue(QLatin1String("identity/fingerprint"), m_fingerprint);
+    }
     if (m_fingerprint.isEmpty()) {
         m_fingerprint = randomFingerprint();
         settings.setValue(QLatin1String("identity/fingerprint"), m_fingerprint);

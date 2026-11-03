@@ -23,7 +23,8 @@ build_symbian.bat debug
 - No `QJsonDocument` — use `src/json.h` (`Json::parseObject` / `Json::serialize`), which goes through `QScriptEngine`'s `JSON` object (hence `QT += script`).
 - No `QUdpSocket::joinMulticastGroup()` — `MulticastReceiver` uses a raw Open C / POSIX BSD socket polled by a timer (disabled on Windows via `SYMBISEND_NO_RAW_MULTICAST`). `NetworkManager::setDefaultInterfaceForOpenC()` calls `setdefaultif()` so that Open C uses the same access point as the Qt `QNetworkSession`.
 - Old C++ (pre-C++11): no `auto`, lambdas, `nullptr`, or new-style `connect`; use `SIGNAL()/SLOT()`.
-- TLS: a system-level patch on the phone provides TLS 1.2/1.3. Do not add TLS code; only `ignoreSslErrors` for LocalSend's self-signed certificates. Our own server speaks plain `http`.
+- TLS: a system-level patch on the phone provides TLS 1.2/1.3. Do not add TLS protocol code; only `ignoreSslErrors` for LocalSend's self-signed certificates. Our own server speaks plain `http`.
+- The official LocalSend server requires **mutual TLS** and ignores a `/register` whose fingerprint isn't the SHA-256 of the client certificate. `src/clientidentity.cpp` creates our certificate once with libcrypto (Open C, SDK headers 0.9.8g — use only functions exported there) and installs it as the default `QSslConfiguration`; `DeviceInfo`'s fingerprint is that certificate's hash. A handshake failing with OpenSSL `reason(1116)` = alert `certificate_required`.
 
 ## Architecture
 

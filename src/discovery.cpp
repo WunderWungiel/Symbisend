@@ -409,8 +409,10 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
 
 void Discovery::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 {
-    Q_UNUSED(errors);
     // LocalSend uses self-signed certificates.
+    foreach (const QSslError &e, errors)
+        qDebug() << "Discovery: ignoring certificate error from" << reply->url().host()
+                 << int(e.error()) << e.errorString();
     reply->ignoreSslErrors();
 }
 

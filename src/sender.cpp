@@ -390,8 +390,10 @@ void Sender::onUploadFinished()
 
 void Sender::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 {
-    Q_UNUSED(errors);
     // LocalSend uses self-signed certificates.
+    foreach (const QSslError &e, errors)
+        qDebug() << "Sender: ignoring certificate error from" << reply->url().host()
+                 << int(e.error()) << e.errorString();
     reply->ignoreSslErrors();
 }
 
