@@ -84,6 +84,19 @@ const int DefaultIconSize = 48;
 
 namespace Verification {
 
+QString fingerprintOfDer(const QByteArray &der)
+{
+    if (der.isEmpty())
+        return QString();
+    unsigned char digest[32];
+    if (mbedtls_sha256(reinterpret_cast<const unsigned char *>(der.constData()),
+                       size_t(der.size()), digest, 0) != 0) {
+        qWarning() << "Verification: SHA-256 failed";
+        return QString();
+    }
+    return QString::fromLatin1(QByteArray(reinterpret_cast<const char *>(digest), 32).toHex()).toUpper();
+}
+
 QString combined(const QString &myFingerprint, const QString &peerFingerprint)
 {
     if (myFingerprint.isEmpty() || peerFingerprint.isEmpty())

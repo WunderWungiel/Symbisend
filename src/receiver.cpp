@@ -226,7 +226,10 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
     m_peerAlias = alias;
     m_peerDeviceModel = info.value(QLatin1String("deviceModel")).toString();
     m_peerDeviceType = info.value(QLatin1String("deviceType")).toString();
-    m_peerFingerprint = info.value(QLatin1String("fingerprint")).toString();
+    // Like the official app: over https the client certificate's hash, which
+    // can't be faked; the claimed one only without it (http, browsers).
+    m_peerFingerprint = !request.peerFingerprint.isEmpty()
+            ? request.peerFingerprint : info.value(QLatin1String("fingerprint")).toString();
     m_peerVersion = info.value(QLatin1String("version")).toString();
     m_peerHttps = info.value(QLatin1String("protocol")).toString() == QLatin1String("https");
     m_peerIp = request.remoteAddress;

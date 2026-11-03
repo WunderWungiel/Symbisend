@@ -24,6 +24,11 @@ struct HttpRequest
     QHash<QByteArray, QByteArray> headers; // lower-case names
     QByteArray body;   // empty for streamed bodies
     QHostAddress remoteAddress;
+    // https: the SHA-256 (uppercase hex) of the client's certificate, which
+    // TLS has proven it holds; over https this, not the fingerprint in a
+    // JSON body, is the client's identity. Empty for http, or for a client
+    // without a certificate (browsers, while not required).
+    QString peerFingerprint;
 
     // Percent-decoded value of a query parameter ("" if missing).
     QString queryValue(const QString &key) const;
@@ -79,7 +84,8 @@ public:
 // streamed ones (see HttpHandler::streamsBody()) of any size.
 //
 // Speaks plain http or https (TLS 1.2 via mbedTLS, see src/tlsserver.h, with
-// our certificate from ClientIdentity; no client certificate asked for).
+// our certificate from ClientIdentity; clients are asked for theirs, see
+// HttpRequest::peerFingerprint).
 // Handlers see no difference.
 class HttpServer : public QObject
 {
@@ -93,13 +99,17 @@ public:
 
     // If https is asked for but impossible (no certificate, or mbedTLS
     // rejects it), listens with plain http instead; isHttps() tells which.
-    bool listen(quint16 port, bool https);
+    // requireClientCert (https only): refuse clients without a certificate,
+    // like the official app unless browsers must connect.
+    bool listen(quint16 port, bool https, bool requireClientCert);
     // Stops listening and drops all client connections (unanswered requests
     // are reported to their handlers as aborted).
     void close();
     bool isListening() const { return m_server.isListening(); }
     // Whether the server (while listening) speaks https.
     bool isHttps() const { return !m_tlsConfig.isNull(); }
+    // Whether the running https server refuses clients without a certificate.
+    bool clientCertRequired() const { return isHttps() && m_requireClientCert; }
 
     // Answers a request whose handler returned status 0. Does nothing if the
     // request was answered already or its connection is gone.
@@ -130,6 +140,7 @@ private:
     QTcpServer m_server;
     // Set while listening with https; every connection gets a TlsSession on it.
     QSharedPointer<TlsServerConfig> m_tlsConfig;
+    bool m_requireClientCert;
     QList<HttpHandler *> m_handlers;
     QHash<QTcpSocket *, Connection *> m_bySocket;
     QHash<quint32, Connection *> m_byId;

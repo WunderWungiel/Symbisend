@@ -210,7 +210,9 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `busy` (bool) — `request` or `receiving`
 - `errorText` (string)
 - The sender: `peerAlias`, `peerDeviceModel` (system, e.g. `Windows`), `peerDeviceType`
-  (`mobile`, `desktop`, ...), `peerFingerprint`, `peerIp`, `peerVersion` (strings),
+  (`mobile`, `desktop`, ...), `peerFingerprint` (over https the SHA-256 of the sender's
+  client certificate, which TLS has proven; the fingerprint it claims only over http or
+  from a browser), `peerIp`, `peerVersion` (strings),
   `peerHttps` (bool: the sender announced https; the official app offers Verify only then)
 - The offer: `fileCount` (int), `totalSize` (number, bytes), `files` (list of
   `{ fileName, size, fileType }`; `fileName` may contain folders)

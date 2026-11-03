@@ -1,6 +1,7 @@
 #ifndef VERIFICATION_H
 #define VERIFICATION_H
 
+#include <QByteArray>
 #include <QDeclarativeImageProvider>
 #include <QString>
 #include <QStringList>
@@ -9,6 +10,10 @@
 // app/lib/util/fingerprint_alphabet.dart): both devices show the same 16
 // icons and the same text when the fingerprints they see are the real ones.
 namespace Verification {
+
+// A LocalSend fingerprint: the SHA-256 of a certificate in DER form, as
+// uppercase hex. Empty for empty input.
+QString fingerprintOfDer(const QByteArray &der);
 
 // Both fingerprints sorted and joined (Dart's [a, b]..sort() then join()).
 // This is the "Text" shown.

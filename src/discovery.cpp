@@ -9,6 +9,7 @@
 #include <QSslError>
 #endif
 
+#include "clientidentity.h"
 #include "deviceinfo.h"
 #include "json.h"
 #include "multicastreceiver.h"
@@ -134,7 +135,8 @@ void Discovery::applyEncryption()
     }
     // isHttps() differs from https also when https is impossible: restarting
     // then only tries again (and logs why it can't).
-    if (m_server->isHttps() == https)
+    // The client certificate is optional only while browsers connect.
+    if (m_server->isHttps() == https && (!https || m_server->clientCertRequired() == !m_linkActive))
         return;
     qDebug() << "Discovery: restarting the server as" << (https ? "https" : "http");
     startListening();
@@ -174,7 +176,7 @@ void Discovery::startListening()
 {
     m_server->close();
     const bool https = wantHttps();
-    if (m_server->listen(m_device->port(), https))
+    if (m_server->listen(m_device->port(), https, !m_linkActive))
         m_device->setHttps(m_server->isHttps());
     else
         m_device->setHttps(https);
@@ -374,40 +376,46 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
             ip = known.ip;
     }
 
-    Peer peer = PeerModel::peerFromMap(map, ip, m_device->port(),
-                                       QLatin1String("https"), QLatin1String("multicast"));
-    if (!ip.isEmpty())
-        m_peers->upsert(peer);
+    // Not stored yet: like the official app, a device that multicasts is
+    // stored only once our register request to it has succeeded - over https
+    // pinned to the fingerprint it multicast, so a device can't pose as
+    // another one by copying its fingerprint.
+    const Peer peer = PeerModel::peerFromMap(map, ip, m_device->port(),
+                                             QLatin1String("https"), QLatin1String("multicast"));
 
-    bool isAnnounce = map.value(QLatin1String("announce")).toBool()
+    const bool isAnnounce = map.value(QLatin1String("announce")).toBool()
             || map.value(QLatin1String("announcement")).toBool();
-    if (isAnnounce) {
-        const QDateTime now = QDateTime::currentDateTime();
-        // Forget old entries, then skip the repeated messages of one burst.
-        QMutableHashIterator<QString, QDateTime> it(m_recentReplies);
-        while (it.hasNext()) {
-            if (it.next().value().msecsTo(now) >= kAnnounceDedupWindowMs)
-                it.remove();
-        }
-        if (m_recentReplies.contains(peer.fingerprint)) {
-            qDebug() << "Discovery: repeated announcement from" << peer.alias << "- already answered";
-            return;
-        }
-        m_recentReplies.insert(peer.fingerprint, now);
+    const QDateTime now = QDateTime::currentDateTime();
+    // Forget old entries, then skip the repeated messages of one burst.
+    QMutableHashIterator<QString, QDateTime> it(m_recentReplies);
+    while (it.hasNext()) {
+        if (it.next().value().msecsTo(now) >= kAnnounceDedupWindowMs)
+            it.remove();
+    }
+    if (m_recentReplies.contains(peer.fingerprint)) {
+        qDebug() << "Discovery: repeated multicast from" << peer.alias << "- already answered";
+        return;
+    }
+    m_recentReplies.insert(peer.fingerprint, now);
 
-        if (ip.isEmpty()) {
+    if (ip.isEmpty()) {
+        if (isAnnounce) {
             // The spec's fallback: answer by multicast; the peer registers
             // us from the address it sees.
             qDebug() << "Discovery: announcement from" << peer.alias
                      << "with unknown address - replying via multicast";
             replyViaUdp();
-            return;
         }
-        const bool v1 = PeerModel::isV1(peer.version);
-        qDebug() << "Discovery: announcement from" << peer.alias << peer.ip
-                 << "v" + peer.version << "- replying";
-        startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol, v1);
+        return;
     }
+    const bool v1 = PeerModel::isV1(peer.version);
+    const bool https = peer.protocol == QLatin1String("https");
+    qDebug() << "Discovery:" << (isAnnounce ? "announcement" : "multicast answer") << "from"
+             << peer.alias << peer.ip << "v" + peer.version << "- registering";
+    // A UDP answer (not an announcement) is checked the same way, but a
+    // failure isn't answered by multicast again.
+    startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol, v1,
+             https ? peer.fingerprint : QString(), isAnnounce);
 }
 
 // ---------------------------------------------------------------- HTTP client
@@ -454,7 +462,8 @@ void Discovery::pumpScanQueue()
     finishScanIfDone();
 }
 
-void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol, bool v1)
+void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol, bool v1,
+                         const QString &expectedFingerprint, bool udpFallback)
 {
     QUrl url;
     url.setScheme(protocol);
@@ -477,6 +486,9 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.deadline = QDateTime::currentDateTime().addMSecs(
                 kind == ScanJob ? kScanTimeoutMs : kAnnounceReplyTimeoutMs);
     job.timedOut = false;
+    job.expectedFingerprint = expectedFingerprint;
+    job.udpFallback = udpFallback;
+    job.certRejected = false;
     m_jobs.insert(reply, job);
     if (kind == ScanJob)
         ++m_activeScanJobs;
@@ -486,10 +498,17 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
 
 void Discovery::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 {
-    // LocalSend uses self-signed certificates.
-    foreach (const QSslError &e, errors)
-        qDebug() << "Discovery: ignoring certificate error from" << reply->url().host()
-                 << int(e.error()) << e.errorString();
+    // LocalSend uses self-signed certificates: accept them if they are valid
+    // and, when answering a device, have the fingerprint it multicast.
+    QHash<QNetworkReply *, Job>::iterator job = m_jobs.find(reply);
+    const QString expected = job != m_jobs.end() ? job.value().expectedFingerprint : QString();
+    QString why;
+    if (!ClientIdentity::acceptPeer(errors, expected, &why)) {
+        qWarning() << "Discovery: certificate of" << reply->url().host() << "rejected:" << why;
+        if (job != m_jobs.end())
+            job.value().certRejected = true;
+        return; // the handshake fails, nothing is sent
+    }
     reply->ignoreSslErrors();
 }
 
@@ -589,11 +608,11 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
     reply->deleteLater();
     if (!m_jobs.contains(reply))
         return;
-    const Job job = m_jobs.take(reply);
+    Job job = m_jobs.take(reply);
     if (job.kind == ScanJob)
         --m_activeScanJobs;
 
-    const QNetworkReply::NetworkError error = reply->error();
+    QNetworkReply::NetworkError error = reply->error();
 
     // A failed session is reported as UnknownNetworkError, which on its own
     // may also be a TLS handshake with a plain-http server; the error text
@@ -611,9 +630,30 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         return;
     }
 
+    // Over https the peer's identity is its certificate's hash (the spec:
+    // the body's fingerprint is "ignored in HTTPS mode"). Checked again here,
+    // not only in onSslErrors(): a reused kept-alive connection has none.
+    QString certFingerprint;
+    if (error == QNetworkReply::NoError && job.protocol == QLatin1String("https")) {
+        certFingerprint = ClientIdentity::peerFingerprint(reply);
+        if (certFingerprint.isEmpty()) {
+            qWarning() << "Discovery:" << job.ip << "answered over https without a certificate - ignored";
+            job.certRejected = true;
+        } else if (!job.expectedFingerprint.isEmpty()
+                   && certFingerprint != job.expectedFingerprint.toUpper()) {
+            qWarning() << "Discovery:" << job.ip << "certificate fingerprint mismatch: expected"
+                       << job.expectedFingerprint.toUpper() << "got" << certFingerprint << "- ignored";
+            job.certRejected = true;
+        }
+        if (job.certRejected)
+            error = QNetworkReply::SslHandshakeFailedError;
+    }
+
     if (error == QNetworkReply::NoError) {
         bool ok = false;
         QVariantMap map = Json::parseObject(reply->readAll(), &ok);
+        if (ok && !certFingerprint.isEmpty())
+            map.insert(QLatin1String("fingerprint"), certFingerprint);
         if (ok && map.value(QLatin1String("fingerprint")).toString() != m_device->fingerprint()) {
             map.insert(QLatin1String("protocol"), job.protocol); // the one that actually worked
             map.insert(QLatin1String("port"), job.port);
@@ -623,6 +663,8 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         } else if (!ok) {
             qWarning() << "Discovery:" << job.ip << "answered with invalid JSON";
         }
+    } else if (job.certRejected) {
+        // Logged already; no http retry, no UDP answer.
     } else if (job.kind == ScanJob && job.protocol == QLatin1String("https")
                && !job.timedOut && looksLikePlainHttpServer(error)) {
         // Something answered, but not with TLS: probably a LocalSend instance
@@ -636,7 +678,8 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
                  << reply->errorString();
     }
 
-    if (job.kind == AnnounceReplyJob && error != QNetworkReply::NoError) {
+    if (job.kind == AnnounceReplyJob && job.udpFallback && !job.certRejected
+            && error != QNetworkReply::NoError) {
         // The announcing peer told us its protocol, so there is no point in
         // switching it (the official app does not either). Fall back to UDP.
         qDebug() << "Discovery: HTTP reply to" << job.ip << "failed, replying via UDP";
@@ -698,7 +741,12 @@ HttpResponse Discovery::handleRequest(const HttpRequest &request)
             response.body = "{\"message\":\"Invalid body\"}";
             return response;
         }
-        if (map.value(QLatin1String("fingerprint")).toString() != m_device->fingerprint()) {
+        const QString claimed = map.value(QLatin1String("fingerprint")).toString();
+        if (!request.peerFingerprint.isEmpty() && claimed.toUpper() != request.peerFingerprint) {
+            // Like the official app: answered, but not stored.
+            qWarning() << "Discovery: ignoring register from" << request.remoteAddress.toString()
+                       << "- claimed fingerprint does not match the client certificate";
+        } else if (claimed != m_device->fingerprint()) {
             m_peers->upsert(PeerModel::peerFromMap(map, request.remoteAddress.toString(),
                                                    m_device->port(), QLatin1String("https"),
                                                    QLatin1String("register")));

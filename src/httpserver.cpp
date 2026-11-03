@@ -71,7 +71,7 @@ struct HttpServer::Connection
 };
 
 HttpServer::HttpServer(QObject *parent)
-    : QObject(parent), m_nextId(1)
+    : QObject(parent), m_requireClientCert(true), m_nextId(1)
 {
     connect(&m_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
     m_idleTimer.setInterval(kIdleCheckIntervalMs);
@@ -90,11 +90,12 @@ void HttpServer::addHandler(HttpHandler *handler)
     m_handlers.append(handler);
 }
 
-bool HttpServer::listen(quint16 port, bool https)
+bool HttpServer::listen(quint16 port, bool https, bool requireClientCert)
 {
     m_tlsConfig.clear();
+    m_requireClientCert = requireClientCert;
     if (https) {
-        m_tlsConfig = TlsServerConfig::create();
+        m_tlsConfig = TlsServerConfig::create(requireClientCert);
         if (m_tlsConfig.isNull())
             qWarning() << "HTTP: https is not possible - using http";
     }
@@ -103,7 +104,9 @@ bool HttpServer::listen(quint16 port, bool https)
         m_tlsConfig.clear();
         return false;
     }
-    qDebug() << "HTTP: listening on port" << port << (isHttps() ? "(https)" : "(http)");
+    qDebug() << "HTTP: listening on port" << port
+             << (!isHttps() ? "(http)" : requireClientCert ? "(https, client certificate required)"
+                                                           : "(https, client certificate optional)");
     return true;
 }
 
@@ -225,6 +228,7 @@ void HttpServer::onReadyRead()
         if (!out.isEmpty())
             socket->write(out);
         if (c->tls->failed()) {
+            socket->flush(); // the alert, if any, before abort() drops it
             if (c->phase != Connection::Answered)
                 qWarning() << "HTTP: TLS with" << socket->peerAddress().toString() << "failed:"
                            << c->tls->errorString();
@@ -233,7 +237,9 @@ void HttpServer::onReadyRead()
         }
         if (!wasDone && c->tls->handshakeDone())
             qDebug() << "HTTP: TLS handshake with" << socket->peerAddress().toString() << "done:"
-                     << c->tls->version() << c->tls->ciphersuite();
+                     << c->tls->version() << c->tls->ciphersuite() << "client certificate"
+                     << (c->tls->peerFingerprint().isEmpty() ? QString::fromLatin1("none")
+                                                             : c->tls->peerFingerprint().left(16) + "...");
     }
     if (c->phase == Connection::Waiting || c->phase == Connection::Answered)
         return; // nothing more is expected from this client
@@ -276,6 +282,7 @@ bool HttpServer::parseHeaders(Connection *c)
     HttpRequest &req = c->request;
     req.id = c->id;
     req.remoteAddress = c->socket->peerAddress();
+    req.peerFingerprint = c->tls ? c->tls->peerFingerprint() : QString();
     QList<QByteArray> lines = c->buffer.left(headerEnd).split('\n');
     c->buffer.remove(0, headerEnd + 4);
     QList<QByteArray> requestLine = lines.takeFirst().trimmed().split(' ');

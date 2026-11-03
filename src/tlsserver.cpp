@@ -5,11 +5,13 @@
 
 #include "clientidentity.h"
 #include "tlsrandom.h"
+#include "verification.h"
 
 // Included last: on Symbian, mbedtls/build_info.h undefines EXPORT_C and
 // IMPORT_C (MBEDTLS_STATIC) for the rest of the translation unit.
 extern "C" {
 #include "mbedtls/error.h"
+#include "mbedtls/md.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/x509_crt.h"
@@ -23,6 +25,7 @@ struct TlsServerConfigPrivate
     mbedtls_ssl_config conf;
     mbedtls_x509_crt cert;
     mbedtls_pk_context key;
+    bool requireClientCert;
 };
 
 // mbedTLS parses PEM only from a NUL-terminated buffer whose length counts
@@ -51,7 +54,7 @@ TlsServerConfig::~TlsServerConfig()
     delete d;
 }
 
-QSharedPointer<TlsServerConfig> TlsServerConfig::create()
+QSharedPointer<TlsServerConfig> TlsServerConfig::create(bool requireClientCert)
 {
     QSharedPointer<TlsServerConfig> none;
     if (!TlsRandom::ready()) {
@@ -66,6 +69,7 @@ QSharedPointer<TlsServerConfig> TlsServerConfig::create()
 
     QSharedPointer<TlsServerConfig> config(new TlsServerConfig);
     TlsServerConfigPrivate *d = config->d;
+    d->requireClientCert = requireClientCert;
 
     const QByteArray cert = pemBuffer(certPem);
     int ret = mbedtls_x509_crt_parse(&d->cert, reinterpret_cast<const unsigned char *>(cert.constData()),
@@ -89,9 +93,12 @@ QSharedPointer<TlsServerConfig> TlsServerConfig::create()
         qWarning() << "TLS: mbedtls_ssl_config_defaults failed:" << TlsRandom::errorString(ret);
         return none;
     }
-    // No client certificate is asked for, so browsers don't prompt for one.
-    // (LocalSend clients send theirs only when asked; we don't check it.)
-    mbedtls_ssl_conf_authmode(&d->conf, MBEDTLS_SSL_VERIFY_NONE);
+    // Ask every client for its certificate, like the official app: over https
+    // a LocalSend device's identity is the hash of it. OPTIONAL, not REQUIRED:
+    // REQUIRED fails without a CA chain, and there is none (all LocalSend
+    // certificates are self-signed). TlsSession checks the certificate itself
+    // after the handshake, and rejects a client without one if required.
+    mbedtls_ssl_conf_authmode(&d->conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
     mbedtls_ssl_conf_min_tls_version(&d->conf, MBEDTLS_SSL_VERSION_TLS1_2);
     mbedtls_ssl_conf_max_tls_version(&d->conf, MBEDTLS_SSL_VERSION_TLS1_2);
     mbedtls_ssl_conf_rng(&d->conf, TlsRandom::random, TlsRandom::context());
@@ -115,6 +122,8 @@ struct TlsSessionPrivate
     bool failed;
     bool peerClosed;
     QString error;
+    QString peerFingerprint;
+    bool requireClientCert; // from the config, which only TlsSession may read
 
     void fail(const char *what, int code)
     {
@@ -146,6 +155,57 @@ static int tlsRecv(void *ctx, unsigned char *buf, size_t len)
 
 } // extern "C"
 
+// The official app (crypto/cert.rs, verify_cert_from_der) accepts a client
+// certificate that is in its validity period and correctly self-signed.
+static QString certificateProblem(const mbedtls_x509_crt *crt)
+{
+    // sig_md, sig_pk, sig_opts and sig are private in mbedTLS 3 (no getters);
+    // MBEDTLS_PRIVATE() is its own way of reaching them.
+    if (mbedtls_x509_time_is_past(&crt->valid_to))
+        return QLatin1String("certificate expired");
+    if (mbedtls_x509_time_is_future(&crt->valid_from))
+        return QLatin1String("certificate not yet valid");
+    const mbedtls_md_info_t *md = mbedtls_md_info_from_type(crt->MBEDTLS_PRIVATE(sig_md));
+    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
+    if (!md || mbedtls_md(md, crt->tbs.p, crt->tbs.len, hash) != 0)
+        return QLatin1String("unsupported signature hash");
+    const int ret = mbedtls_pk_verify_ext(crt->MBEDTLS_PRIVATE(sig_pk), crt->MBEDTLS_PRIVATE(sig_opts),
+                                          const_cast<mbedtls_pk_context *>(&crt->pk),
+                                          crt->MBEDTLS_PRIVATE(sig_md), hash, mbedtls_md_get_size(md),
+                                          crt->MBEDTLS_PRIVATE(sig).p, crt->MBEDTLS_PRIVATE(sig).len);
+    if (ret != 0)
+        return QLatin1String("bad self-signature: ") + TlsRandom::errorString(ret);
+    return QString();
+}
+
+// Right after the handshake: take the client's certificate fingerprint, or
+// refuse the connection with an alert (no certificate while one is required,
+// or an invalid one).
+static bool checkPeer(TlsSessionPrivate *d)
+{
+    const mbedtls_x509_crt *crt = mbedtls_ssl_get_peer_cert(&d->ssl);
+    if (!crt) {
+        if (!d->requireClientCert)
+            return true;
+        mbedtls_ssl_send_alert_message(&d->ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                       MBEDTLS_SSL_ALERT_MSG_CERT_REQUIRED);
+        d->failed = true;
+        d->error = QLatin1String("client sent no certificate");
+        return false;
+    }
+    const QString problem = certificateProblem(crt);
+    if (!problem.isEmpty()) {
+        mbedtls_ssl_send_alert_message(&d->ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                       MBEDTLS_SSL_ALERT_MSG_BAD_CERT);
+        d->failed = true;
+        d->error = QLatin1String("client certificate rejected: ") + problem;
+        return false;
+    }
+    d->peerFingerprint = Verification::fingerprintOfDer(
+                QByteArray(reinterpret_cast<const char *>(crt->raw.p), int(crt->raw.len)));
+    return true;
+}
+
 TlsSession::TlsSession(const QSharedPointer<TlsServerConfig> &config)
     : d(new TlsSessionPrivate)
 {
@@ -155,6 +215,7 @@ TlsSession::TlsSession(const QSharedPointer<TlsServerConfig> &config)
     d->handshakeDone = false;
     d->failed = false;
     d->peerClosed = false;
+    d->requireClientCert = config->d->requireClientCert;
     mbedtls_ssl_init(&d->ssl);
     const int ret = mbedtls_ssl_setup(&d->ssl, &config->d->conf);
     if (ret != 0) {
@@ -186,6 +247,8 @@ QByteArray TlsSession::feed(const QByteArray &ciphertext)
     if (!d->handshakeDone) {
         const int ret = mbedtls_ssl_handshake(&d->ssl);
         if (ret == 0) {
+            if (!checkPeer(d))
+                return plain;
             d->handshakeDone = true;
         } else if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             d->fail("handshake", ret);
@@ -260,6 +323,7 @@ bool TlsSession::handshakeDone() const { return d->handshakeDone; }
 bool TlsSession::failed() const { return d->failed; }
 bool TlsSession::peerClosed() const { return d->peerClosed; }
 QString TlsSession::errorString() const { return d->error; }
+QString TlsSession::peerFingerprint() const { return d->peerFingerprint; }
 
 QString TlsSession::version() const
 {

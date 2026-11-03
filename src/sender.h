@@ -91,6 +91,8 @@ private slots:
     void onOnlineChanged();
 
 private:
+    QString certificateError() const;
+
     struct OutFile {
         QString id;
         QString fileName;   // relative path for folder contents
@@ -122,6 +124,8 @@ private:
     QList<OutFile> m_queue;   // the accepted ones
     QString m_pin;
     bool m_pinSent;
+    // The receiver's certificate wasn't the one of the device we found.
+    bool m_certRejected;
     QString m_sessionId;
     QNetworkReply *m_reply;   // the one request in flight (owns the upload's QFile)
     int m_current;            // index into m_queue, -1 before the first

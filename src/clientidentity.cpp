@@ -5,6 +5,15 @@
 #include <QSettings>
 #include <QTime>
 
+#include "verification.h"
+
+#ifndef QT_NO_OPENSSL
+#include <QNetworkReply>
+#include <QSslCertificate>
+#include <QSslConfiguration>
+#include <QSslError>
+#endif
+
 static const char kCertKey[] = "identity/certificate";
 static const char kPrivateKeyKey[] = "identity/privateKey";
 
@@ -15,6 +24,48 @@ bool ClientIdentity::serverIdentity(QByteArray *certPem, QByteArray *keyPem)
     *keyPem = settings.value(QLatin1String(kPrivateKeyKey)).toByteArray();
     return !certPem->isEmpty() && !keyPem->isEmpty();
 }
+
+#ifndef QT_NO_OPENSSL
+bool ClientIdentity::acceptPeer(const QList<QSslError> &errors, const QString &expectedFingerprint,
+                                QString *why)
+{
+    // Like the official app's verify_cert_from_der: the certificate must be in
+    // its validity period and correctly self-signed. That it is self-signed,
+    // untrusted, or not issued for the IP is normal for LocalSend.
+    QSslCertificate cert;
+    foreach (const QSslError &e, errors) {
+        switch (e.error()) {
+        case QSslError::CertificateSignatureFailed:
+        case QSslError::CertificateNotYetValid:
+        case QSslError::CertificateExpired:
+            *why = e.errorString();
+            return false;
+        default:
+            break;
+        }
+        if (cert.isNull() && !e.certificate().isNull())
+            cert = e.certificate();
+    }
+    if (expectedFingerprint.isEmpty())
+        return true;
+    if (cert.isNull()) {
+        *why = QLatin1String("no certificate to check the fingerprint against");
+        return false;
+    }
+    const QString actual = Verification::fingerprintOfDer(cert.toDer());
+    if (actual != expectedFingerprint.toUpper()) {
+        *why = QString::fromLatin1("certificate fingerprint mismatch: expected %1, got %2")
+                .arg(expectedFingerprint.toUpper(), actual);
+        return false;
+    }
+    return true;
+}
+
+QString ClientIdentity::peerFingerprint(const QNetworkReply *reply)
+{
+    return Verification::fingerprintOfDer(reply->sslConfiguration().peerCertificate().toDer());
+}
+#endif
 
 #if defined(SYMBISEND_CLIENT_CERT) && !defined(QT_NO_OPENSSL)
 #include <QSslCertificate>
@@ -33,7 +84,6 @@ bool ClientIdentity::serverIdentity(QByteArray *certPem, QByteArray *keyPem)
 #include <openssl/pem.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
-#include <openssl/sha.h>
 #include <openssl/x509.h>
 
 static QString opensslError()
@@ -124,16 +174,6 @@ static bool generate(QByteArray *certPem, QByteArray *keyPem)
     return ok;
 }
 
-static QString fingerprintOf(const QSslCertificate &cert)
-{
-    // QCryptographicHash has no SHA-256 in Qt 4.
-    const QByteArray der = cert.toDer();
-    unsigned char md[SHA256_DIGEST_LENGTH];
-    SHA256(reinterpret_cast<const unsigned char *>(der.constData()), der.size(), md);
-    return QString::fromLatin1(
-                QByteArray(reinterpret_cast<const char *>(md), SHA256_DIGEST_LENGTH).toHex()).toUpper();
-}
-
 QString ClientIdentity::install()
 {
     QSettings settings;
@@ -163,7 +203,7 @@ QString ClientIdentity::install()
     config.setPrivateKey(key);
     QSslConfiguration::setDefaultConfiguration(config);
 
-    const QString fingerprint = fingerprintOf(cert);
+    const QString fingerprint = Verification::fingerprintOfDer(cert.toDer());
     qDebug() << "ClientIdentity: client certificate installed, fingerprint" << fingerprint;
     return fingerprint;
 }

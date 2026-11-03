@@ -2,7 +2,11 @@
 #define CLIENTIDENTITY_H
 
 #include <QByteArray>
+#include <QList>
 #include <QString>
+
+class QNetworkReply;
+class QSslError;
 
 // Our TLS client certificate.
 //
@@ -30,6 +34,20 @@ namespace ClientIdentity {
     // under identity/certificate and identity/privateKey by hand. False if
     // there is none.
     bool serverIdentity(QByteArray *certPem, QByteArray *keyPem);
+
+#ifndef QT_NO_OPENSSL
+    // For a sslErrors() slot, before ignoreSslErrors(): whether the peer's
+    // certificate is acceptable. Like the official app it must be in its
+    // validity period and correctly signed; with expectedFingerprint set
+    // (pinning, as for every request to a device we already know) its SHA-256
+    // must also be that one. If not, *why says why: don't ignore the errors,
+    // the handshake then fails and the request is never sent.
+    bool acceptPeer(const QList<QSslError> &errors, const QString &expectedFingerprint, QString *why);
+    // The fingerprint of the certificate a finished https reply came over
+    // (empty if none). Checked again after the reply because QNetworkAccessManager
+    // reuses kept-alive connections without a new sslErrors().
+    QString peerFingerprint(const QNetworkReply *reply);
+#endif
 }
 
 #endif // CLIENTIDENTITY_H

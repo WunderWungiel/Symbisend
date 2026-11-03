@@ -102,6 +102,11 @@ private:
         bool v1;           // peer speaks protocol v1: use /api/localsend/v1/register
         QDateTime deadline;
         bool timedOut;
+        // https: the fingerprint the peer's certificate must have (the one it
+        // multicast); empty = accept any valid one (subnet scan).
+        QString expectedFingerprint;
+        bool udpFallback;  // reply via UDP if the register fails (announcements)
+        bool certRejected; // its certificate was refused
     };
 
     bool wantHttps() const;
@@ -111,7 +116,8 @@ private:
     void abortJobs();
     static void abortReply(QNetworkReply *reply);
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
-                  bool v1 = false);
+                  bool v1 = false, const QString &expectedFingerprint = QString(),
+                  bool udpFallback = false);
     void pumpScanQueue();
     void finishScanIfDone();
     void replyViaUdp();

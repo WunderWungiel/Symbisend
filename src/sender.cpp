@@ -12,6 +12,7 @@
 #include <QSslError>
 #endif
 
+#include "clientidentity.h"
 #include "deviceinfo.h"
 #include "json.h"
 #include "networkmanager.h"
@@ -30,6 +31,7 @@ Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
       m_nam(new QNetworkAccessManager(this)),
       m_state(QLatin1String("idle")),
       m_pinSent(false),
+      m_certRejected(false),
       m_reply(0),
       m_current(-1),
       m_bytesTotal(0), m_bytesDone(0), m_currentSent(0),
@@ -78,6 +80,7 @@ bool Sender::send(const QString &fingerprint)
     m_queue.clear();
     m_pin.clear();
     m_pinSent = false;
+    m_certRejected = false;
     m_sessionId.clear();
     m_current = -1;
     m_bytesTotal = m_bytesDone = m_currentSent = 0;
@@ -244,6 +247,21 @@ void Sender::onPrepareFinished()
     qDebug() << "Sender: prepare-upload answered" << status
              << "(error" << int(reply->error()) << reply->errorString() + ")";
 
+    // Checked again here, not only in onSslErrors(): a reused kept-alive
+    // connection has no new handshake.
+    if (!m_certRejected && status != 0 && m_peer.protocol == QLatin1String("https")) {
+        const QString actual = ClientIdentity::peerFingerprint(reply);
+        if (actual != m_peer.fingerprint.toUpper()) {
+            qWarning() << "Sender: certificate fingerprint mismatch: expected" << m_peer.fingerprint.toUpper()
+                       << "got" << (actual.isEmpty() ? QString::fromLatin1("none") : actual);
+            m_certRejected = true;
+        }
+    }
+    if (m_certRejected) {
+        finish(QLatin1String("failed"), certificateError());
+        return;
+    }
+
     switch (status) {
     case 200: {
         bool ok = false;
@@ -379,7 +397,7 @@ void Sender::onUploadFinished()
                << int(reply->error()) << reply->errorString();
     QString error;
     switch (status) {
-    case 0:   error = reply->errorString(); break;
+    case 0:   error = m_certRejected ? certificateError() : reply->errorString(); break;
     case 403: error = QString::fromLatin1("%1 cancelled the transfer").arg(m_peer.alias); break;
     case 409: error = QString::fromLatin1("%1 is busy with another transfer").arg(m_peer.alias); break;
     default:  error = QString::fromLatin1("%1 answered with error %2").arg(m_peer.alias).arg(status);
@@ -388,12 +406,23 @@ void Sender::onUploadFinished()
     finish(QLatin1String("failed"), error);
 }
 
+QString Sender::certificateError() const
+{
+    return QString::fromLatin1("This is not the %1 that was found (its certificate is different)")
+            .arg(m_peer.alias);
+}
+
 void Sender::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 {
-    // LocalSend uses self-signed certificates.
-    foreach (const QSslError &e, errors)
-        qDebug() << "Sender: ignoring certificate error from" << reply->url().host()
-                 << int(e.error()) << e.errorString();
+    // LocalSend uses self-signed certificates. Like the official app, every
+    // request is pinned to the certificate of the device that was found: its
+    // fingerprint is that certificate's hash.
+    QString why;
+    if (!ClientIdentity::acceptPeer(errors, m_peer.fingerprint, &why)) {
+        qWarning() << "Sender: certificate of" << reply->url().host() << "rejected:" << why;
+        m_certRejected = true;
+        return; // the handshake fails, nothing is sent
+    }
     reply->ignoreSslErrors();
 }
 
