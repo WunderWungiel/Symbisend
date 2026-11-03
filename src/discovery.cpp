@@ -258,10 +258,15 @@ void Discovery::abortJobs()
 {
     // abort() emits finished() synchronously; with m_jobs already cleared
     // onReplyFinished() only deletes the replies (no retries, no UDP replies).
+    // A reply that can't be aborted (it already failed) is deleted here, or
+    // it would leak with its connection if it never reports finished();
+    // deleteLater() twice is harmless if it does.
     QList<QNetworkReply *> replies = m_jobs.keys();
     m_jobs.clear();
-    foreach (QNetworkReply *reply, replies)
+    foreach (QNetworkReply *reply, replies) {
         abortReply(reply);
+        reply->deleteLater();
+    }
 
     m_scanQueue.clear();
     m_activeScanJobs = 0;
@@ -505,8 +510,11 @@ void Discovery::onScanTick()
     // A reply that neither finished nor could be aborted (it already had an
     // error, see abortReply()) would hold its scan slot forever, and the scan
     // - with the refresh button, which is disabled while scanning - would
-    // never end. Forget such jobs a while after their deadline; should the
-    // reply still finish, onReplyFinished() only deletes it.
+    // never end. Forget such jobs a while after their deadline, and delete
+    // the reply: deleting it (unlike abort()) sets no second error, and it
+    // releases the reply's connection, which would otherwise stay open for
+    // good - one more with every scan. Should it still report finished() in
+    // the meantime, onReplyFinished() only deletes it (again: harmless).
     const QDateTime giveUp = now.addMSecs(-kStuckJobGraceMs);
     QList<QNetworkReply *> stuck;
     for (QHash<QNetworkReply *, Job>::const_iterator it = m_jobs.constBegin(); it != m_jobs.constEnd(); ++it) {
@@ -517,6 +525,7 @@ void Discovery::onScanTick()
         const Job job = m_jobs.take(reply);
         qWarning() << "Discovery:" << job.ip << job.protocol << "request never finished"
                    << "(error" << int(reply->error()) << ") - giving up on it";
+        reply->deleteLater();
         if (job.kind == ScanJob) {
             --m_activeScanJobs;
             ++m_scanDone;
