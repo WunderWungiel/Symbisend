@@ -1,7 +1,6 @@
-# Add more folders to ship with the application, here
-folder_01.source = qml/Symbisend
-folder_01.target = qml
-DEPLOYMENTFOLDERS = folder_01
+# The QML and images are compiled into the binary (qml.qrc), so no loose
+# folders are deployed. List every new file under qml/Symbisend in qml.qrc.
+DEPLOYMENTFOLDERS =
 
 # Additional import path used to resolve QML modules in Creator's code model
 QML_IMPORT_PATH =
@@ -96,6 +95,9 @@ HEADERS += \
 
 # Pages served to web browsers (official LocalSend assets, see web/README.md)
 RESOURCES += web.qrc
+
+# QML UI and its images, loaded from qrc:/qml/Symbisend/
+RESOURCES += qml.qrc
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

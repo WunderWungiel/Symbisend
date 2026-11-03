@@ -2,6 +2,7 @@
 #include <QtDeclarative/QDeclarativeContext>
 #include <QDateTime>
 #include <QDebug>
+#include <QUrl>
 
 #include "qmlapplicationviewer.h"
 #include "src/logger.h"
@@ -62,7 +63,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("webShare"), &webShare);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
-    viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));
+    viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));
     viewer.showExpanded();
 
     network.connectNetwork();
