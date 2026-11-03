@@ -7,6 +7,7 @@
 #include <QStringList>
 
 #include "clientidentity.h"
+#include "verification.h"
 
 const char *DeviceInfo::ProtocolVersion = "2.0";
 
@@ -91,6 +92,18 @@ void DeviceInfo::randomizeAlias()
     } while (a == m_alias);
     qDebug() << "DeviceInfo: new random alias" << a;
     setAlias(a);
+}
+
+QVariantMap DeviceInfo::verification(const QString &peerFingerprint) const
+{
+    const QString text = Verification::combined(m_fingerprint, peerFingerprint);
+    const QStringList icons = Verification::icons(text);
+    qDebug() << "DeviceInfo: verify" << peerFingerprint.left(16) + "..." << "->"
+             << icons.join(QLatin1String(" "));
+    QVariantMap m;
+    m.insert(QLatin1String("text"), text);
+    m.insert(QLatin1String("icons"), icons);
+    return m;
 }
 
 QVariantMap DeviceInfo::toRegisterMap() const

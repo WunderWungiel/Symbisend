@@ -96,7 +96,7 @@ Page {
                     iconSource: page.platformInverted ? "images/verified-user-inverted.svg"
                                                       : "images/verified-user.svg"
                     text: "Verify"
-                    onClicked: console.log("DeviceDetailsPage: verify clicked (not implemented)")
+                    onClicked: verifyDialog.openFor(page.fingerprint)
                 }
             }
 
@@ -222,4 +222,6 @@ Page {
         flickableItem: flick
         platformInverted: page.platformInverted
     }
+
+    VerifyDialog { id: verifyDialog }
 }

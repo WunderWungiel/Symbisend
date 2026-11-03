@@ -75,7 +75,8 @@ SOURCES += main.cpp \
     src/webshare.cpp \
     src/clientidentity.cpp \
     src/tlsrandom.cpp \
-    src/tlsserver.cpp
+    src/tlsserver.cpp \
+    src/verification.cpp
 
 HEADERS += \
     src/logger.h \
@@ -95,13 +96,17 @@ HEADERS += \
     src/webshare.h \
     src/clientidentity.h \
     src/tlsrandom.h \
-    src/tlsserver.h
+    src/tlsserver.h \
+    src/verification.h
 
 # Pages served to web browsers (official LocalSend assets, see web/README.md)
 RESOURCES += web.qrc
 
 # QML UI and its images, loaded from qrc:/qml/Symbisend/
 RESOURCES += qml.qrc
+
+# LocalSend's Verify icons (fingerprint-icons/README.md)
+RESOURCES += fingerprint-icons.qrc
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)

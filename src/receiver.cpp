@@ -39,6 +39,7 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
       m_server(server), m_settings(settings), m_network(network), m_webShare(webShare),
       m_history(history),
       m_state(QLatin1String("idle")),
+      m_peerHttps(false),
       m_totalSize(0),
       m_isMessage(false),
       m_pendingRequest(0),
@@ -227,6 +228,7 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
     m_peerDeviceType = info.value(QLatin1String("deviceType")).toString();
     m_peerFingerprint = info.value(QLatin1String("fingerprint")).toString();
     m_peerVersion = info.value(QLatin1String("version")).toString();
+    m_peerHttps = info.value(QLatin1String("protocol")).toString() == QLatin1String("https");
     m_peerIp = request.remoteAddress;
 
     for (QVariantMap::const_iterator it = filesMap.constBegin(); it != filesMap.constEnd(); ++it) {
@@ -609,6 +611,7 @@ void Receiver::reset()
     m_peerDeviceType.clear();
     m_peerFingerprint.clear();
     m_peerVersion.clear();
+    m_peerHttps = false;
     m_peerIp = QHostAddress();
     m_files.clear();
     m_fileIndex.clear();

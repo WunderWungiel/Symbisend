@@ -1,5 +1,6 @@
 #include <QtGui/QApplication>
 #include <QtDeclarative/QDeclarativeContext>
+#include <QtDeclarative/QDeclarativeEngine>
 #include <QDateTime>
 #include <QDebug>
 #include <QUrl>
@@ -18,6 +19,7 @@
 #include "src/receiver.h"
 #include "src/webshare.h"
 #include "src/tlsrandom.h"
+#include "src/verification.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -64,6 +66,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("receiver"), &receiver);
     ctx->setContextProperty(QLatin1String("webShare"), &webShare);
     ctx->setContextProperty(QLatin1String("history"), &history);
+    // image://verify/<name>/<rrggbb>, the Verify dialog's icons
+    viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));

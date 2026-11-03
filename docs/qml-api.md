@@ -64,6 +64,11 @@ Properties: `count` (int).  Methods: `clear()`.
 ## `myDevice` — our identity as other devices see it
 - `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`
 - `randomizeAlias()` — picks a new random "Adjective Fruit" name
+- `verification(peerFingerprint)` → `{ text, icons }` — LocalSend's Verify page: `text` is
+  both fingerprints sorted and joined, `icons` 16 icon names (SHA-256 of `text`, first 128
+  bits in base 260). Show each as `image://verify/<name>/<rrggbb>` (the icon in that colour,
+  e.g. `ffffff`; set `sourceSize`). Empty if a fingerprint is unknown. `VerifyDialog.qml`
+  shows it (`openFor(fingerprint)`).
 - Changing the alias re-announces us (if the server is running).
 
 ## `settings` — app settings (persisted)
@@ -205,7 +210,8 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `busy` (bool) — `request` or `receiving`
 - `errorText` (string)
 - The sender: `peerAlias`, `peerDeviceModel` (system, e.g. `Windows`), `peerDeviceType`
-  (`mobile`, `desktop`, ...), `peerFingerprint`, `peerIp`, `peerVersion` (strings)
+  (`mobile`, `desktop`, ...), `peerFingerprint`, `peerIp`, `peerVersion` (strings),
+  `peerHttps` (bool: the sender announced https; the official app offers Verify only then)
 - The offer: `fileCount` (int), `totalSize` (number, bytes), `files` (list of
   `{ fileName, size, fileType }`; `fileName` may contain folders)
 - `isMessage` (bool), `message` (string) — the offer is a single text message (like the

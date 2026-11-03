@@ -19,6 +19,7 @@
         <file>qml/Symbisend/SettingsItem.qml</file>
         <file>qml/Symbisend/SettingsPage.qml</file>
         <file>qml/Symbisend/SettingsSwitch.qml</file>
+        <file>qml/Symbisend/VerifyDialog.qml</file>
         <file>qml/Symbisend/images/check-inverted.svg</file>
         <file>qml/Symbisend/images/check.svg</file>
         <file>qml/Symbisend/images/close-inverted.svg</file>

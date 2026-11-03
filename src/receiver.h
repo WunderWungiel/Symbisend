@@ -47,6 +47,8 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(QString peerFingerprint READ peerFingerprint NOTIFY stateChanged)
     Q_PROPERTY(QString peerIp READ peerIp NOTIFY stateChanged)
     Q_PROPERTY(QString peerVersion READ peerVersion NOTIFY stateChanged)
+    // The sender announced https (its fingerprint is then its certificate's hash).
+    Q_PROPERTY(bool peerHttps READ peerHttps NOTIFY stateChanged)
 
     // The offer.
     Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
@@ -85,6 +87,7 @@ public:
     QString peerFingerprint() const { return m_peerFingerprint; }
     QString peerIp() const { return m_peerIp.toString(); }
     QString peerVersion() const { return m_peerVersion; }
+    bool peerHttps() const { return m_peerHttps; }
     int fileCount() const { return m_files.size(); }
     qreal totalSize() const { return qreal(m_totalSize); }
     QVariantList files() const;
@@ -167,6 +170,7 @@ private:
     QString m_peerDeviceType;
     QString m_peerFingerprint;
     QString m_peerVersion;
+    bool m_peerHttps;
     QHostAddress m_peerIp;
     QList<InFile> m_files;
     QHash<QString, int> m_fileIndex;  // file id -> index into m_files

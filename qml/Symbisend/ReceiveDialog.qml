@@ -67,6 +67,9 @@ Dialog {
     // Closed by hand during the countdown.
     onStatusChanged: if (status == DialogStatus.Closing || status == DialogStatus.Closed) finishTimer.stop()
 
+    // Opens on top of this dialog.
+    VerifyDialog { id: verifyDialog }
+
     // Sized from the column explicitly, like SendDialog.
     height: privateTitleHeight + contentColumn.height + privateButtonsHeight
 
@@ -165,7 +168,8 @@ Dialog {
             }
         }
 
-        // Not implemented yet, like on the device details page.
+        // Like the official app: only for senders on https, whose fingerprint
+        // is their certificate's hash.
         ToolButton {
             anchors.horizontalCenter: parent.horizontalCenter
             visible: root.recvState == "request"
@@ -173,7 +177,8 @@ Dialog {
             iconSource: root.platformInverted ? "images/verified-user-inverted.svg"
                                               : "images/verified-user.svg"
             text: "Verify"
-            onClicked: console.log("ReceiveDialog: verify clicked (not implemented)")
+            enabled: receiver.peerHttps
+            onClicked: verifyDialog.openFor(receiver.peerFingerprint)
         }
 
         // ------------------------------------------------ Progress
