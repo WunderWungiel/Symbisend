@@ -289,7 +289,7 @@ HttpResponse Receiver::startSession()
 {
     if (m_isMessage) {
         // Nothing to upload: the message is all there is.
-        if (m_history)
+        if (m_history && m_settings->saveToHistory())
             m_history->addText(message(), m_peerAlias);
         finish(QLatin1String("finished"));
         return HttpResponse(204);
@@ -426,7 +426,7 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
         return HttpResponse::message(400, QLatin1String("Incomplete file"));
     }
     closeUpload(request.id, true);
-    if (f.status == Done && m_history)
+    if (f.status == Done && m_history && m_settings->saveToHistory())
         m_history->addFile(f.savedPath, f.size, m_peerAlias);
     qDebug() << "Receiver: saved" << QDir::toNativeSeparators(f.savedPath)
              << "(" << filesDone() << "of" << m_files.size() << ")";

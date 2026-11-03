@@ -96,7 +96,8 @@ Receive:
   were received (`receiver.state` `finished`, not a message) the Close button counts down
   3 s and the dialog closes by itself, like the official app. Failed/cancelled transfers
   and messages stay open.
-- `saveToHistory` (bool, default true) *(stored only)*
+- `saveToHistory` (bool, default true) — when off, `receiver` adds nothing to `history`
+  (received files and messages are not recorded; existing entries stay), like the official app.
 - `receiveViaLinkAutoAccept` (bool, default false) — while `webShare.receiveActive`, every
   file offer is accepted at once (like `quickSave`; messages are still shown). The
   official app's "Automatically accept requests" on its Receive via link page.
@@ -219,7 +220,7 @@ Network:
 ## `history` — received files and messages (ListView model)
 Newest first, at most 200 entries (older ones are dropped), persisted in `QSettings`
 (`history/entries`). `receiver` adds every file once it is saved and every accepted text
-message.
+message, unless `settings.saveToHistory` is off.
 - `count` (int)
 - Roles:
   - `kind` (string) — `image`, `video`, `file` (from the extension) or `text`
