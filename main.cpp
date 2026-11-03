@@ -38,10 +38,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     DeviceInfo device;
     PeerModel peers;
     NetworkManager network;
-    Discovery discovery(&device, &peers, &network);
+    // Also picks http/https for the server (settings.encryption, webShare.encrypted).
+    Discovery discovery(&device, &peers, &network, &settings);
     Sender sender(&device, &peers, &selection, &network);
     // Serves / and /i18n.json (the browser pages) on discovery's HTTP server.
-    WebShare webShare(discovery.httpServer(), &settings, &network, device.port());
+    WebShare webShare(&discovery, &settings, &network, device.port());
     // Serves prepare-upload/upload/cancel on discovery's HTTP server.
     Receiver receiver(discovery.httpServer(), &settings, &network, &webShare);
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();

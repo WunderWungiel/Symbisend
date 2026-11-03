@@ -18,6 +18,7 @@ class DeviceInfo;
 class PeerModel;
 class NetworkManager;
 class MulticastReceiver;
+class Settings;
 
 // LocalSend v2 discovery:
 //  - multicast announcements (send) + receiving announcements (raw socket)
@@ -29,17 +30,22 @@ class Discovery : public QObject, public HttpHandler
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
     Q_PROPERTY(bool serverRunning READ isServerRunning NOTIFY statusChanged)
+    // Whether the running server speaks https (see settings.encryption,
+    // webShare.encrypted).
+    Q_PROPERTY(bool serverHttps READ isServerHttps NOTIFY statusChanged)
     Q_PROPERTY(bool multicastListening READ isMulticastListening NOTIFY statusChanged)
     // While true (the Send page is on screen), refresh() runs every minute so
     // the list stays current and departed devices expire.
     Q_PROPERTY(bool autoRefresh READ autoRefresh WRITE setAutoRefresh NOTIFY autoRefreshChanged)
 
 public:
-    Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, QObject *parent = 0);
+    Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, Settings *settings,
+              QObject *parent = 0);
 
     bool isScanning() const { return m_scanning; }
     int scanProgress() const;
     bool isServerRunning() const;
+    bool isServerHttps() const;
     bool isMulticastListening() const;
     bool autoRefresh() const { return m_autoRefresh; }
     void setAutoRefresh(bool on);
@@ -58,6 +64,11 @@ public:
 
     // Our server, for other handlers of its routes (Receiver).
     HttpServer *httpServer() const { return m_server; }
+
+    // WebShare: while "Receive via link" is active, the server speaks https
+    // only if encrypted (instead of following settings.encryption). A running
+    // server is restarted at once if that changes what it speaks.
+    void setLinkEncryption(bool linkActive, bool encrypted);
 
     // HttpHandler: /register and /info
     bool handles(const HttpRequest &request) const;
@@ -79,6 +90,7 @@ private slots:
     void sendAnnouncement();
     void onAliasChanged();
     void onAutoRefreshTimer();
+    void applyEncryption();
 
 private:
     enum JobKind { ScanJob, AnnounceReplyJob };
@@ -92,6 +104,7 @@ private:
         bool timedOut;
     };
 
+    bool wantHttps() const;
     void stopAll();
     void startListening();
     void stopListening();
@@ -108,6 +121,7 @@ private:
     DeviceInfo *m_device;
     PeerModel *m_peers;
     NetworkManager *m_network;
+    Settings *m_settings;
     HttpServer *m_server;
     MulticastReceiver *m_multicast;
     // Sends announcements. Recreated for every connection (see onOnlineChanged()).
@@ -122,6 +136,8 @@ private:
     int m_activeScanJobs;
     bool m_scanning;
     bool m_serverEnabled;  // false after stopServer() until startServer()
+    bool m_linkActive;     // see setLinkEncryption()
+    bool m_linkEncrypted;
     QDateTime m_scanStarted;
     QDateTime m_previousScanStarted; // start of the refresh before the current one
     QTimer m_tickTimer;

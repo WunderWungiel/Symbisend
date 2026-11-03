@@ -79,6 +79,31 @@ Page {
                 }
             }
 
+            // Only for this link, off every time the page opens. Restarts
+            // the server as https / http (the link changes with it).
+            SettingsSwitch {
+                title: "Encryption"
+                checked: webShare.encrypted
+                onToggled: webShare.encrypted = value
+            }
+            Item {
+                visible: webShare.encrypted
+                width: column.width
+                height: visible ? encryptionHint.height + 2 * platformStyle.paddingMedium : 0
+
+                Label {
+                    id: encryptionHint
+                    platformInverted: page.platformInverted
+                    anchors {
+                        left: parent.left; right: parent.right
+                        verticalCenter: parent.verticalCenter
+                        leftMargin: platformStyle.paddingLarge; rightMargin: platformStyle.paddingLarge
+                    }
+                    wrapMode: Text.Wrap
+                    font.pixelSize: platformStyle.fontSizeSmall
+                    text: "LocalSend uses a self-signed certificate. You need to accept it in your browser."
+                }
+            }
             SettingsSwitch {
                 title: "Automatically accept requests"
                 checked: settings.receiveViaLinkAutoAccept

@@ -14,6 +14,7 @@
 #include "multicastreceiver.h"
 #include "networkmanager.h"
 #include "peermodel.h"
+#include "settings.h"
 
 static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
@@ -28,16 +29,20 @@ static const int kStuckJobGraceMs = 5000;
 // An announcement is sent as a burst of 3 (see announce()); answer it once.
 static const int kAnnounceDedupWindowMs = 5000;
 
-Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, QObject *parent)
+Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network,
+                     Settings *settings, QObject *parent)
     : QObject(parent),
-      m_device(device), m_peers(peers), m_network(network),
+      m_device(device), m_peers(peers), m_network(network), m_settings(settings),
       m_server(new HttpServer(this)),
       m_multicast(new MulticastReceiver(this)),
       m_udp(0),
       m_nam(new QNetworkAccessManager(this)),
       m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true),
+      m_linkActive(false), m_linkEncrypted(false),
       m_autoRefresh(false)
 {
+    m_device->setHttps(wantHttps()); // until the server actually starts
+    connect(m_settings, SIGNAL(encryptionChanged()), this, SLOT(applyEncryption()));
     m_server->addHandler(this);
     connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
@@ -94,6 +99,49 @@ bool Discovery::isServerRunning() const
     return m_server->isListening();
 }
 
+bool Discovery::isServerHttps() const
+{
+    return m_server->isListening() && m_server->isHttps();
+}
+
+bool Discovery::wantHttps() const
+{
+    // HttpServer falls back to http if it can't do https (no certificate).
+    return m_linkActive ? m_linkEncrypted : m_settings->encryption();
+}
+
+void Discovery::setLinkEncryption(bool linkActive, bool encrypted)
+{
+    if (linkActive == m_linkActive && encrypted == m_linkEncrypted)
+        return;
+    m_linkActive = linkActive;
+    m_linkEncrypted = encrypted;
+    applyEncryption();
+}
+
+// Restarts a running server whose protocol no longer matches the settings
+// (like the official app, which restarts its server for web share
+// encryption). Requests in progress are aborted; peers learn the new
+// protocol from the announcement. A stopped server uses it on its next start.
+void Discovery::applyEncryption()
+{
+    const bool https = wantHttps();
+    qDebug() << "Discovery: encryption" << (https ? "on" : "off")
+             << (m_linkActive ? "(receive via link)" : "(settings)");
+    if (!m_server->isListening()) {
+        m_device->setHttps(https);
+        return;
+    }
+    // isHttps() differs from https also when https is impossible: restarting
+    // then only tries again (and logs why it can't).
+    if (m_server->isHttps() == https)
+        return;
+    qDebug() << "Discovery: restarting the server as" << (https ? "https" : "http");
+    startListening();
+    if (isServerRunning())
+        announce();
+}
+
 bool Discovery::isMulticastListening() const
 {
     return m_multicast->isActive();
@@ -125,7 +173,11 @@ void Discovery::onOnlineChanged()
 void Discovery::startListening()
 {
     m_server->close();
-    m_server->listen(m_device->port());
+    const bool https = wantHttps();
+    if (m_server->listen(m_device->port(), https))
+        m_device->setHttps(m_server->isHttps());
+    else
+        m_device->setHttps(https);
     m_multicast->start(QHostAddress(QLatin1String(kMulticastGroup)), m_device->port(),
                        m_network->localAddress());
     emit statusChanged();

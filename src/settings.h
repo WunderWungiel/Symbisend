@@ -34,6 +34,12 @@ class Settings : public QObject
     // While "Receive via link" is on, accept every request at once.
     Q_PROPERTY(bool receiveViaLinkAutoAccept READ receiveViaLinkAutoAccept WRITE setReceiveViaLinkAutoAccept NOTIFY receiveViaLinkAutoAcceptChanged)
 
+    // Network
+    // Our server speaks https (default) instead of http. Discovery restarts
+    // the server when it changes (except while "Receive via link" is on,
+    // which has its own toggle, webShare.encrypted).
+    Q_PROPERTY(bool encryption READ encryption WRITE setEncryption NOTIFY encryptionChanged)
+
 public:
     explicit Settings(QObject *parent = 0);
 
@@ -60,6 +66,8 @@ public:
     void setSaveToHistory(bool on);
     bool receiveViaLinkAutoAccept() const { return m_receiveViaLinkAutoAccept; }
     void setReceiveViaLinkAutoAccept(bool on);
+    bool encryption() const { return m_encryption; }
+    void setEncryption(bool on);
 
     // Qt-style path ("F:/Symbisend") for C++ code that writes files.
     QString downloadFolder() const { return m_downloadFolder; }
@@ -83,6 +91,7 @@ signals:
     void autoFinishChanged();
     void saveToHistoryChanged();
     void receiveViaLinkAutoAcceptChanged();
+    void encryptionChanged();
 
 private slots:
     void runFolderPicker();
@@ -104,6 +113,7 @@ private:
     bool m_autoFinish;
     bool m_saveToHistory;
     bool m_receiveViaLinkAutoAccept;
+    bool m_encryption;
 
     QString m_custom;          // user's choice, "" = use default
     QString m_downloadFolder;  // effective folder

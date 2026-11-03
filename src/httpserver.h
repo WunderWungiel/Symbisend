@@ -6,10 +6,12 @@
 #include <QHash>
 #include <QHostAddress>
 #include <QList>
+#include <QSharedPointer>
 #include <QTcpServer>
 #include <QTimer>
 
 class QTcpSocket;
+class TlsServerConfig;
 
 struct HttpRequest
 {
@@ -75,6 +77,10 @@ public:
 // Very small HTTP/1.1 server: one request per connection, Content-Length
 // or chunked bodies. Headers up to 16 KB; buffered bodies up to 1 MB,
 // streamed ones (see HttpHandler::streamsBody()) of any size.
+//
+// Speaks plain http or https (TLS 1.2 via mbedTLS, see src/tlsserver.h, with
+// our certificate from ClientIdentity; no client certificate asked for).
+// Handlers see no difference.
 class HttpServer : public QObject
 {
     Q_OBJECT
@@ -85,11 +91,15 @@ public:
     // Handlers are asked in the order added; nobody serving a path = 404.
     void addHandler(HttpHandler *handler);
 
-    bool listen(quint16 port);
+    // If https is asked for but impossible (no certificate, or mbedTLS
+    // rejects it), listens with plain http instead; isHttps() tells which.
+    bool listen(quint16 port, bool https);
     // Stops listening and drops all client connections (unanswered requests
     // are reported to their handlers as aborted).
     void close();
     bool isListening() const { return m_server.isListening(); }
+    // Whether the server (while listening) speaks https.
+    bool isHttps() const { return !m_tlsConfig.isNull(); }
 
     // Answers a request whose handler returned status 0. Does nothing if the
     // request was answered already or its connection is gone.
@@ -107,6 +117,8 @@ private slots:
 private:
     struct Connection;
 
+    // Writes to the client, through TLS on https connections.
+    void write(Connection *c, const QByteArray &data);
     void process(Connection *c);
     bool parseHeaders(Connection *c);
     bool readBody(Connection *c);
@@ -116,6 +128,8 @@ private:
     bool alive(quint32 id) const { return m_byId.contains(id); }
 
     QTcpServer m_server;
+    // Set while listening with https; every connection gets a TlsSession on it.
+    QSharedPointer<TlsServerConfig> m_tlsConfig;
     QList<HttpHandler *> m_handlers;
     QHash<QTcpSocket *, Connection *> m_bySocket;
     QHash<quint32, Connection *> m_byId;

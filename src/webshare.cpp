@@ -4,25 +4,41 @@
 #include <QFile>
 #include <QVariantMap>
 
+#include "discovery.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
 
-WebShare::WebShare(HttpServer *server, Settings *settings, NetworkManager *network,
+WebShare::WebShare(Discovery *discovery, Settings *settings, NetworkManager *network,
                    int port, QObject *parent)
     : QObject(parent),
-      m_settings(settings), m_network(network), m_port(port),
-      m_receiveActive(false)
+      m_discovery(discovery), m_settings(settings), m_network(network), m_port(port),
+      m_receiveActive(false), m_encrypted(false)
 {
-    server->addHandler(this);
+    m_discovery->httpServer()->addHandler(this);
     connect(m_network, SIGNAL(onlineChanged()), this, SIGNAL(urlChanged()));
+    // The scheme follows the server (restarted as http/https).
+    connect(m_discovery, SIGNAL(statusChanged()), this, SIGNAL(urlChanged()));
 }
 
 QString WebShare::url() const
 {
     if (!m_network->isOnline() || m_network->localAddress().isNull())
         return QString();
-    return QString::fromLatin1("http://%1:%2").arg(m_network->localAddressString()).arg(m_port);
+    return QString::fromLatin1("%1://%2:%3")
+            .arg(QLatin1String(m_discovery->isServerHttps() ? "https" : "http"))
+            .arg(m_network->localAddressString()).arg(m_port);
+}
+
+void WebShare::setEncrypted(bool on)
+{
+    if (on == m_encrypted)
+        return;
+    m_encrypted = on;
+    qDebug() << "WebShare: encryption" << (on ? "on" : "off");
+    emit encryptedChanged();
+    if (m_receiveActive)
+        m_discovery->setLinkEncryption(true, m_encrypted);
 }
 
 void WebShare::setPin(const QString &pin)
@@ -41,7 +57,10 @@ void WebShare::startReceive()
     // Like the official app: the link starts with the receive PIN from
     // settings and can change it without touching the settings.
     setPin(m_settings->requirePin() ? m_settings->pin() : QString());
+    // Like the official app: every link starts unencrypted.
+    setEncrypted(false);
     m_receiveActive = true;
+    m_discovery->setLinkEncryption(true, m_encrypted);
     qDebug() << "WebShare: receive via link on," << (url().isEmpty() ? QString::fromLatin1("offline") : url())
              << "auto accept" << m_settings->receiveViaLinkAutoAccept();
     emit receiveActiveChanged();
@@ -53,6 +72,9 @@ void WebShare::stop()
         return;
     m_receiveActive = false;
     setPin(QString());
+    // Back to settings.encryption.
+    m_discovery->setLinkEncryption(false, false);
+    setEncrypted(false);
     qDebug() << "WebShare: receive via link off";
     emit receiveActiveChanged();
 }

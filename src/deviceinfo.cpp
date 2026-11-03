@@ -42,7 +42,7 @@ static QString randomFingerprint()
 }
 
 DeviceInfo::DeviceInfo(QObject *parent)
-    : QObject(parent)
+    : QObject(parent), m_https(false)
 {
     QSettings settings;
     m_alias = settings.value(QLatin1String("identity/alias")).toString();

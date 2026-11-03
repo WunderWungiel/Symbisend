@@ -3,9 +3,11 @@
 #include <QDebug>
 #include <QStringList>
 #include <QTcpSocket>
+#include <QElapsedTimer>
 #include <QUrl>
 
 #include "json.h"
+#include "tlsserver.h"
 
 // The request line + headers. LocalSend clients send well under 1 KB.
 static const int kMaxHeaderSize = 16 * 1024;
@@ -47,11 +49,13 @@ struct HttpServer::Connection
     enum ChunkState { ChunkSize, ChunkData, ChunkDataEnd, Trailer };
 
     Connection()
-        : id(0), socket(0), phase(Headers), handler(0), streaming(false),
-          chunked(false), chunkState(ChunkSize), remaining(0) {}
+        : id(0), socket(0), tls(0), phase(Headers), handler(0), streaming(false),
+          chunked(false), chunkState(ChunkSize), remaining(0), bodyBytes(0) {}
+    ~Connection() { delete tls; }
 
     quint32 id;
     QTcpSocket *socket;
+    TlsSession *tls;         // https only
     QByteArray buffer;       // received, not processed yet
     Phase phase;
     HttpRequest request;
@@ -61,6 +65,9 @@ struct HttpServer::Connection
     ChunkState chunkState;
     qint64 remaining;        // body bytes left (Content-Length), or of the current chunk
     QDateTime lastActivity;
+    // Streamed bodies: size and duration, for the throughput in the log.
+    qint64 bodyBytes;
+    QElapsedTimer bodyTimer;
 };
 
 HttpServer::HttpServer(QObject *parent)
@@ -83,13 +90,20 @@ void HttpServer::addHandler(HttpHandler *handler)
     m_handlers.append(handler);
 }
 
-bool HttpServer::listen(quint16 port)
+bool HttpServer::listen(quint16 port, bool https)
 {
+    m_tlsConfig.clear();
+    if (https) {
+        m_tlsConfig = TlsServerConfig::create();
+        if (m_tlsConfig.isNull())
+            qWarning() << "HTTP: https is not possible - using http";
+    }
     if (!m_server.listen(QHostAddress::Any, port)) {
         qWarning() << "HTTP: cannot listen on port" << port << m_server.errorString();
+        m_tlsConfig.clear();
         return false;
     }
-    qDebug() << "HTTP: listening on port" << port;
+    qDebug() << "HTTP: listening on port" << port << (isHttps() ? "(https)" : "(http)");
     return true;
 }
 
@@ -104,6 +118,7 @@ void HttpServer::close()
         if (Connection *c = m_byId.value(id))
             remove(c, true);
     }
+    m_tlsConfig.clear();
 }
 
 void HttpServer::respond(quint32 requestId, const HttpResponse &response)
@@ -133,6 +148,8 @@ void HttpServer::onNewConnection()
             m_nextId = 1;
         c->socket = socket;
         c->lastActivity = QDateTime::currentDateTime();
+        if (m_tlsConfig)
+            c->tls = new TlsSession(m_tlsConfig);
         m_bySocket.insert(socket, c);
         m_byId.insert(c->id, c);
         connect(socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
@@ -199,12 +216,42 @@ void HttpServer::onReadyRead()
     if (!c)
         return;
     c->lastActivity = QDateTime::currentDateTime();
-    if (c->phase == Connection::Waiting || c->phase == Connection::Answered) {
-        socket->readAll(); // nothing more is expected from this client
-        return;
+    QByteArray data = socket->readAll();
+    if (c->tls) {
+        const bool wasDone = c->tls->handshakeDone();
+        // Also after our answer: the client's close_notify goes through here.
+        data = c->tls->feed(data);
+        const QByteArray out = c->tls->takeOutgoing();
+        if (!out.isEmpty())
+            socket->write(out);
+        if (c->tls->failed()) {
+            if (c->phase != Connection::Answered)
+                qWarning() << "HTTP: TLS with" << socket->peerAddress().toString() << "failed:"
+                           << c->tls->errorString();
+            remove(c, true);
+            return;
+        }
+        if (!wasDone && c->tls->handshakeDone())
+            qDebug() << "HTTP: TLS handshake with" << socket->peerAddress().toString() << "done:"
+                     << c->tls->version() << c->tls->ciphersuite();
     }
-    c->buffer.append(socket->readAll());
+    if (c->phase == Connection::Waiting || c->phase == Connection::Answered)
+        return; // nothing more is expected from this client
+    if (data.isEmpty())
+        return;
+    if (c->buffer.isEmpty())
+        c->buffer = data; // no copy
+    else
+        c->buffer.append(data);
     process(c);
+}
+
+void HttpServer::write(Connection *c, const QByteArray &data)
+{
+    if (c->tls)
+        c->socket->write(c->tls->encrypt(data));
+    else
+        c->socket->write(data);
 }
 
 void HttpServer::process(Connection *c)
@@ -279,6 +326,7 @@ bool HttpServer::parseHeaders(Connection *c)
 
     c->phase = Connection::Body;
     if (c->streaming) {
+        c->bodyTimer.start();
         // Let the handler check the request before any body is read.
         const quint32 id = c->id;
         const HttpResponse r = c->handler->bodyData(req, QByteArray());
@@ -290,7 +338,7 @@ bool HttpServer::parseHeaders(Connection *c)
         }
     }
     if (req.headers.value("expect").toLower() == "100-continue")
-        c->socket->write("HTTP/1.1 100 Continue\r\n\r\n");
+        write(c, "HTTP/1.1 100 Continue\r\n\r\n");
     return true;
 }
 
@@ -308,6 +356,7 @@ bool HttpServer::readBody(Connection *c)
         }
         if (!piece.isEmpty()) {
             if (c->streaming) {
+                c->bodyBytes += piece.size();
                 const HttpResponse r = c->handler->bodyData(c->request, piece);
                 if (!alive(id))
                     return false;
@@ -329,6 +378,12 @@ bool HttpServer::readBody(Connection *c)
             return false; // wait for more data
     }
 
+    if (c->streaming && c->bodyBytes >= 1024 * 1024) {
+        // To compare https with http on the phone.
+        const qint64 ms = qMax(c->bodyTimer.elapsed(), qint64(1));
+        qDebug() << "HTTP: received" << c->bodyBytes / 1024 << "KB in" << ms << "ms ="
+                 << int(c->bodyBytes * 1000 / 1024 / ms) << "KB/s" << (c->tls ? "(https)" : "(http)");
+    }
     c->phase = Connection::Waiting;
     c->buffer.clear();
     const HttpResponse r = c->handler->handleRequest(c->request);
@@ -454,7 +509,9 @@ void HttpServer::sendResponse(Connection *c, const HttpResponse &response)
     out.append("Content-Length: " + QByteArray::number(response.body.size()) + "\r\n");
     out.append("Connection: close\r\n\r\n");
     out.append(response.body);
-    c->socket->write(out);
+    write(c, out);
+    if (c->tls)
+        c->socket->write(c->tls->closeNotify());
     // Ignore anything else this client sends; the connection is forgotten
     // once the client closes it (or after the idle timeout).
     c->phase = Connection::Answered;

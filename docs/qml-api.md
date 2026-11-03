@@ -35,6 +35,10 @@ Properties: `count` (int).  Methods: `clear()`.
 ## `discovery`
 - `scanning` (bool), `scanProgress` (0–100)
 - `serverRunning` (bool) — our HTTP server on port 53317 is up
+- `serverHttps` (bool) — the running server speaks https (false while stopped). It
+  follows `settings.encryption`, or `webShare.encrypted` while `webShare.receiveActive`;
+  a change restarts a running server at once (requests in progress are aborted) and
+  re-announces us. Without a usable certificate (e.g. desktop builds) it stays http.
 - `multicastListening` (bool) — we receive other devices' announcements
 - `refresh()` — announce + rescan the subnet (also connects if offline)
 - `autoRefresh` (bool, read/write, default false) — while true, `refresh()` runs every
@@ -197,6 +201,11 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `cancel()` — stops receiving (in `request`: same as `decline()`)
 - Signals `stateChanged()`, `progressChanged()`.
 
+Network:
+- `encryption` (bool, default true) — our server speaks https (LocalSend's "Encryption").
+  Applied at once, see `discovery.serverHttps`. Sending to others always uses the protocol
+  each peer announced, whatever this says.
+
 `main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`.
 
 ## `webShare` — "Receive via link" (browsers send files to us)
@@ -206,14 +215,19 @@ which sends the chosen files through the normal `prepare-upload`/`upload` endpoi
 they arrive through `receiver` as a sender with `peerAlias` `Web Browser`,
 `peerDeviceType` `web`. While inactive, `/` answers with LocalSend's 403 page.
 - `receiveActive` (bool, read-only)
-- `url` (string) — `http://<our IP>:53317`, or `""` while offline. Plain http (our server
-  has no TLS; the official app also uses http for links by default).
+- `url` (string) — `http://<our IP>:53317` (`https://` while `discovery.serverHttps`), or
+  `""` while offline.
+- `encrypted` (bool, read/write) — while active, the server speaks https instead of
+  following `settings.encryption` (the server restarts, `url` changes). Like the official
+  app it is not persisted: `startReceive()` and `stop()` set it to false. Browsers warn
+  about our self-signed certificate; show the official hint "LocalSend uses a self-signed
+  certificate. You need to accept it in your browser." while it is on.
 - `pin` (string, read/write, `""` = none) — while active, required from every sender
   (browsers ask for it), replacing `settings.pin`. `startReceive()` sets it to
   `settings.pin` if `settings.requirePin`, else `""`; changing it doesn't touch the
   settings. `stop()` clears it.
 - `startReceive()`, `stop()` — `ReceiveLinkPage.qml` calls them when it opens / closes.
-- Signals `receiveActiveChanged()`, `urlChanged()`, `pinChanged()`.
+- Signals `receiveActiveChanged()`, `urlChanged()`, `pinChanged()`, `encryptedChanged()`.
 - Also see `settings.receiveViaLinkAutoAccept`. Not implemented yet: "Share via link"
   (browsers downloading from us).
 

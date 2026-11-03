@@ -1,6 +1,7 @@
 #ifndef CLIENTIDENTITY_H
 #define CLIENTIDENTITY_H
 
+#include <QByteArray>
 #include <QString>
 
 // Our TLS client certificate.
@@ -22,6 +23,13 @@ namespace ClientIdentity {
     // Returns the certificate's fingerprint, or an empty string if there is
     // no certificate (then HTTPS peers running the Rust server reject us).
     QString install();
+    // The stored certificate and private key (PEM) for our https server
+    // (src/tlsserver.cpp, mbedTLS), so peers see the certificate our
+    // fingerprint is the hash of. Read from QSettings on every platform: on
+    // a desktop build without SYMBISEND_CLIENT_CERT a test pair can be put
+    // under identity/certificate and identity/privateKey by hand. False if
+    // there is none.
+    bool serverIdentity(QByteArray *certPem, QByteArray *keyPem);
 }
 
 #endif // CLIENTIDENTITY_H

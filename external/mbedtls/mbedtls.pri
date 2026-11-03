@@ -15,8 +15,10 @@ MBEDTLS_SRC = $$PWD/upstream
 INCLUDEPATH += $$MBEDTLS_DIR $$MBEDTLS_SRC/include
 DEFINES += MBEDTLS_STATIC
 # Our configuration instead of include/mbedtls/mbedtls_config.h. sbsv2 mangles
-# a quoted macro value, so Symbian gets the <> form.
-symbian:DEFINES += "MBEDTLS_CONFIG_FILE=<symbisend_config.h>"
+# a quoted macro value, so Symbian gets the <> form, and only through the MMP:
+# in DEFINES it would also reach moc's command line, where the shell takes
+# < and > as redirections (moc then fails and its output is stale).
+symbian:MMP_RULES += "MACRO MBEDTLS_CONFIG_FILE=<symbisend_config.h>"
 else:DEFINES += MBEDTLS_CONFIG_FILE=\\\"symbisend_config.h\\\"
 
 MBEDTLS_MODULES = \

@@ -5,6 +5,17 @@
 #include <QSettings>
 #include <QTime>
 
+static const char kCertKey[] = "identity/certificate";
+static const char kPrivateKeyKey[] = "identity/privateKey";
+
+bool ClientIdentity::serverIdentity(QByteArray *certPem, QByteArray *keyPem)
+{
+    QSettings settings;
+    *certPem = settings.value(QLatin1String(kCertKey)).toByteArray();
+    *keyPem = settings.value(QLatin1String(kPrivateKeyKey)).toByteArray();
+    return !certPem->isEmpty() && !keyPem->isEmpty();
+}
+
 #if defined(SYMBISEND_CLIENT_CERT) && !defined(QT_NO_OPENSSL)
 #include <QSslCertificate>
 #include <QSslConfiguration>
@@ -24,9 +35,6 @@
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 #include <openssl/x509.h>
-
-static const char kCertKey[] = "identity/certificate";
-static const char kPrivateKeyKey[] = "identity/privateKey";
 
 static QString opensslError()
 {

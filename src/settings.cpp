@@ -21,6 +21,7 @@ static const char *kSaveMediaToGalleryKey = "receive/saveMediaToGallery";
 static const char *kAutoFinishKey = "receive/autoFinish";
 static const char *kSaveToHistoryKey = "receive/saveToHistory";
 static const char *kReceiveViaLinkAutoAcceptKey = "receive/viaLinkAutoAccept";
+static const char *kEncryptionKey = "network/encryption";
 
 Settings::Settings(QObject *parent)
     : QObject(parent)
@@ -44,11 +45,13 @@ Settings::Settings(QObject *parent)
     m_autoFinish = s.value(QLatin1String(kAutoFinishKey), false).toBool();
     m_saveToHistory = s.value(QLatin1String(kSaveToHistoryKey), true).toBool();
     m_receiveViaLinkAutoAccept = s.value(QLatin1String(kReceiveViaLinkAutoAcceptKey), false).toBool();
+    m_encryption = s.value(QLatin1String(kEncryptionKey), true).toBool();
     qDebug() << "Settings: theme" << m_theme << "language" << m_language
              << "quickSave" << m_quickSave << "requirePin" << m_requirePin
              << "saveMediaToGallery" << m_saveMediaToGallery
              << "autoFinish" << m_autoFinish << "saveToHistory" << m_saveToHistory
-             << "receiveViaLinkAutoAccept" << m_receiveViaLinkAutoAccept;
+             << "receiveViaLinkAutoAccept" << m_receiveViaLinkAutoAccept
+             << "encryption" << m_encryption;
 
     m_custom = s.value(QLatin1String(kDownloadFolderKey)).toString();
     updateDownloadFolder();
@@ -152,6 +155,12 @@ void Settings::setReceiveViaLinkAutoAccept(bool on)
 {
     if (store(kReceiveViaLinkAutoAcceptKey, &m_receiveViaLinkAutoAccept, on))
         emit receiveViaLinkAutoAcceptChanged();
+}
+
+void Settings::setEncryption(bool on)
+{
+    if (store(kEncryptionKey, &m_encryption, on))
+        emit encryptionChanged();
 }
 
 QString Settings::downloadFolderNative() const

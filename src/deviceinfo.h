@@ -27,7 +27,9 @@ public:
     QString deviceModel() const { return m_deviceModel; }
     QString deviceType() const { return QLatin1String("mobile"); }
     int port() const { return DefaultPort; }
-    QString protocol() const { return QLatin1String("http"); }
+    // What our server speaks right now (Discovery sets it on every start).
+    QString protocol() const { return QLatin1String(m_https ? "https" : "http"); }
+    void setHttps(bool on) { m_https = on; }
 
     // Body for /register requests and responses (v2).
     QVariantMap toRegisterMap() const;
@@ -41,6 +43,7 @@ private:
     QString m_alias;
     QString m_fingerprint;
     QString m_deviceModel;
+    bool m_https;
 };
 
 #endif // DEVICEINFO_H

@@ -116,6 +116,16 @@ Page {
                     onClicked: discovery.stopServer()
                 }
             }
+            // Applied at once: a running server restarts as https / http.
+            SettingsSwitch {
+                title: "Encryption"
+                checked: settings.encryption
+                onToggled: {
+                    settings.encryption = value
+                    if (!value)
+                        encryptionOffDialog.open()
+                }
+            }
             SettingsItem {
                 title: "Device name"
                 subTitle: myDevice.alias
@@ -216,6 +226,16 @@ Page {
             settings.pin = pinField.text
             settings.requirePin = true
         }
+    }
+
+    // The official app's notice after turning encryption off.
+    QueryDialog {
+        id: encryptionOffDialog
+        platformInverted: page.platformInverted
+        titleText: "Encryption disabled"
+        message: "Communication now takes place via the unencrypted HTTP protocol. "
+                 + "To use HTTPS protocol, enable encryption again."
+        acceptButtonText: "OK"
     }
 
     CommonDialog {
