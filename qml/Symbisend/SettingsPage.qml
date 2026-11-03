@@ -58,10 +58,20 @@ Page {
                 checked: settings.quickSave
                 onToggled: settings.quickSave = value
             }
+            // Turning it on asks for the PIN first (stays off on Cancel or
+            // an empty PIN); tapping the row while on changes the PIN.
             SettingsSwitch {
                 title: "Require PIN"
+                subTitle: settings.requirePin ? "Tap to change the PIN" : ""
                 checked: settings.requirePin
-                onToggled: settings.requirePin = value
+                rowToggles: false
+                onClicked: pinDialog.openWith(settings.requirePin ? settings.pin : "")
+                onToggled: {
+                    if (value)
+                        pinDialog.openWith("")
+                    else
+                        settings.requirePin = false // also clears the PIN
+                }
             }
             SettingsItem {
                 title: "Save to folder"
@@ -167,6 +177,44 @@ Page {
                 enabled: !settings.downloadFolderIsDefault
                 onClicked: settings.resetDownloadFolder()
             }
+        }
+    }
+
+    CommonDialog {
+        id: pinDialog
+        platformInverted: page.platformInverted
+        titleText: "PIN"
+        buttonTexts: ["OK", "Cancel"]
+
+        function openWith(pin) {
+            pinField.text = pin
+            open()
+        }
+
+        content: Item {
+            width: pinDialog.platformContentMaximumWidth
+            height: pinField.height + 2 * platformStyle.paddingLarge
+
+            // Any text, not only digits: the standard keyboard.
+            TextField {
+                id: pinField
+                platformInverted: page.platformInverted
+                anchors {
+                    left: parent.left; right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    margins: platformStyle.paddingLarge
+                }
+                maximumLength: 64
+                placeholderText: "Enter PIN"
+                inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+            }
+        }
+
+        onButtonClicked: {
+            if (index != 0 || pinField.text == "")
+                return // keeps the old state / PIN
+            settings.pin = pinField.text
+            settings.requirePin = true
         }
     }
 

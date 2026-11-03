@@ -20,7 +20,9 @@ class Settings : public QObject
 
     // Receive
     Q_PROPERTY(bool quickSave READ quickSave WRITE setQuickSave NOTIFY quickSaveChanged)
+    // requirePin can only be on with a non-empty pin; turning it off clears the pin.
     Q_PROPERTY(bool requirePin READ requirePin WRITE setRequirePin NOTIFY requirePinChanged)
+    Q_PROPERTY(QString pin READ pin WRITE setPin NOTIFY pinChanged)
     // Native-separator path for display, e.g. "F:\Symbisend".
     Q_PROPERTY(QString downloadFolder READ downloadFolderNative NOTIFY downloadFolderChanged)
     Q_PROPERTY(bool downloadFolderIsDefault READ downloadFolderIsDefault NOTIFY downloadFolderChanged)
@@ -42,6 +44,10 @@ public:
     void setQuickSave(bool on);
     bool requirePin() const { return m_requirePin; }
     void setRequirePin(bool on);
+    // Any text, not only digits. Setting an empty pin is ignored while
+    // requirePin is on (turn requirePin off instead).
+    QString pin() const { return m_pin; }
+    void setPin(const QString &pin);
     bool saveMediaToGallery() const { return m_saveMediaToGallery; }
     void setSaveMediaToGallery(bool on);
     bool autoFinish() const { return m_autoFinish; }
@@ -65,6 +71,7 @@ signals:
     void languageChanged();
     void quickSaveChanged();
     void requirePinChanged();
+    void pinChanged();
     void downloadFolderChanged();
     void saveMediaToGalleryChanged();
     void autoFinishChanged();
@@ -85,6 +92,7 @@ private:
     QString m_language;
     bool m_quickSave;
     bool m_requirePin;
+    QString m_pin;
     bool m_saveMediaToGallery;
     bool m_autoFinish;
     bool m_saveToHistory;

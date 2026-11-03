@@ -15,6 +15,7 @@ static const char *kThemeKey = "general/theme";
 static const char *kLanguageKey = "general/language";
 static const char *kQuickSaveKey = "receive/quickSave";
 static const char *kRequirePinKey = "receive/requirePin";
+static const char *kPinKey = "receive/pin";
 static const char *kDownloadFolderKey = "transfer/downloadFolder";
 static const char *kSaveMediaToGalleryKey = "receive/saveMediaToGallery";
 static const char *kAutoFinishKey = "receive/autoFinish";
@@ -32,6 +33,12 @@ Settings::Settings(QObject *parent)
         m_language = QLatin1String("system");
     m_quickSave = s.value(QLatin1String(kQuickSaveKey), false).toBool();
     m_requirePin = s.value(QLatin1String(kRequirePinKey), false).toBool();
+    m_pin = s.value(QLatin1String(kPinKey)).toString();
+    if (m_requirePin && m_pin.isEmpty()) {
+        qWarning() << "Settings: requirePin was on without a PIN, turning it off";
+        m_requirePin = false;
+        s.setValue(QLatin1String(kRequirePinKey), false);
+    }
     m_saveMediaToGallery = s.value(QLatin1String(kSaveMediaToGalleryKey), true).toBool();
     m_autoFinish = s.value(QLatin1String(kAutoFinishKey), false).toBool();
     m_saveToHistory = s.value(QLatin1String(kSaveToHistoryKey), true).toBool();
@@ -90,8 +97,34 @@ void Settings::setQuickSave(bool on)
 
 void Settings::setRequirePin(bool on)
 {
-    if (store(kRequirePinKey, &m_requirePin, on))
-        emit requirePinChanged();
+    if (on && m_pin.isEmpty()) {
+        qWarning() << "Settings: requirePin needs a PIN first, ignored";
+        return;
+    }
+    if (!store(kRequirePinKey, &m_requirePin, on))
+        return;
+    emit requirePinChanged();
+    if (!on && !m_pin.isEmpty()) {
+        m_pin.clear();
+        QSettings().remove(QLatin1String(kPinKey));
+        qDebug() << "Settings: PIN cleared";
+        emit pinChanged();
+    }
+}
+
+void Settings::setPin(const QString &pin)
+{
+    if (pin == m_pin)
+        return;
+    if (pin.isEmpty() && m_requirePin) {
+        qWarning() << "Settings: empty PIN ignored while requirePin is on";
+        return;
+    }
+    m_pin = pin;
+    // Not through store(): keep the PIN itself out of the log.
+    QSettings().setValue(QLatin1String(kPinKey), m_pin);
+    qDebug() << "Settings: PIN set," << m_pin.length() << "characters";
+    emit pinChanged();
 }
 
 void Settings::setSaveMediaToGallery(bool on)

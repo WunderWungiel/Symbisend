@@ -74,7 +74,10 @@ General:
 
 Receive:
 - `quickSave` (bool, default false) *(stored only)*
-- `requirePin` (bool, default false) *(stored only)*
+- `requirePin` (bool, default false) *(stored only)* — can only be turned on while `pin`
+  is non-empty (otherwise the write is ignored); turning it off also clears `pin`
+- `pin` (string, default `""`) *(stored only)* — any text, not only digits. Setting it
+  to `""` is ignored while `requirePin` is on. To enable: set `pin`, then `requirePin = true`.
 - `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
   received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else
   `C:\Data\Symbisend`; recomputed each launch. If the chosen folder is unavailable
