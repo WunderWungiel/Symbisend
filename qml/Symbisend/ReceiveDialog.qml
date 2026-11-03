@@ -32,8 +32,40 @@ Dialog {
                 + " (" + selection.formatSize(receiver.totalSize) + ")"
     }
 
-    // Declined (idle): nothing more to show.
-    onRecvStateChanged: if (recvState == "idle") close()
+    // settings.autoFinish, like the official app: once every file is saved the
+    // Close button counts down "Close (3)", "Close (2)", ... and the dialog
+    // closes by itself. Not for messages (they are there to be read) nor for
+    // failed or cancelled transfers.
+    property int finishCounter: 3
+
+    Timer {
+        id: finishTimer
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            if (root.finishCounter <= 1) {
+                stop()
+                console.log("ReceiveDialog: auto finish - closing")
+                root.close()
+            } else {
+                root.finishCounter--
+            }
+        }
+    }
+
+    onRecvStateChanged: {
+        finishTimer.stop()
+        // Declined (idle): nothing more to show.
+        if (recvState == "idle") {
+            close()
+        } else if (recvState == "finished" && !receiver.isMessage && settings.autoFinish
+                   && (status == DialogStatus.Open || status == DialogStatus.Opening)) {
+            finishCounter = 3
+            finishTimer.start()
+        }
+    }
+    // Closed by hand during the countdown.
+    onStatusChanged: if (status == DialogStatus.Closing || status == DialogStatus.Closed) finishTimer.stop()
 
     // Sized from the column explicitly, like SendDialog.
     height: privateTitleHeight + contentColumn.height + privateButtonsHeight
@@ -225,7 +257,8 @@ Dialog {
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
-                text: root.recvState == "receiving" ? "Cancel" : "Close"
+                text: root.recvState == "receiving" ? "Cancel"
+                      : finishTimer.running ? "Close (" + root.finishCounter + ")" : "Close"
                 onClicked: {
                     if (root.recvState == "receiving")
                         receiver.cancel()

@@ -11,7 +11,7 @@
 // recomputed on every launch so inserting a memory card is picked up.
 //
 // quickSave, requirePin/pin, downloadFolder and receiveViaLinkAutoAccept are
-// used by Receiver; the
+// used by Receiver; autoFinish by ReceiveDialog.qml; the
 // other receive settings are stored only for now.
 class Settings : public QObject
 {

@@ -92,7 +92,10 @@ Receive:
   `downloadFolder` changes when the user confirms (nothing happens on cancel)
 - `resetDownloadFolder()` — back to the default
 - `saveMediaToGallery` (bool, default true) *(stored only)*
-- `autoFinish` (bool, default false) *(stored only)*
+- `autoFinish` (bool, default false) — applied in QML (`ReceiveDialog.qml`): after files
+  were received (`receiver.state` `finished`, not a message) the Close button counts down
+  3 s and the dialog closes by itself, like the official app. Failed/cancelled transfers
+  and messages stay open.
 - `saveToHistory` (bool, default true) *(stored only)*
 - `receiveViaLinkAutoAccept` (bool, default false) — while `webShare.receiveActive`, every
   file offer is accepted at once (like `quickSave`; messages are still shown). The
