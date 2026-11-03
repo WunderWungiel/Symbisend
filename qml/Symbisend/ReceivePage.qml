@@ -67,16 +67,38 @@ Page {
         }
     }
 
-    // History of received files (HistoryPage), top right.
+    // History of received files (HistoryPage), left of the Info button.
     ToolButton {
         id: historyButton
+        platformInverted: page.platformInverted
+        anchors {
+            top: infoButton.top
+            right: infoButton.left
+        }
+        iconSource: page.platformInverted ? "images/history-inverted.svg" : "images/history.svg"
+        onClicked: page.historyRequested()
+    }
+
+    // Our own alias, address and port, top right.
+    ToolButton {
+        id: infoButton
         platformInverted: page.platformInverted
         anchors {
             top: parent.top; topMargin: 4
             right: parent.right; rightMargin: platformStyle.paddingMedium
         }
-        iconSource: page.platformInverted ? "images/history-inverted.svg" : "images/history.svg"
-        onClicked: page.historyRequested()
+        iconSource: page.platformInverted ? "images/info-inverted.svg" : "images/info.svg"
+        onClicked: infoDialog.open()
+    }
+
+    QueryDialog {
+        id: infoDialog
+        platformInverted: page.platformInverted
+        titleText: "Info"
+        message: "Alias: " + myDevice.alias
+                 + "\nIP: " + (network.localAddress !== "" ? network.localAddress : "-")
+                 + "\nPort: " + myDevice.port
+        acceptButtonText: "OK"
     }
 
     // "Receive via link": browsers upload to us (ReceiveLinkPage).
