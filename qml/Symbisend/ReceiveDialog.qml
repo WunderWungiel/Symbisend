@@ -183,7 +183,10 @@ Dialog {
             text: {
                 if (root.recvState == "finished")
                     return "Saved " + (receiver.filesDone == 1 ? "1 file" : receiver.filesDone + " files")
-                            + " from " + receiver.peerAlias + " to " + receiver.folder
+                            + " from " + receiver.peerAlias
+                            // Own line for the folder: Qt allows a line break after
+                            // "\", so "F:\Symbisend" would otherwise split there.
+                            + "\nto " + receiver.folder
                 return receiver.errorText
             }
         }
