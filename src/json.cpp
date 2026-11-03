@@ -51,8 +51,16 @@ static void escapeString(const QString &s, QByteArray &out)
         default:
             if (u < 0x20) {
                 out.append(QString::fromLatin1("\\u%1").arg(u, 4, 16, QLatin1Char('0')).toLatin1());
+            } else if (u < 0x80) {
+                out.append(char(u));
             } else {
-                out.append(QString(c).toUtf8());
+                // Whole runs of non-ASCII at once: keeps surrogate pairs
+                // (emoji) together, which per-character toUtf8() broke.
+                int j = i + 1;
+                while (j < s.size() && s.at(j).unicode() >= 0x80)
+                    ++j;
+                out.append(s.mid(i, j - i).toUtf8());
+                i = j - 1;
             }
         }
     }
