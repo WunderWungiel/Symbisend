@@ -227,6 +227,9 @@ message.
   - `size` (number, bytes; UTF-8 length for text), `sizeText` (string, `1.2 MB`)
   - `time` (date), `timeText` (string, the phone's short date + time format)
   - `senderAlias` (string) — the device that sent it
+- `openFile(int row)` → bool — opens that entry's file in the system's app for it
+  (`QDesktopServices::openUrl`). False for text entries, a missing file, or when nothing
+  could open it.
 - Signal `countChanged()`.
 
 ## `webShare` — "Receive via link" (browsers send files to us)

@@ -76,7 +76,6 @@ Page {
             right: parent.right; rightMargin: platformStyle.paddingMedium
         }
         iconSource: page.platformInverted ? "images/history-inverted.svg" : "images/history.svg"
-        text: "History"
         onClicked: page.historyRequested()
     }
 

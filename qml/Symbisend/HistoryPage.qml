@@ -3,9 +3,10 @@ import com.nokia.symbian 1.1
 
 // History of received files and messages (the `history` model), opened with
 // the History button on the Home tab. Like LocalSend's history page: Open
-// folder / Delete history, then every entry with its type icon, name (or the
+// folder / Clear, then every entry with its type icon, name (or the
 // message), date, size and sender. Has its own back button at the top, so
-// main.qml hides the toolbar.
+// main.qml hides the toolbar. Tapping a file opens it in the phone's app for
+// it; tapping a text message shows it in a dialog.
 Page {
     id: page
 
@@ -43,7 +44,7 @@ Page {
         }
     }
 
-    // ------------------------------------------------ Open folder / Delete history
+    // ------------------------------------------------ Open folder / Clear
     // Icon + text ToolButtons, capped at half the row each (see SelectionCard).
     Item {
         id: buttonRow
@@ -71,7 +72,7 @@ Page {
             width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
             anchors { left: openFolderButton.right; leftMargin: buttonRow.spacing }
             iconSource: "toolbar-delete"
-            text: "Delete history"
+            text: "Clear"
             // TODO: clear the history
         }
     }
@@ -92,6 +93,24 @@ Page {
             height: Math.max(tile.height, texts.height, moreButton.height) + 2 * platformStyle.paddingSmall
 
             property bool isText: model.kind == "text"
+
+            // Press feedback; moreButton (declared later) stays on top.
+            Rectangle {
+                anchors.fill: parent
+                visible: rowMouse.pressed
+                color: page.mutedColor
+                opacity: 0.3
+            }
+            MouseArea {
+                id: rowMouse
+                anchors.fill: parent
+                onClicked: {
+                    if (row.isText)
+                        textDialog.openWith(model.text, model.senderAlias)
+                    else if (!history.openFile(index))
+                        openFailedDialog.open()
+                }
+            }
 
             SelectionTile {
                 id: tile
@@ -148,6 +167,47 @@ Page {
         visible: history.count === 0
         color: page.mutedColor
         text: "No history"
+    }
+
+    // ------------------------------------------------ Dialogs
+    // A received text message, in full, in an editable field (like the
+    // Device name dialog in Settings) so it can be selected and copied.
+    // Edits are not saved.
+    CommonDialog {
+        id: textDialog
+        platformInverted: page.platformInverted
+        buttonTexts: ["Close"]
+
+        function openWith(text, senderAlias) {
+            titleText = senderAlias
+            textArea.text = text
+            open()
+        }
+
+        content: Item {
+            width: textDialog.platformContentMaximumWidth
+            height: textArea.height + 2 * platformStyle.paddingLarge
+
+            TextArea {
+                id: textArea
+                platformInverted: page.platformInverted
+                anchors {
+                    left: parent.left; right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    margins: platformStyle.paddingLarge
+                }
+                // Grows with the text, up to what fits; scrolls beyond that.
+                height: Math.min(implicitHeight, Math.round(page.height * 0.5))
+            }
+        }
+    }
+
+    QueryDialog {
+        id: openFailedDialog
+        platformInverted: page.platformInverted
+        titleText: "Cannot open file"
+        message: "The file no longer exists or no application can open it."
+        acceptButtonText: "OK"
     }
 
     ScrollDecorator {

@@ -1,10 +1,12 @@
 #include "historymodel.h"
 
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
 #include <QLocale>
 #include <QSettings>
+#include <QUrl>
 #include <QVariantList>
 #include <QVariantMap>
 
@@ -65,6 +67,25 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case SenderAliasRole: return e.senderAlias;
     }
     return QVariant();
+}
+
+bool HistoryModel::openFile(int row)
+{
+    if (row < 0 || row >= m_entries.size())
+        return false;
+    const HistoryEntry &e = m_entries.at(row);
+    if (e.path.isEmpty())
+        return false;
+    if (!QFileInfo(e.path).exists()) {
+        qWarning() << "History: cannot open" << e.path << "- file no longer exists";
+        return false;
+    }
+    bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(e.path));
+    if (ok)
+        qDebug() << "History: opened" << e.path;
+    else
+        qWarning() << "History: no application could open" << e.path;
+    return ok;
 }
 
 void HistoryModel::addFile(const QString &path, qint64 size, const QString &senderAlias)

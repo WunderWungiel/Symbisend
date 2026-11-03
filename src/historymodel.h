@@ -54,6 +54,11 @@ public:
     // An accepted text message.
     void addText(const QString &text, const QString &senderAlias);
 
+    // Opens the file of entry `row` in the system's app for it (the phone's
+    // document handler). False if it is a text entry, the file is gone or
+    // nothing could open it.
+    Q_INVOKABLE bool openFile(int row);
+
 signals:
     void countChanged();
 
