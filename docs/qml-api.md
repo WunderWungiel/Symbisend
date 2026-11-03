@@ -230,17 +230,23 @@ Network:
 `main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`.
 
 ## `history` — received files and messages (ListView model)
-Newest first, at most 200 entries (older ones are dropped), persisted in `QSettings`
-(`history/entries`). `receiver` adds every file once it is saved and every accepted text
-message, unless `settings.saveToHistory` is off.
+Newest first, at most 200 entries (older ones are dropped), persisted as JSON in its own
+file (`history.json` in the app's data folder; older versions' `QSettings` key
+`history/entries` is moved there once). `receiver` adds every file once it is saved and
+every accepted text message, unless `settings.saveToHistory` is off. Messages longer than
+10 000 characters are kept shortened (ending in `…`).
 - `count` (int)
 - Roles:
   - `kind` (string) — `image`, `video`, `file` (from the extension) or `text`
   - `fileName` (string) — name of the saved file (`a (1).jpg` if it was renamed); empty
     for text
   - `path` (string, native separators) — the saved file; empty for text
-  - `text` (string) — text messages only
-  - `size` (number, bytes; UTF-8 length for text), `sizeText` (string, `1.2 MB`)
+  - `text` (string) — text messages only, in full (up to the 10 000 characters kept).
+    Don't bind list rows to it: use `preview`
+  - `preview` (string) — one line for the list: a message's first non-empty line, cut
+    to 150 characters (`…`); the file name for files
+  - `size` (number, bytes; UTF-8 length of the whole message for text), `sizeText`
+    (string, `1.2 MB`)
   - `time` (date), `timeText` (string, the phone's short date + time format)
   - `senderAlias` (string) — the device that sent it
 - `openFile(int row)` → bool — opens that entry's file in the system's app for it

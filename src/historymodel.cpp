@@ -1,8 +1,10 @@
 #include "historymodel.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QDesktopServices>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QLocale>
 #include <QSettings>
@@ -20,12 +22,13 @@
 #include <coemain.h>
 #endif
 
-// {"entries":[{...}, ...]} as one string (Json::parseObject wants an object).
-static const char *kEntriesKey = "history/entries";
+// Where the history used to be stored (one QSettings string); moved to
+// filePath() on the first start of a newer version.
+static const char *kOldEntriesKey = "history/entries";
 static const int kSaveDelayMs = 1000;
 
 HistoryModel::HistoryModel(QObject *parent)
-    : QAbstractListModel(parent)
+    : QAbstractListModel(parent), m_locale(QLocale::system())
 {
     QHash<int, QByteArray> roles;
     roles[KindRole] = "kind";
@@ -37,6 +40,7 @@ HistoryModel::HistoryModel(QObject *parent)
     roles[TimeRole] = "time";
     roles[TimeTextRole] = "timeText";
     roles[SenderAliasRole] = "senderAlias";
+    roles[PreviewRole] = "preview";
     setRoleNames(roles);
 
     m_saveTimer.setSingleShot(true);
@@ -70,8 +74,9 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
     case SizeRole: return qreal(e.size);
     case SizeTextRole: return SelectionModel::formatBytes(qreal(e.size));
     case TimeRole: return e.time;
-    case TimeTextRole: return QLocale::system().toString(e.time, QLocale::ShortFormat);
+    case TimeTextRole: return m_locale.toString(e.time, QLocale::ShortFormat);
     case SenderAliasRole: return e.senderAlias;
+    case PreviewRole: return e.kind == QLatin1String("text") ? e.preview : e.fileName;
     }
     return QVariant();
 }
@@ -190,11 +195,36 @@ void HistoryModel::addText(const QString &text, const QString &senderAlias)
 {
     HistoryEntry e;
     e.kind = QString::fromLatin1("text");
-    e.text = text;
     e.size = text.toUtf8().size();
+    if (text.size() > MaxTextLength) {
+        qDebug() << "History: message of" << text.size() << "characters kept shortened to"
+                 << MaxTextLength;
+        e.text = text.left(MaxTextLength) + QChar(0x2026); // "..."
+    } else {
+        e.text = text;
+    }
+    e.preview = previewOf(e.text);
     e.time = QDateTime::currentDateTime();
     e.senderAlias = senderAlias;
     prepend(e);
+}
+
+// The first non-empty line, at most MaxPreviewLength characters, found
+// without splitting the whole text.
+QString HistoryModel::previewOf(const QString &text)
+{
+    int start = 0;
+    while (start < text.size() && text.at(start).isSpace())
+        ++start;
+    int end = start;
+    const int limit = qMin(text.size(), start + MaxPreviewLength);
+    while (end < limit && text.at(end) != QLatin1Char('\n') && text.at(end) != QLatin1Char('\r'))
+        ++end;
+    QString line = text.mid(start, end - start);
+    if (end == limit && limit < text.size() && text.at(limit) != QLatin1Char('\n')
+            && text.at(limit) != QLatin1Char('\r'))
+        line += QChar(0x2026); // cut in the middle of the line
+    return line;
 }
 
 void HistoryModel::prepend(const HistoryEntry &entry)
@@ -230,35 +260,123 @@ void HistoryModel::save()
     }
     QVariantMap root;
     root.insert(QLatin1String("entries"), list);
-    QSettings().setValue(QLatin1String(kEntriesKey), QString::fromUtf8(Json::serialize(root)));
+    const QByteArray data = Json::serialize(root);
+    list.clear();
+    root.clear();
+
+    // Written next to the old file and then swapped in, so a crash or a full
+    // disk in the middle leaves the previous history intact.
+    const QString path = filePath();
+    const QString temp = path + QLatin1String(".new");
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile out(temp);
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "History: cannot write" << temp << out.errorString();
+        return;
+    }
+    const bool written = out.write(data) == data.size();
+    out.close();
+    if (!written || out.error() != QFile::NoError) {
+        qWarning() << "History: writing" << temp << "failed:" << out.errorString();
+        QFile::remove(temp);
+        return;
+    }
+    QFile::remove(path);
+    if (!QFile::rename(temp, path))
+        qWarning() << "History: cannot replace" << path;
+}
+
+// history.json in the app's own data folder. Symbian: the private folder
+// (applicationDirPath() is that there), which needs no capabilities.
+QString HistoryModel::filePath()
+{
+#ifdef Q_OS_SYMBIAN
+    const QString dir = QCoreApplication::applicationDirPath();
+#else
+    QString dir = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    if (dir.isEmpty())
+        dir = QDir::homePath() + QLatin1String("/.symbisend");
+#endif
+    return QDir::fromNativeSeparators(dir) + QLatin1String("/history.json");
 }
 
 void HistoryModel::load()
 {
-    const QString stored = QSettings().value(QLatin1String(kEntriesKey)).toString();
+    if (!loadFromFile())
+        migrateFromSettings();
+    qDebug() << "History:" << m_entries.size() << "entries";
+}
+
+// False if there is no history file yet.
+bool HistoryModel::loadFromFile()
+{
+    QFile in(filePath());
+    if (!in.exists()) {
+        // A save that was cut short before its rename.
+        if (QFile::exists(filePath() + QLatin1String(".new")))
+            QFile::rename(filePath() + QLatin1String(".new"), filePath());
+        if (!in.exists())
+            return false;
+    }
+    if (!in.open(QIODevice::ReadOnly)) {
+        qWarning() << "History: cannot read" << in.fileName() << in.errorString();
+        return true;
+    }
+    bool ok = false;
+    const QVariantMap root = Json::parseObject(in.readAll(), &ok);
+    in.close();
+    if (!ok) {
+        qWarning() << "History:" << in.fileName() << "is unreadable, starting empty";
+        return true;
+    }
+    foreach (const QVariant &v, root.value(QLatin1String("entries")).toList()) {
+        addLoaded(v.toMap());
+        if (m_entries.size() >= MaxEntries)
+            break;
+    }
+    return true;
+}
+
+// Versions before history.json kept the history in QSettings: move it over
+// once and drop it from the settings file.
+void HistoryModel::migrateFromSettings()
+{
+    QSettings settings;
+    const QString stored = settings.value(QLatin1String(kOldEntriesKey)).toString();
     if (stored.isEmpty())
         return;
     bool ok = false;
     const QVariantMap root = Json::parseObject(stored.toUtf8(), &ok);
-    if (!ok) {
+    if (ok) {
+        foreach (const QVariant &v, root.value(QLatin1String("entries")).toList()) {
+            addLoaded(v.toMap());
+            if (m_entries.size() >= MaxEntries)
+                break;
+        }
+    } else {
         qWarning() << "History: stored history is unreadable, starting empty";
+    }
+    save();
+    if (QFile::exists(filePath())) {
+        settings.remove(QLatin1String(kOldEntriesKey));
+        qDebug() << "History: moved" << m_entries.size() << "entries from the settings to" << filePath();
+    }
+}
+
+void HistoryModel::addLoaded(const QVariantMap &m)
+{
+    HistoryEntry e;
+    e.kind = m.value(QLatin1String("kind")).toString();
+    e.path = m.value(QLatin1String("path")).toString();
+    e.fileName = QFileInfo(e.path).fileName();
+    e.text = m.value(QLatin1String("text")).toString();
+    if (e.text.size() > MaxTextLength)
+        e.text = e.text.left(MaxTextLength) + QChar(0x2026);
+    e.preview = previewOf(e.text);
+    e.size = qint64(m.value(QLatin1String("size")).toDouble());
+    e.time = QDateTime::fromString(m.value(QLatin1String("time")).toString(), Qt::ISODate);
+    e.senderAlias = m.value(QLatin1String("sender")).toString();
+    if (e.kind.isEmpty() || (e.path.isEmpty() && e.kind != QLatin1String("text")))
         return;
-    }
-    foreach (const QVariant &v, root.value(QLatin1String("entries")).toList()) {
-        const QVariantMap m = v.toMap();
-        HistoryEntry e;
-        e.kind = m.value(QLatin1String("kind")).toString();
-        e.path = m.value(QLatin1String("path")).toString();
-        e.fileName = QFileInfo(e.path).fileName();
-        e.text = m.value(QLatin1String("text")).toString();
-        e.size = qint64(m.value(QLatin1String("size")).toDouble());
-        e.time = QDateTime::fromString(m.value(QLatin1String("time")).toString(), Qt::ISODate);
-        e.senderAlias = m.value(QLatin1String("sender")).toString();
-        if (e.kind.isEmpty() || (e.path.isEmpty() && e.kind != QLatin1String("text")))
-            continue;
-        m_entries.append(e);
-        if (m_entries.size() >= MaxEntries)
-            break;
-    }
-    qDebug() << "History:" << m_entries.size() << "entries";
+    m_entries.append(e);
 }

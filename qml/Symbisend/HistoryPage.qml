@@ -139,8 +139,9 @@ Page {
                     platformInverted: page.platformInverted
                     width: parent.width
                     elide: Text.ElideRight
-                    // Text messages: their first line.
-                    text: row.isText ? model.text.split("\n")[0] : model.fileName
+                    // Text messages: their first line, shortened (made in C++,
+                    // so long messages aren't split or laid out here).
+                    text: model.preview
                 }
                 Label {
                     platformInverted: page.platformInverted
