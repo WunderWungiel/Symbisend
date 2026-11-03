@@ -109,6 +109,11 @@ Native pickers. Their results go straight into `selection` (connected in `main.c
   `folderPicked(path)`, and is added to `selection`. Nothing is emitted on cancel.
 - `clipboardText()` → string — the clipboard's text (`""` if empty); also logged. Not
   added to the selection by itself: call `selection.addText()`.
+- `clipboardHasText` (bool) — whether the clipboard holds text (enable/disable Paste).
+  Updates by itself when this app changes the clipboard; a copy made in another app is
+  **not** signalled (Symbian), so call `checkClipboard()` when the app becomes active
+  or the Paste button comes into view.
+- `checkClipboard()` — re-reads the clipboard and updates `clipboardHasText`
 - `showInfo(text)` — a native information note (Avkon `CAknInformationNote`, e.g.
   "Clipboard is empty"); returns at once, the note hides by itself
 

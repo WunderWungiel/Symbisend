@@ -35,7 +35,20 @@ static const TInt kAllMedias = AknCommonDialogsDynMem::EMemoryTypePhone
 
 Picker::Picker(QObject *parent)
     : QObject(parent)
+    , m_clipboardHasText(false)
 {
+    connect(QApplication::clipboard(), SIGNAL(dataChanged()), this, SLOT(checkClipboard()));
+    checkClipboard();
+}
+
+void Picker::checkClipboard()
+{
+    bool has = !QApplication::clipboard()->text().isEmpty();
+    if (has == m_clipboardHasText)
+        return;
+    m_clipboardHasText = has;
+    qDebug() << "Picker: clipboard" << (has ? "has text" : "is empty");
+    emit clipboardHasTextChanged();
 }
 
 void Picker::pickFile()

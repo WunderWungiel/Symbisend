@@ -16,6 +16,11 @@
 class Picker : public QObject
 {
     Q_OBJECT
+    // Whether the clipboard holds text (for enabling the Paste button).
+    // Updated when this app changes the clipboard (QClipboard::dataChanged);
+    // a copy made in another app is not signalled on Symbian, so QML calls
+    // checkClipboard() when the app becomes active / the Send page shows.
+    Q_PROPERTY(bool clipboardHasText READ clipboardHasText NOTIFY clipboardHasTextChanged)
 
 public:
     explicit Picker(QObject *parent = 0);
@@ -29,13 +34,19 @@ public:
     Q_INVOKABLE void pickFolder();
     // The clipboard's text ("" if empty).
     Q_INVOKABLE QString clipboardText() const;
+    bool clipboardHasText() const { return m_clipboardHasText; }
     // A short native information note (Avkon CAknInformationNote on Symbian,
     // a message box elsewhere). Returns at once; the note hides by itself.
     Q_INVOKABLE void showInfo(const QString &text);
 
+public slots:
+    // Re-reads the clipboard and updates clipboardHasText (callable from QML).
+    void checkClipboard();
+
 signals:
     void filesPicked(const QStringList &paths);
     void folderPicked(const QString &path);
+    void clipboardHasTextChanged();
 
 private slots:
     void runFilePicker();
@@ -46,6 +57,7 @@ private:
     void reportFiles(const char *what, const QStringList &paths);
 
     QString m_mediaKind;
+    bool m_clipboardHasText;
 };
 
 #endif // PICKER_H

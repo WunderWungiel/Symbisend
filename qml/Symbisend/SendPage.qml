@@ -22,7 +22,19 @@ Page {
         if (text.length > 0)
             selection.addText(text)
         else
-            picker.showInfo("Clipboard is empty")
+            picker.checkClipboard() // emptied meanwhile: just disable the button
+    }
+
+    // A copy made in another app is not signalled, so look at the clipboard
+    // again whenever the Paste button may come into view.
+    function updateClipboard() {
+        if (page.visible && Qt.application.active)
+            picker.checkClipboard()
+    }
+    onVisibleChanged: updateClipboard()
+    Connections {
+        target: Qt.application
+        onActiveChanged: page.updateClipboard()
     }
 
     // Keep the device list current while it is on screen: not on another
@@ -95,6 +107,7 @@ Page {
             width: parent.width
             spacing: platformStyle.paddingSmall
             visible: selection.count === 0 || page.addOptionsShown
+            onVisibleChanged: page.updateClipboard()
 
             property real buttonWidth: (width - 4 * spacing) / 5
 
@@ -114,6 +127,7 @@ Page {
                 width: sendOptions.buttonWidth
                 label: "Paste"
                 icon: "send-paste"
+                enabled: picker.clipboardHasText
                 onClicked: page.paste()
             }
             SendOptionButton {

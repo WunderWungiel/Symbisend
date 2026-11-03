@@ -19,6 +19,8 @@ Button {
         id: content
         anchors.centerIn: parent
         width: parent.width - 2 * platformStyle.paddingSmall
+        // The Button frame greys out by itself; dim the icon and label too.
+        opacity: root.enabled ? 1.0 : 0.4
         spacing: platformStyle.paddingSmall
 
         Image {
