@@ -1,6 +1,7 @@
 #include "multicastreceiver.h"
 
 #include <QDebug>
+#include <QSocketNotifier>
 
 #if defined(Q_OS_WIN)
 #  define SYMBISEND_NO_RAW_MULTICAST
@@ -18,15 +19,24 @@
 #  include <string.h>
 #endif
 
-static const int kPollIntervalMs = 250;
+// Only until the notifier has fired once (see the header).
+static const int kFallbackPollMs = 5000;
+// Reading pauses this long after empty reads or errors, which repeat without
+// end while the link goes down (the descriptor keeps reporting "readable").
+static const int kPauseMs = 1000;
 static const int kMaxDatagram = 8192;
+// Datagrams read per wake-up at most; the rest waits for the next one.
+static const int kMaxReadsPerWakeUp = 32;
 
 MulticastReceiver::MulticastReceiver(QObject *parent)
-    : QObject(parent), m_fd(-1), m_badReadLogged(false), m_oddAddressLogged(false),
-      m_selectErrorLogged(false)
+    : QObject(parent), m_fd(-1), m_notifier(0), m_notifierFired(false), m_badReadLogged(false),
+      m_oddAddressLogged(false), m_selectErrorLogged(false), m_fallbackLogged(false)
 {
-    m_pollTimer.setInterval(kPollIntervalMs);
-    connect(&m_pollTimer, SIGNAL(timeout()), this, SLOT(poll()));
+    m_fallbackTimer.setInterval(kFallbackPollMs);
+    connect(&m_fallbackTimer, SIGNAL(timeout()), this, SLOT(onFallbackPoll()));
+    m_resumeTimer.setSingleShot(true);
+    m_resumeTimer.setInterval(kPauseMs);
+    connect(&m_resumeTimer, SIGNAL(timeout()), this, SLOT(resumeNotifier()));
 }
 
 MulticastReceiver::~MulticastReceiver()
@@ -43,7 +53,11 @@ bool MulticastReceiver::start(const QHostAddress &, quint16, const QHostAddress 
 }
 
 void MulticastReceiver::stop() {}
-void MulticastReceiver::poll() {}
+void MulticastReceiver::onActivated() {}
+void MulticastReceiver::onFallbackPoll() {}
+void MulticastReceiver::resumeNotifier() {}
+bool MulticastReceiver::readPending() { return false; }
+void MulticastReceiver::pauseNotifier() {}
 
 #else
 
@@ -88,8 +102,8 @@ bool MulticastReceiver::start(const QHostAddress &group, quint16 port, const QHo
         }
     }
 
-    // Non-blocking is only a second line of defence: poll() checks with
-    // select() before every read. On the 808 Open C refuses both ways
+    // Non-blocking is only a second line of defence: readPending() checks
+    // with select() before every read. On the 808 Open C refuses both ways
     // (fcntl errno 13, ioctl errno 78), so this is logged at debug level.
     int flags = ::fcntl(fd, F_GETFL, 0);
     if (flags < 0 || ::fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) {
@@ -104,31 +118,81 @@ bool MulticastReceiver::start(const QHostAddress &group, quint16 port, const QHo
     m_badReadLogged = false;
     m_oddAddressLogged = false;
     m_selectErrorLogged = false;
-    m_pollTimer.start();
-    qDebug() << "Multicast: joined" << group.toString() << "port" << port;
+    m_fallbackLogged = false;
+    m_notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
+    connect(m_notifier, SIGNAL(activated(int)), this, SLOT(onActivated()));
+    if (!m_notifierFired)
+        m_fallbackTimer.start();
+    qDebug() << "Multicast: joined" << group.toString() << "port" << port
+             << (m_notifierFired ? "" : "(fallback poll until the socket notifier fires)");
     return true;
 }
 
 void MulticastReceiver::stop()
 {
-    m_pollTimer.stop();
+    m_fallbackTimer.stop();
+    m_resumeTimer.stop();
+    if (m_notifier) {
+        // Before close(): the dispatcher must stop watching the descriptor.
+        // deleteLater(): stop() may run inside the notifier's own activated().
+        m_notifier->setEnabled(false);
+        m_notifier->disconnect(this);
+        m_notifier->deleteLater();
+        m_notifier = 0;
+    }
     if (m_fd >= 0) {
         ::close(m_fd);
         m_fd = -1;
     }
 }
 
-void MulticastReceiver::poll()
+void MulticastReceiver::onActivated()
 {
-    if (m_fd < 0)
+    if (!m_notifierFired) {
+        m_notifierFired = true;
+        m_fallbackTimer.stop();
+        qDebug() << "Multicast: socket notifier works, fallback poll off";
+    }
+    if (!readPending())
+        pauseNotifier();
+}
+
+void MulticastReceiver::onFallbackPoll()
+{
+    if (m_notifierFired) {
+        m_fallbackTimer.stop();
         return;
+    }
+    if (m_fd < 0 || m_resumeTimer.isActive())
+        return;
+    readPending();
+}
+
+void MulticastReceiver::pauseNotifier()
+{
+    if (m_notifier && m_notifier->isEnabled()) {
+        m_notifier->setEnabled(false);
+        m_resumeTimer.start();
+    }
+}
+
+void MulticastReceiver::resumeNotifier()
+{
+    if (m_notifier)
+        m_notifier->setEnabled(true);
+}
+
+bool MulticastReceiver::readPending()
+{
     char buffer[kMaxDatagram];
-    // Bounded per tick. m_fd is re-checked because a slot connected to
-    // datagramReceived() may have called stop().
-    for (int i = 0; i < 32 && m_fd >= 0; ++i) {
+    // Bounded per wake-up. m_fd is re-checked because a slot connected to
+    // datagramReceived() may have called stop() (the notifier that may have
+    // called us is only deleted later, see stop()).
+    for (int i = 0; i < kMaxReadsPerWakeUp && m_fd >= 0; ++i) {
         // Open C refuses both O_NONBLOCK and FIONBIO (see start()), so the
         // socket may be blocking: only read when select() says a datagram
-        // is waiting, or recvfrom() could freeze the UI thread.
+        // is waiting, or recvfrom() could freeze the UI thread. (A notifier
+        // wake-up said so a moment ago; this is one cheap call per datagram.)
         fd_set readable;
         FD_ZERO(&readable);
         FD_SET(m_fd, &readable);
@@ -142,10 +206,10 @@ void MulticastReceiver::poll()
                 qWarning() << "Multicast: select failed, errno" << errno
                            << "- further ones not logged";
             }
-            return;
+            return false;
         }
         if (ready == 0 || !FD_ISSET(m_fd, &readable))
-            return; // nothing waiting
+            return true; // nothing (more) waiting
 
         struct sockaddr_in from;
         memset(&from, 0, sizeof(from));
@@ -153,19 +217,25 @@ void MulticastReceiver::poll()
         ssize_t n = ::recvfrom(m_fd, buffer, sizeof(buffer), 0,
                                reinterpret_cast<struct sockaddr *>(&from), &fromLen);
         if (n < 0) {
-            if (errno != EAGAIN && errno != EWOULDBLOCK)
-                qWarning() << "Multicast: recvfrom failed, errno" << errno;
-            return;
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                return true;
+            qWarning() << "Multicast: recvfrom failed, errno" << errno;
+            return false;
         }
         // When the WLAN link goes down, Open C's recvfrom() "succeeds" with
-        // no datagram behind it. Drop those; going offline stops the
-        // receiver shortly after.
+        // no datagram behind it, again and again. Drop those and pause;
+        // going offline stops the receiver shortly after.
         if (n == 0) {
             if (!m_badReadLogged) {
                 m_badReadLogged = true;
                 qWarning() << "Multicast: empty read - link down? Ignoring further ones";
             }
-            return;
+            return false;
+        }
+        if (!m_notifierFired && !m_fallbackLogged) {
+            m_fallbackLogged = true;
+            qWarning() << "Multicast: datagram found by the fallback poll - the socket notifier"
+                       << "has not fired (yet)";
         }
 
         // Open C's sockaddr_in is 28 bytes (AF_INET is 0x0800 there), but
@@ -188,6 +258,7 @@ void MulticastReceiver::poll()
         }
         emit datagramReceived(QByteArray(buffer, int(n)), sender, senderPort);
     }
+    return true;
 }
 
 #endif
