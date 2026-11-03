@@ -14,6 +14,9 @@ Page {
     // Edit button on the Selection card; main.qml opens SelectionPage.
     signal editSelectionRequested()
 
+    // The Selection card's Add button toggles the send option row below it.
+    property bool addOptionsShown: false
+
     function paste() {
         var text = picker.clipboardText() // logged by C++
         if (text.length > 0)
@@ -46,6 +49,8 @@ Page {
     Connections {
         target: selection
         onFolderTruncated: picker.showInfo("Only the first " + maxFiles + " files of the folder were added")
+        // Start collapsed again the next time the card appears.
+        onCountChanged: if (selection.count === 0) page.addOptionsShown = false
     }
 
     Column {
@@ -74,13 +79,22 @@ Page {
             }
         }
 
+        SelectionCard {
+            width: parent.width
+            visible: selection.count > 0
+            platformInverted: page.platformInverted
+            onEditClicked: page.editSelectionRequested()
+            onAddClicked: page.addOptionsShown = !page.addOptionsShown
+        }
+
         // What to send. Picked items go into `selection`; once there is
-        // something, the Selection card replaces the buttons.
+        // something, the Selection card takes over and this row only comes
+        // back below it while the card's Add button is toggled on.
         Row {
             id: sendOptions
             width: parent.width
             spacing: platformStyle.paddingSmall
-            visible: selection.count === 0
+            visible: selection.count === 0 || page.addOptionsShown
 
             property real buttonWidth: (width - 4 * spacing) / 5
 
@@ -114,14 +128,6 @@ Page {
                 icon: "send-folder"
                 onClicked: picker.pickFolder()
             }
-        }
-
-        SelectionCard {
-            width: parent.width
-            visible: selection.count > 0
-            platformInverted: page.platformInverted
-            onEditClicked: page.editSelectionRequested()
-            onAddClicked: addMenu.open()
         }
     }
 
@@ -165,44 +171,6 @@ Page {
                 platformInverted: page.platformInverted
                 text: "Videos"
                 onClicked: picker.pickMedia("video")
-            }
-        }
-    }
-
-    // The Selection card's Add button: every option of the button row.
-    ContextMenu {
-        id: addMenu
-        platformInverted: page.platformInverted
-        MenuLayout {
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: "File"
-                onClicked: picker.pickFile()
-            }
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: "Images"
-                onClicked: picker.pickMedia("image")
-            }
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: "Videos"
-                onClicked: picker.pickMedia("video")
-            }
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: "Paste"
-                onClicked: page.paste()
-            }
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: "Text"
-                onClicked: textDialog.openNew()
-            }
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: "Folder"
-                onClicked: picker.pickFolder()
             }
         }
     }

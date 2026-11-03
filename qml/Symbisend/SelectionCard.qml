@@ -1,8 +1,8 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
-// The Send page's "Selection" card, shown instead of the File/Media/...
-// buttons once something was picked. Modelled on LocalSend's selection card:
+// The Send page's "Selection" card, shown above the File/Media/... buttons
+// once something was picked (Add toggles that row back on). Modelled on LocalSend's selection card:
 // title with a close (clear) button, element count and total size, a row of
 // item tiles, and Edit / Add buttons.
 Rectangle {
