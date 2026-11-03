@@ -30,8 +30,8 @@ Page {
     Binding {
         target: discovery
         property: "autoRefresh"
-        // No scans while sending: they would compete with the upload.
-        value: page.visible && Qt.application.active && !sender.busy
+        // No scans while sending or receiving: they would compete with the transfer.
+        value: page.visible && Qt.application.active && !sender.busy && !receiver.busy
     }
 
     // Tap on a device: send the selection to it.

@@ -10,7 +10,8 @@
 // it is the default for the drives present right now (F: > E: > C:/Data),
 // recomputed on every launch so inserting a memory card is picked up.
 //
-// Most of the other settings are stored only; nothing acts on them yet.
+// quickSave, requirePin/pin and downloadFolder are used by Receiver; the
+// other receive settings are stored only for now.
 class Settings : public QObject
 {
     Q_OBJECT

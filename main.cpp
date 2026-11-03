@@ -13,6 +13,7 @@
 #include "src/picker.h"
 #include "src/selectionmodel.h"
 #include "src/sender.h"
+#include "src/receiver.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -36,6 +37,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     NetworkManager network;
     Discovery discovery(&device, &peers, &network);
     Sender sender(&device, &peers, &selection, &network);
+    // Serves prepare-upload/upload/cancel on discovery's HTTP server.
+    Receiver receiver(discovery.httpServer(), &settings, &network);
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
     QmlApplicationViewer viewer;
@@ -49,6 +52,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("picker"), &picker);
     ctx->setContextProperty(QLatin1String("selection"), &selection);
     ctx->setContextProperty(QLatin1String("sender"), &sender);
+    ctx->setContextProperty(QLatin1String("receiver"), &receiver);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setMainQmlFile(QLatin1String("qml/Symbisend/main.qml"));

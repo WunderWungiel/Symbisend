@@ -52,4 +52,16 @@ PageStackWindow {
             TabButton { tab: settingsTab; iconSource: "toolbar-settings"; platformInverted: window.platformInverted }
         }
     }
+
+    // Incoming transfers, wherever the user is in the app.
+    ReceiveDialog { id: receiveDialog }
+
+    Connections {
+        target: receiver
+        onStateChanged: {
+            if (receiver.state == "request" && receiveDialog.status != DialogStatus.Open
+                    && receiveDialog.status != DialogStatus.Opening)
+                receiveDialog.open()
+        }
+    }
 }

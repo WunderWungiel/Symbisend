@@ -41,8 +41,8 @@ Properties: `count` (int).  Methods: `clear()`.
   60 s, and once right away if the last refresh is older than 15 s. Never connects by
   itself: does nothing while offline. Devices missing from two refreshes in a row are
   dropped, so set it while the device list is visible (the Send page binds it to
-  `visible && Qt.application.active && !sender.busy`); without it the list is only pruned on manual
-  refreshes.
+  `visible && Qt.application.active && !sender.busy && !receiver.busy`); without it the list is
+  only pruned on manual refreshes.
 - `announce()`, `scan()` — the two halves separately
 - `startServer()`, `stopServer()`, `restartServer()` — the HTTP server and the multicast
   listener together (whether others can find us / send to us); `serverRunning` reflects
@@ -73,10 +73,11 @@ General:
   translations exist yet *(stored only)*
 
 Receive:
-- `quickSave` (bool, default false) *(stored only)*
-- `requirePin` (bool, default false) *(stored only)* — can only be turned on while `pin`
+- `quickSave` (bool, default false) — offers of files are accepted at once, without the
+  receive dialog (messages are still shown)
+- `requirePin` (bool, default false) — senders must send `pin`; can only be turned on while `pin`
   is non-empty (otherwise the write is ignored); turning it off also clears `pin`
-- `pin` (string, default `""`) *(stored only)* — any text, not only digits. Setting it
+- `pin` (string, default `""`) — any text, not only digits. Setting it
   to `""` is ignored while `requirePin` is on. To enable: set `pin`, then `requirePin = true`.
 - `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
   received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else
@@ -160,6 +161,40 @@ the transfer ends in `finished` and kept after `declined`, `failed` or `cancelle
 - Signals `stateChanged()`, `progressChanged()`.
 
 The Send page calls `send()` when a device is tapped and opens `SendDialog.qml`.
+
+## `receiver` — receiving from other devices
+Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port
+53317, while `discovery.serverRunning`). One session at a time; while busy, other senders
+are told we're busy. Files go to `settings.downloadFolder`, folders inside it are created
+as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one becomes
+`a (1).jpg`. Unfinished files are deleted.
+- `state` (string):
+  - `idle` — nothing received yet, or the last offer was declined
+  - `request` — an offer waits for `accept()` / `decline()` (no timeout; the sender may
+    withdraw it: `cancelled`). With `settings.quickSave` files skip this state.
+  - `receiving` — files are coming in
+  - `finished` — everything was saved (or the message was accepted)
+  - `failed` — see `errorText` (connection lost, the sender stopped sending for 30 s,
+    memory full, ...)
+  - `cancelled` — by the sender (`errorText` says so) or by `cancel()`
+- `busy` (bool) — `request` or `receiving`
+- `errorText` (string)
+- The sender: `peerAlias`, `peerDeviceModel` (system, e.g. `Windows`), `peerDeviceType`
+  (`mobile`, `desktop`, ...), `peerFingerprint`, `peerIp`, `peerVersion` (strings)
+- The offer: `fileCount` (int), `totalSize` (number, bytes), `files` (list of
+  `{ fileName, size, fileType }`; `fileName` may contain folders)
+- `isMessage` (bool), `message` (string) — the offer is a single text message (like the
+  official app: one `text/*` file with a preview). It is shown, not saved: accepting it
+  goes straight to `finished`.
+- `folder` (string, native separators) — where the files go / went
+- `filesDone` (int, files saved), `fileName` (string, the file coming in now)
+- `bytesReceived`, `bytesTotal` (number), `progress` (0–1), `remainingSeconds` (int, -1
+  while unknown). Progress properties update every 0.5 s.
+- `accept()`, `decline()` — in state `request`
+- `cancel()` — stops receiving (in `request`: same as `decline()`)
+- Signals `stateChanged()`, `progressChanged()`.
+
+`main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`.
 
 ## `logger` — debug log
 - `model` — list model of the last ~300 lines, oldest first, role `line` (string). Use it

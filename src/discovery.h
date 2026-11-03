@@ -56,7 +56,11 @@ public:
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void restartServer();
 
-    // HttpHandler
+    // Our server, for other handlers of its routes (Receiver).
+    HttpServer *httpServer() const { return m_server; }
+
+    // HttpHandler: /register and /info
+    bool handles(const HttpRequest &request) const;
     HttpResponse handleRequest(const HttpRequest &request);
 
 signals:

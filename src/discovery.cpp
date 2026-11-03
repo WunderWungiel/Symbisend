@@ -31,13 +31,14 @@ static const int kAnnounceDedupWindowMs = 5000;
 Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, QObject *parent)
     : QObject(parent),
       m_device(device), m_peers(peers), m_network(network),
-      m_server(new HttpServer(this, this)),
+      m_server(new HttpServer(this)),
       m_multicast(new MulticastReceiver(this)),
       m_udp(0),
       m_nam(new QNetworkAccessManager(this)),
       m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true),
       m_autoRefresh(false)
 {
+    m_server->addHandler(this);
     connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
     connect(m_multicast, SIGNAL(datagramReceived(QByteArray,QHostAddress,quint16)),
@@ -586,14 +587,28 @@ void Discovery::finishScanIfDone()
 
 // ---------------------------------------------------------------- HTTP server
 
+static bool isRegisterPath(const QString &path)
+{
+    return path == QLatin1String("/api/localsend/v2/register")
+            || path == QLatin1String("/api/localsend/v1/register");
+}
+
+static bool isInfoPath(const QString &path)
+{
+    return path == QLatin1String("/api/localsend/v2/info")
+            || path == QLatin1String("/api/localsend/v1/info");
+}
+
+bool Discovery::handles(const HttpRequest &request) const
+{
+    return isRegisterPath(request.path) || isInfoPath(request.path);
+}
+
 HttpResponse Discovery::handleRequest(const HttpRequest &request)
 {
     HttpResponse response;
-    const QString path = request.path;
-    const bool isRegister = path == QLatin1String("/api/localsend/v2/register")
-            || path == QLatin1String("/api/localsend/v1/register");
-    const bool isInfo = path == QLatin1String("/api/localsend/v2/info")
-            || path == QLatin1String("/api/localsend/v1/info");
+    const bool isRegister = isRegisterPath(request.path);
+    const bool isInfo = isInfoPath(request.path);
 
     if (isRegister && request.method == QLatin1String("POST")) {
         bool ok = false;
@@ -616,7 +631,7 @@ HttpResponse Discovery::handleRequest(const HttpRequest &request)
         return response;
     }
 
-    response.status = 404;
-    response.body = "{\"message\":\"Not found\"}";
+    response.status = 405;
+    response.body = "{\"message\":\"Method not allowed\"}";
     return response;
 }

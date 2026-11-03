@@ -66,6 +66,7 @@ SOURCES += main.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
     src/sender.cpp \
+    src/receiver.cpp \
     src/clientidentity.cpp
 
 HEADERS += \
@@ -81,6 +82,7 @@ HEADERS += \
     src/picker.h \
     src/selectionmodel.h \
     src/sender.h \
+    src/receiver.h \
     src/clientidentity.h
 
 # Please do not modify the following two lines. Required for deployment.

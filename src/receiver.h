@@ -1,0 +1,172 @@
+#ifndef RECEIVER_H
+#define RECEIVER_H
+
+#include <QObject>
+#include <QDateTime>
+#include <QHash>
+#include <QHostAddress>
+#include <QList>
+#include <QTimer>
+#include <QVariantList>
+
+#include "httpserver.h"
+
+class QFile;
+class NetworkManager;
+class Settings;
+
+// Receives files from other devices (LocalSend v2 upload API, our side):
+//  1. POST /prepare-upload: the sender's info and file list. Answered once
+//     our user accepts (a session id and a token per file), declines (403),
+//     or right away: PIN missing/wrong (401), busy (409), quick save.
+//     A lone text message is answered with 204 after accepting.
+//  2. POST /upload?sessionId&fileId&token for each file, streamed into the
+//     download folder.
+//  3. POST /cancel?sessionId when the sender gives up.
+// One session at a time. See docs/qml-api.md.
+class Receiver : public QObject, public HttpHandler
+{
+    Q_OBJECT
+    // "idle", "request" (an offer waits for accept()/decline()), "receiving",
+    // "finished", "failed", "cancelled" (by the sender or by us)
+    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    // request or receiving
+    Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
+    Q_PROPERTY(QString errorText READ errorText NOTIFY stateChanged)
+
+    // The sending device, from its prepare-upload request.
+    Q_PROPERTY(QString peerAlias READ peerAlias NOTIFY stateChanged)
+    Q_PROPERTY(QString peerDeviceModel READ peerDeviceModel NOTIFY stateChanged)
+    Q_PROPERTY(QString peerDeviceType READ peerDeviceType NOTIFY stateChanged)
+    Q_PROPERTY(QString peerFingerprint READ peerFingerprint NOTIFY stateChanged)
+    Q_PROPERTY(QString peerIp READ peerIp NOTIFY stateChanged)
+    Q_PROPERTY(QString peerVersion READ peerVersion NOTIFY stateChanged)
+
+    // The offer.
+    Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
+    Q_PROPERTY(qreal totalSize READ totalSize NOTIFY stateChanged)
+    // [{ fileName, size, fileType }], in the sender's order
+    Q_PROPERTY(QVariantList files READ files NOTIFY stateChanged)
+    // A lone text message (shown, not saved): isMessage, and its text.
+    Q_PROPERTY(bool isMessage READ isMessage NOTIFY stateChanged)
+    Q_PROPERTY(QString message READ message NOTIFY stateChanged)
+
+    // Receiving.
+    Q_PROPERTY(QString folder READ folder NOTIFY stateChanged)
+    Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
+    Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
+    Q_PROPERTY(qreal bytesReceived READ bytesReceived NOTIFY progressChanged)
+    Q_PROPERTY(qreal bytesTotal READ totalSize NOTIFY progressChanged)
+    Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
+    Q_PROPERTY(int remainingSeconds READ remainingSeconds NOTIFY progressChanged)
+
+public:
+    Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
+             QObject *parent = 0);
+    ~Receiver();
+
+    QString state() const { return m_state; }
+    bool isBusy() const;
+    QString errorText() const { return m_errorText; }
+    QString peerAlias() const { return m_peerAlias; }
+    QString peerDeviceModel() const { return m_peerDeviceModel; }
+    QString peerDeviceType() const { return m_peerDeviceType; }
+    QString peerFingerprint() const { return m_peerFingerprint; }
+    QString peerIp() const { return m_peerIp.toString(); }
+    QString peerVersion() const { return m_peerVersion; }
+    int fileCount() const { return m_files.size(); }
+    qreal totalSize() const { return qreal(m_totalSize); }
+    QVariantList files() const;
+    bool isMessage() const { return m_isMessage; }
+    QString message() const;
+    QString folder() const;
+    int filesDone() const;
+    QString fileName() const { return m_currentName; }
+    qreal bytesReceived() const;
+    qreal progress() const;
+    int remainingSeconds() const { return m_remainingSeconds; }
+
+    // State "request": take everything offered / refuse it.
+    Q_INVOKABLE void accept();
+    Q_INVOKABLE void decline();
+    // Stops receiving (files not complete yet are deleted).
+    Q_INVOKABLE void cancel();
+
+    // HttpHandler
+    bool handles(const HttpRequest &request) const;
+    bool streamsBody(const HttpRequest &request) const;
+    HttpResponse bodyData(const HttpRequest &request, const QByteArray &data);
+    HttpResponse handleRequest(const HttpRequest &request);
+    void requestAborted(const HttpRequest &request);
+
+signals:
+    void stateChanged();
+    void progressChanged();
+
+private slots:
+    void onTick();
+    void onOnlineChanged();
+
+private:
+    enum FileStatus { Pending, Receiving, Done, Failed };
+    struct InFile {
+        QString id;
+        QString fileName;   // as sent; may contain folders ("Trip/a.jpg")
+        QString fileType;
+        QString preview;
+        qint64 size;
+        QString token;
+        FileStatus status;
+        qint64 received;
+        QString savedPath;  // while receiving and once done
+    };
+    struct Upload {
+        int file;           // index into m_files
+        QFile *out;
+    };
+
+    HttpResponse prepareUpload(const HttpRequest &request);
+    HttpResponse cancelRequest(const HttpRequest &request);
+    HttpResponse startUpload(const HttpRequest &request);
+    HttpResponse writeUpload(const HttpRequest &request, const QByteArray &data);
+    HttpResponse finishUpload(const HttpRequest &request);
+    HttpResponse startSession();
+    void closeUpload(quint32 requestId, bool keepFile);
+    void dropUploads();
+    void checkDone();
+    void finish(const QString &state, const QString &error = QString());
+    void setState(const QString &state, const QString &error = QString());
+    void reset();
+    static QString safeRelativePath(const QString &fileName);
+    static QString uniquePath(const QString &path);
+    static QString randomToken();
+
+    HttpServer *m_server;
+    Settings *m_settings;
+    NetworkManager *m_network;
+
+    QString m_state;
+    QString m_errorText;
+    QString m_peerAlias;
+    QString m_peerDeviceModel;
+    QString m_peerDeviceType;
+    QString m_peerFingerprint;
+    QString m_peerVersion;
+    QHostAddress m_peerIp;
+    QList<InFile> m_files;
+    QHash<QString, int> m_fileIndex;  // file id -> index into m_files
+    qint64 m_totalSize;
+    bool m_isMessage;
+    quint32 m_pendingRequest;         // the prepare-upload waiting for the user, 0 if none
+    QString m_sessionId;
+    QString m_folder;                 // Qt separators, set when accepted
+    QHash<quint32, Upload> m_uploads; // running uploads by request id
+    QString m_currentName;
+    QDateTime m_receivingSince;
+    QDateTime m_lastActivity;
+    int m_remainingSeconds;
+    QHash<QString, int> m_wrongPins;  // sender IP -> wrong PINs in a row
+    QTimer m_tick;
+};
+
+#endif // RECEIVER_H
