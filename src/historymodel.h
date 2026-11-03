@@ -59,6 +59,14 @@ public:
     // nothing could open it.
     Q_INVOKABLE bool openFile(int row);
 
+    // Shows `folder` (native or '/' separators) in the phone's file manager
+    // (Symbian: the File manager app; elsewhere: the desktop's file browser).
+    // Creates the folder first if needed. False if nothing could show it.
+    Q_INVOKABLE bool openFolder(const QString &folder);
+
+    // Forgets every entry. The received files themselves stay on disk.
+    Q_INVOKABLE void clear();
+
 signals:
     void countChanged();
 

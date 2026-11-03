@@ -13,6 +13,13 @@
 #include "json.h"
 #include "selectionmodel.h"
 
+#ifdef Q_OS_SYMBIAN
+#include <apacmdln.h>
+#include <apgcli.h>
+#include <apgtask.h>
+#include <coemain.h>
+#endif
+
 // {"entries":[{...}, ...]} as one string (Json::parseObject wants an object).
 static const char *kEntriesKey = "history/entries";
 static const int kSaveDelayMs = 1000;
@@ -86,6 +93,85 @@ bool HistoryModel::openFile(int row)
     else
         qWarning() << "History: no application could open" << e.path;
     return ok;
+}
+
+#ifdef Q_OS_SYMBIAN
+// The stock File manager app (FileMgr.exe).
+static const TUid kFileManagerUid = { 0x101F84EB };
+
+static TPtrC toPtr(const QString &s)
+{
+    return TPtrC(reinterpret_cast<const TUint16 *>(s.utf16()), s.length());
+}
+
+// Starts File manager with `folder` (native separators, trailing '\') as the
+// document to open; it then shows that folder. If it is already running, the
+// folder is handed to the running instance and it is brought to the front.
+static void openInFileManagerL(const QString &folder)
+{
+    TApaTaskList tasks(CCoeEnv::Static()->WsSession());
+    TApaTask task = tasks.FindApp(kFileManagerUid);
+    if (task.Exists()) {
+        qDebug() << "History: File manager is running, switching it to" << folder;
+        task.SwitchOpenFile(toPtr(folder));
+        task.BringToForeground();
+        return;
+    }
+
+    RApaLsSession ls;
+    User::LeaveIfError(ls.Connect());
+    CleanupClosePushL(ls);
+    TApaAppInfo info;
+    User::LeaveIfError(ls.GetAppInfo(info, kFileManagerUid));
+    CApaCommandLine *cmd = CApaCommandLine::NewLC();
+    cmd->SetExecutableNameL(info.iFullName);
+    cmd->SetDocumentNameL(toPtr(folder));
+    cmd->SetCommandL(EApaCommandOpen);
+    User::LeaveIfError(ls.StartApp(*cmd));
+    CleanupStack::PopAndDestroy(2); // cmd, ls
+}
+#endif
+
+bool HistoryModel::openFolder(const QString &folder)
+{
+    const QString path = QDir::fromNativeSeparators(folder);
+    if (path.isEmpty())
+        return false;
+    if (!QDir(path).exists() && !QDir().mkpath(path)) {
+        qWarning() << "History: cannot open folder" << path << "- it does not exist and cannot be created";
+        return false;
+    }
+#ifdef Q_OS_SYMBIAN
+    QString native = QDir::toNativeSeparators(path);
+    if (!native.endsWith(QLatin1Char('\\')))
+        native += QLatin1Char('\\');
+    TRAPD(err, openInFileManagerL(native));
+    if (err != KErrNone) {
+        qWarning() << "History: cannot start File manager for" << native << "- error" << err;
+        return false;
+    }
+    qDebug() << "History: opened folder" << native << "in File manager";
+    return true;
+#else
+    bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+    if (ok)
+        qDebug() << "History: opened folder" << path;
+    else
+        qWarning() << "History: nothing could open folder" << path;
+    return ok;
+#endif
+}
+
+void HistoryModel::clear()
+{
+    if (m_entries.isEmpty())
+        return;
+    qDebug() << "History: cleared" << m_entries.size() << "entries";
+    beginResetModel();
+    m_entries.clear();
+    endResetModel();
+    emit countChanged();
+    save();
 }
 
 void HistoryModel::addFile(const QString &path, qint64 size, const QString &senderAlias)

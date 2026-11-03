@@ -230,6 +230,11 @@ message.
 - `openFile(int row)` → bool — opens that entry's file in the system's app for it
   (`QDesktopServices::openUrl`). False for text entries, a missing file, or when nothing
   could open it.
+- `openFolder(string folder)` → bool — shows that folder (pass `settings.downloadFolder`)
+  in the phone's File manager (Symbian; started with the folder as its document, or the
+  running one switched to it) or the desktop's file browser. Creates the folder if
+  missing. False if nothing could show it.
+- `clear()` — forgets every entry (saved at once). The received files stay on disk.
 - Signal `countChanged()`.
 
 ## `webShare` — "Receive via link" (browsers send files to us)

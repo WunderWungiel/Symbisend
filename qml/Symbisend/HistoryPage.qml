@@ -65,7 +65,10 @@ Page {
             anchors.left: parent.left
             iconSource: page.platformInverted ? "images/send-folder-inverted.svg" : "images/send-folder.svg"
             text: "Open folder"
-            // TODO: open settings.downloadFolder
+            onClicked: {
+                if (!history.openFolder(settings.downloadFolder))
+                    openFolderFailedDialog.open()
+            }
         }
         ToolButton {
             platformInverted: page.platformInverted
@@ -73,7 +76,8 @@ Page {
             anchors { left: openFolderButton.right; leftMargin: buttonRow.spacing }
             iconSource: "toolbar-delete"
             text: "Clear"
-            // TODO: clear the history
+            enabled: history.count > 0
+            onClicked: clearDialog.open()
         }
     }
 
@@ -208,6 +212,26 @@ Page {
         titleText: "Cannot open file"
         message: "The file no longer exists or no application can open it."
         acceptButtonText: "OK"
+    }
+
+    QueryDialog {
+        id: openFolderFailedDialog
+        platformInverted: page.platformInverted
+        titleText: "Cannot open folder"
+        message: "The download folder could not be opened:\n" + settings.downloadFolder
+        acceptButtonText: "OK"
+    }
+
+    // Like the official app: confirm first. Only the list is cleared, the
+    // received files stay.
+    QueryDialog {
+        id: clearDialog
+        platformInverted: page.platformInverted
+        titleText: "Clear history"
+        message: "Do you want to delete the entire history? Received files are not deleted."
+        acceptButtonText: "Clear"
+        rejectButtonText: "Cancel"
+        onAccepted: history.clear()
     }
 
     ScrollDecorator {
