@@ -14,6 +14,7 @@
 class QNetworkReply;
 class QSslError;
 class DeviceInfo;
+class Discovery;
 class NetworkManager;
 
 // Sends the selection to one peer (LocalSend v2 upload API):
@@ -28,10 +29,11 @@ class NetworkManager;
 class Sender : public QObject
 {
     Q_OBJECT
-    // "idle", "waiting" (for the receiver to accept), "pin" (receiver wants a
-    // PIN: submitPin()), "sending", "finished", "declined", "failed", "cancelled"
+    // "idle", "connecting" (sendToAddress(): finding out who is there),
+    // "waiting" (for the receiver to accept), "pin" (receiver wants a PIN:
+    // submitPin()), "sending", "finished", "declined", "failed", "cancelled"
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
-    // waiting, pin or sending
+    // connecting, waiting, pin or sending
     Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
     Q_PROPERTY(QString peerAlias READ peerAlias NOTIFY stateChanged)
     // Why it failed / was declined; also "Wrong PIN" in state "pin".
@@ -55,7 +57,7 @@ public:
     static QString mimeType(const QString &fileName);
 
     Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
-           NetworkManager *network, QObject *parent = 0);
+           NetworkManager *network, Discovery *discovery, QObject *parent = 0);
 
     QString state() const { return m_state; }
     bool isBusy() const;
@@ -73,6 +75,10 @@ public:
     // errorText set and state "failed") if that is not possible right now:
     // already busy, nothing selected, offline, unknown or v1 peer.
     Q_INVOKABLE bool send(const QString &fingerprint);
+    // The same for a device that was not found, by its IP address on the
+    // default port. False as above; a device that isn't there is reported
+    // later, as state "failed".
+    Q_INVOKABLE bool sendToAddress(const QString &ip);
     // State "pin": asks again with this PIN.
     Q_INVOKABLE void submitPin(const QString &pin);
     // Stops the transfer (and tells the receiver, if it accepted already).
@@ -89,6 +95,7 @@ private slots:
     void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
     void onTick();
     void onOnlineChanged();
+    void onLookUpFinished(const QString &ip, const QString &fingerprint, const QString &error);
 
 private:
     QString certificateError() const;
@@ -102,6 +109,8 @@ private:
         QString token;      // from prepare-upload
     };
 
+    void reset();
+    bool start(const QString &fingerprint);
     QUrl url(const QString &route) const;
     void postPrepare();
     void startNextUpload();
@@ -115,6 +124,7 @@ private:
     PeerModel *m_peers;
     SelectionModel *m_selection;
     NetworkManager *m_network;
+    Discovery *m_discovery;
     QNetworkAccessManager *m_nam;
 
     QString m_state;

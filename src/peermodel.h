@@ -26,7 +26,7 @@ struct Peer
     QString version;
     QString deviceModel;
     QString deviceType;
-    QString source;        // how we found it: "register", "scan", "multicast"
+    QString source;        // how we found it: "register", "scan", "multicast", "address"
     QDateTime lastSeen;
     QList<PeerLog> logs;   // oldest first, capped; kept across upserts
 };

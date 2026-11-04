@@ -17,7 +17,7 @@ Roles (use as `model.<role>` in delegates; `alias` clashes with a QML keyword):
 | `deviceModel` | string   | `Windows`, `Samsung`, ...       |
 | `deviceType`  | string   | `mobile`, `desktop`, `web`, `headless`, `server` |
 | `fingerprint` | string   | unique device id                |
-| `source`      | string   | `scan`, `register`, `multicast`, `announce` (debug info) |
+| `source`      | string   | `scan`, `register`, `multicast`, `announce`, `address` (debug info) |
 | `lastSeen`    | datetime |                                 |
 
 Properties: `count` (int).  Methods: `clear()`.
@@ -170,10 +170,15 @@ the transfer ends in `finished` and kept after `declined`, `failed` or `cancelle
 - `send(fingerprint)` → bool — starts sending `selection` to that peer. Returns false
   (state `failed`, `errorText` says why) when already busy, nothing is selected, offline,
   the peer is unknown, or it speaks protocol v1 (not supported yet).
+- `sendToAddress(ip)` → bool — the same for a device typed in by hand, on the default port:
+  state `connecting` while it asks who is there (`/register`, https then http; the device
+  also joins `peerModel`, `source` = `address`), then as after `send()`. Returns false only
+  when already busy or offline; no device at that address ends in state `failed`.
 - `cancel()` — stops a running transfer and tells the receiver.
 - `submitPin(pin)` — in state `pin`: asks again with that PIN.
 - `state` (string):
   - `idle` — nothing sent yet
+  - `connecting` — `sendToAddress()` is finding the device; `peerAlias` is the IP until then
   - `waiting` — the receiver's user hasn't accepted yet (no timeout; with quick save this
     passes at once)
   - `pin` — the receiver wants a PIN; `errorText` is `Wrong PIN` after a wrong one
@@ -183,7 +188,7 @@ the transfer ends in `finished` and kept after `declined`, `failed` or `cancelle
   - `declined` — the receiver said no
   - `failed` — see `errorText` (busy receiver, connection lost, no progress for 60 s, ...)
   - `cancelled` — by us
-- `busy` (bool) — `waiting`, `pin` or `sending`
+- `busy` (bool) — `connecting`, `waiting`, `pin` or `sending`
 - `peerAlias`, `errorText` (string)
 - `fileCount` (int, accepted files), `fileIndex` (int, 1-based, the file being uploaded),
   `fileName` (string, its relative path; `Text` for a text message)
@@ -192,7 +197,8 @@ the transfer ends in `finished` and kept after `declined`, `failed` or `cancelle
   unknown (before 2 s of sending). Progress properties update every 0.5 s.
 - Signals `stateChanged()`, `progressChanged()`.
 
-The Send page calls `send()` when a device is tapped and opens `SendDialog.qml`.
+The Send page calls `send()` when a device is tapped, `sendToAddress()` after
+`AddressDialog.qml`, and opens `SendDialog.qml`.
 
 ## `receiver` — receiving from other devices
 Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port

@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/Symbisend/AboutPage.qml</file>
+        <file>qml/Symbisend/AddressDialog.qml</file>
         <file>qml/Symbisend/DeviceDetailsPage.qml</file>
         <file>qml/Symbisend/FavoriteDialog.qml</file>
         <file>qml/Symbisend/FavoritesPage.qml</file>
@@ -22,6 +23,8 @@
         <file>qml/Symbisend/SettingsPage.qml</file>
         <file>qml/Symbisend/SettingsSwitch.qml</file>
         <file>qml/Symbisend/VerifyDialog.qml</file>
+        <file>qml/Symbisend/images/ads-click-inverted.svg</file>
+        <file>qml/Symbisend/images/ads-click.svg</file>
         <file>qml/Symbisend/images/check-inverted.svg</file>
         <file>qml/Symbisend/images/check.svg</file>
         <file>qml/Symbisend/images/close-inverted.svg</file>

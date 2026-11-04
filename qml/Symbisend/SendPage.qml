@@ -48,16 +48,26 @@ Page {
         value: page.visible && Qt.application.active && !sender.busy && !receiver.busy
     }
 
-    // Tap on a device: send the selection to it.
-    function sendTo(fingerprint) {
-        if (selection.count === 0) {
-            picker.showInfo("Select something to send first")
-            return
-        }
-        if (sender.send(fingerprint))
+    // There must be something to send before a device is chosen.
+    function checkSelection() {
+        if (selection.count > 0)
+            return true
+        picker.showInfo("Select something to send first")
+        return false
+    }
+
+    // After sender.send() or sender.sendToAddress().
+    function showSendResult(started) {
+        if (started)
             sendDialog.open()
         else if (sender.errorText != "")
             picker.showInfo(sender.errorText)
+    }
+
+    // Tap on a device: send the selection to it.
+    function sendTo(fingerprint) {
+        if (checkSelection())
+            showSendResult(sender.send(fingerprint))
     }
 
     Connections {
@@ -86,10 +96,18 @@ Page {
             ToolButton {
                 id: refreshButton
                 platformInverted: page.platformInverted
-                anchors.right: favoritesButton.left
+                anchors.right: addressButton.left
                 iconSource: "toolbar-refresh"
                 enabled: !discovery.scanning
                 onClicked: discovery.refresh()
+            }
+            ToolButton {
+                id: addressButton
+                platformInverted: page.platformInverted
+                anchors.right: favoritesButton.left
+                iconSource: page.platformInverted ? "images/ads-click-inverted.svg"
+                                                  : "images/ads-click.svg"
+                onClicked: if (page.checkSelection()) addressDialog.open()
             }
             ToolButton {
                 id: favoritesButton
@@ -202,6 +220,11 @@ Page {
     SendDialog {
         id: sendDialog
         platformInverted: page.platformInverted
+    }
+
+    AddressDialog {
+        id: addressDialog
+        onAddressEntered: page.showSendResult(sender.sendToAddress(ip))
     }
 
     SendTextDialog {

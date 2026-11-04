@@ -4,6 +4,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QStringList>
 #include <QUrl>
 #ifndef QT_NO_OPENSSL
 #include <QSslError>
@@ -21,6 +22,8 @@ static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
 static const int kScanTimeoutMs = 3000;
 static const int kAnnounceReplyTimeoutMs = 5000;
+// lookUp(): the user is waiting, but a phone needs time for the handshake.
+static const int kLookUpTimeoutMs = 8000;
 // Refresh while the device list is on screen (autoRefresh). A device is
 // dropped after missing two refreshes, i.e. within about two minutes.
 static const int kAutoRefreshIntervalMs = 60000;
@@ -264,6 +267,11 @@ void Discovery::abortJobs()
     // it would leak with its connection if it never reports finished();
     // deleteLater() twice is harmless if it does.
     QList<QNetworkReply *> replies = m_jobs.keys();
+    QStringList lookUps;
+    foreach (const Job &job, m_jobs) {
+        if (job.kind == LookUpJob)
+            lookUps.append(job.ip);
+    }
     m_jobs.clear();
     foreach (QNetworkReply *reply, replies) {
         abortReply(reply);
@@ -276,6 +284,8 @@ void Discovery::abortJobs()
         m_scanning = false;
         emit scanningChanged();
     }
+    foreach (const QString &ip, lookUps)
+        emit lookUpFinished(ip, QString(), QLatin1String("Connection lost"));
 }
 
 // A reply that already failed is about to emit finished() by itself; aborting
@@ -455,6 +465,12 @@ void Discovery::scan()
     pumpScanQueue();
 }
 
+void Discovery::lookUp(const QString &ip)
+{
+    qDebug() << "Discovery: looking up" << ip;
+    startJob(LookUpJob, ip, m_device->port(), QLatin1String("https"));
+}
+
 void Discovery::pumpScanQueue()
 {
     while (m_activeScanJobs < kMaxConcurrentScanJobs && !m_scanQueue.isEmpty())
@@ -484,7 +500,8 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.protocol = protocol;
     job.v1 = v1;
     job.deadline = QDateTime::currentDateTime().addMSecs(
-                kind == ScanJob ? kScanTimeoutMs : kAnnounceReplyTimeoutMs);
+                kind == ScanJob ? kScanTimeoutMs
+                                : kind == LookUpJob ? kLookUpTimeoutMs : kAnnounceReplyTimeoutMs);
     job.timedOut = false;
     job.expectedFingerprint = expectedFingerprint;
     job.udpFallback = udpFallback;
@@ -510,6 +527,11 @@ void Discovery::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors
         return; // the handshake fails, nothing is sent
     }
     reply->ignoreSslErrors();
+}
+
+static QString notFoundError(const QString &ip)
+{
+    return QString::fromLatin1("No LocalSend device found at %1").arg(ip);
 }
 
 void Discovery::onScanTick()
@@ -549,6 +571,8 @@ void Discovery::onScanTick()
             --m_activeScanJobs;
             ++m_scanDone;
             emit scanProgressChanged();
+        } else if (job.kind == LookUpJob) {
+            emit lookUpFinished(job.ip, QString(), notFoundError(job.ip));
         }
     }
     if (!stuck.isEmpty())
@@ -627,6 +651,8 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         qWarning() << "Discovery: network lost (" << int(error) << reply->errorString()
                    << ", accessible" << int(m_nam->networkAccessible()) << ") - stopping scan";
         abortJobs();
+        if (job.kind == LookUpJob)
+            emit lookUpFinished(job.ip, QString(), QLatin1String("Connection lost"));
         return;
     }
 
@@ -649,23 +675,27 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
             error = QNetworkReply::SslHandshakeFailedError;
     }
 
+    QString fingerprint; // of the device that answered
     if (error == QNetworkReply::NoError) {
         bool ok = false;
         QVariantMap map = Json::parseObject(reply->readAll(), &ok);
         if (ok && !certFingerprint.isEmpty())
             map.insert(QLatin1String("fingerprint"), certFingerprint);
-        if (ok && map.value(QLatin1String("fingerprint")).toString() != m_device->fingerprint()) {
+        if (ok)
+            fingerprint = map.value(QLatin1String("fingerprint")).toString();
+        if (ok && fingerprint != m_device->fingerprint()) {
             map.insert(QLatin1String("protocol"), job.protocol); // the one that actually worked
             map.insert(QLatin1String("port"), job.port);
+            const char *source = job.kind == ScanJob ? "scan"
+                               : job.kind == LookUpJob ? "address" : "announce";
             m_peers->upsert(PeerModel::peerFromMap(map, job.ip, job.port, job.protocol,
-                                                   job.kind == ScanJob ? QLatin1String("scan")
-                                                                       : QLatin1String("announce")));
+                                                   QLatin1String(source)));
         } else if (!ok) {
             qWarning() << "Discovery:" << job.ip << "answered with invalid JSON";
         }
     } else if (job.certRejected) {
         // Logged already; no http retry, no UDP answer.
-    } else if (job.kind == ScanJob && job.protocol == QLatin1String("https")
+    } else if (job.kind != AnnounceReplyJob && job.protocol == QLatin1String("https")
                && !job.timedOut && looksLikePlainHttpServer(error)) {
         // Something answered, but not with TLS: probably a LocalSend instance
         // with encryption disabled. Retry over HTTP.
@@ -673,7 +703,7 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
                  << ") - trying http";
         startJob(job.kind, job.ip, job.port, QLatin1String("http"), job.v1);
         return;
-    } else if (!isNothingThere(error, job.timedOut) || job.kind == AnnounceReplyJob) {
+    } else if (!isNothingThere(error, job.timedOut) || job.kind != ScanJob) {
         qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error)
                  << reply->errorString();
     }
@@ -684,6 +714,17 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         // switching it (the official app does not either). Fall back to UDP.
         qDebug() << "Discovery: HTTP reply to" << job.ip << "failed, replying via UDP";
         replyViaUdp();
+    }
+
+    if (job.kind == LookUpJob) {
+        QString why;
+        if (job.certRejected)
+            why = QString::fromLatin1("The certificate of %1 was rejected").arg(job.ip);
+        else if (fingerprint.isEmpty())
+            why = notFoundError(job.ip);
+        else if (fingerprint == m_device->fingerprint())
+            why = QLatin1String("This is the address of this phone");
+        emit lookUpFinished(job.ip, why.isEmpty() ? fingerprint : QString(), why);
     }
 
     if (job.kind == ScanJob) {

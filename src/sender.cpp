@@ -14,6 +14,7 @@
 
 #include "clientidentity.h"
 #include "deviceinfo.h"
+#include "discovery.h"
 #include "json.h"
 #include "networkmanager.h"
 
@@ -25,9 +26,10 @@ static const int kStallTimeoutMs = 60000;
 static const int kEstimateAfterMs = 2000;
 
 Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
-               NetworkManager *network, QObject *parent)
+               NetworkManager *network, Discovery *discovery, QObject *parent)
     : QObject(parent),
       m_device(device), m_peers(peers), m_selection(selection), m_network(network),
+      m_discovery(discovery),
       m_nam(new QNetworkAccessManager(this)),
       m_state(QLatin1String("idle")),
       m_pinSent(false),
@@ -42,14 +44,16 @@ Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
             this, SLOT(onSslErrors(QNetworkReply*,QList<QSslError>)));
 #endif
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
+    connect(m_discovery, SIGNAL(lookUpFinished(QString,QString,QString)),
+            this, SLOT(onLookUpFinished(QString,QString,QString)));
     m_tick.setInterval(kTickMs);
     connect(&m_tick, SIGNAL(timeout()), this, SLOT(onTick()));
 }
 
 bool Sender::isBusy() const
 {
-    return m_state == QLatin1String("waiting") || m_state == QLatin1String("pin")
-            || m_state == QLatin1String("sending");
+    return m_state == QLatin1String("connecting") || m_state == QLatin1String("waiting")
+            || m_state == QLatin1String("pin") || m_state == QLatin1String("sending");
 }
 
 QString Sender::fileName() const
@@ -75,6 +79,39 @@ bool Sender::send(const QString &fingerprint)
         qWarning() << "Sender: already sending to" << m_peer.alias;
         return false;
     }
+    return start(fingerprint);
+}
+
+bool Sender::sendToAddress(const QString &ip)
+{
+    if (isBusy()) {
+        qWarning() << "Sender: already sending to" << m_peer.alias;
+        return false;
+    }
+    reset();
+    if (!m_network->isOnline()) {
+        finish(QLatin1String("failed"), QLatin1String("Not connected"));
+        return false;
+    }
+    m_peer.alias = ip; // until we know better
+    setState(QLatin1String("connecting"));
+    m_discovery->lookUp(ip);
+    return true;
+}
+
+void Sender::onLookUpFinished(const QString &ip, const QString &fingerprint, const QString &error)
+{
+    // Not ours if the user cancelled meanwhile.
+    if (m_state != QLatin1String("connecting") || ip != m_peer.alias)
+        return;
+    if (!error.isEmpty())
+        finish(QLatin1String("failed"), error);
+    else
+        start(fingerprint);
+}
+
+void Sender::reset()
+{
     m_peer = Peer();
     m_files.clear();
     m_queue.clear();
@@ -86,7 +123,11 @@ bool Sender::send(const QString &fingerprint)
     m_bytesTotal = m_bytesDone = m_currentSent = 0;
     m_remainingSeconds = -1;
     emit progressChanged();
+}
 
+bool Sender::start(const QString &fingerprint)
+{
+    reset();
     if (!m_peers->find(fingerprint, &m_peer)) {
         finish(QLatin1String("failed"), QLatin1String("The device is gone"));
         return false;

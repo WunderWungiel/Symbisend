@@ -1,8 +1,8 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
-// Progress of a transfer started with sender.send(): waiting for the
-// receiver, PIN entry, total progress with the time left in the title, and
+// Progress of a transfer started with sender.send() or sendToAddress():
+// connecting, waiting for the receiver, PIN entry, total progress with the time left in the title, and
 // the result. Cancel stops the transfer; Close just hides the finished one.
 CommonDialog {
     id: root
@@ -20,6 +20,7 @@ CommonDialog {
     }
 
     titleText: {
+        if (sendState == "connecting") return "Connecting"
         if (sendState == "waiting") return "Waiting for response"
         if (sendState == "pin") return "PIN required"
         if (sendState == "sending")
@@ -57,6 +58,7 @@ CommonDialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             wrapMode: Text.Wrap
             text: {
+                if (root.sendState == "connecting") return "Connecting to " + sender.peerAlias + "..."
                 if (root.sendState == "waiting") return "Waiting for " + sender.peerAlias + " to accept..."
                 if (root.sendState == "pin") return sender.errorText != "" ? sender.errorText
                                                                        : sender.peerAlias + " asks for a PIN"
@@ -72,8 +74,9 @@ CommonDialog {
         ProgressBar {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
-            visible: root.sendState == "waiting" || root.sendState == "sending" || root.sendState == "finished"
-            indeterminate: root.sendState == "waiting"
+            visible: root.sendState == "connecting" || root.sendState == "waiting"
+                     || root.sendState == "sending" || root.sendState == "finished"
+            indeterminate: root.sendState == "connecting" || root.sendState == "waiting"
             minimumValue: 0
             maximumValue: 1
             value: sender.progress

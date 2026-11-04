@@ -55,6 +55,11 @@ public:
     Q_INVOKABLE void announce();
     Q_INVOKABLE void scan();
 
+    // Asks the device at this address who it is (POST /register, like the
+    // official app's "Enter address"; https, then http), which also adds it
+    // to the peer list. Ends with lookUpFinished().
+    void lookUp(const QString &ip);
+
     // Our HTTP server + multicast listener, i.e. whether others can find us
     // and send to us. Stopping is not persisted: the server runs again after
     // a restart of the app.
@@ -79,6 +84,8 @@ signals:
     void scanProgressChanged();
     void statusChanged();
     void autoRefreshChanged();
+    // After lookUp(): the device's fingerprint, or what went wrong in error.
+    void lookUpFinished(const QString &ip, const QString &fingerprint, const QString &error);
 
 private slots:
     void onOnlineChanged();
@@ -93,7 +100,7 @@ private slots:
     void applyEncryption();
 
 private:
-    enum JobKind { ScanJob, AnnounceReplyJob };
+    enum JobKind { ScanJob, AnnounceReplyJob, LookUpJob };
     struct Job {
         JobKind kind;
         QString ip;
@@ -103,7 +110,7 @@ private:
         QDateTime deadline;
         bool timedOut;
         // https: the fingerprint the peer's certificate must have (the one it
-        // multicast); empty = accept any valid one (subnet scan).
+        // multicast); empty = accept any valid one (subnet scan, lookUp()).
         QString expectedFingerprint;
         bool udpFallback;  // reply via UDP if the register fails (announcements)
         bool certRejected; // its certificate was refused
