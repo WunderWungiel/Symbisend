@@ -30,7 +30,9 @@ static const int kAutoRefreshIntervalMs = 60000;
 static const int kAutoRefreshMinGapMs = 15000;
 // How long past its deadline a request may take to report finished().
 static const int kStuckJobGraceMs = 5000;
-// An announcement is sent as a burst of 3 (see announce()); answer it once.
+// An announcement is sent as a burst of 3 (see announce()). The official app
+// answers every message; a TLS handshake costs a phone more, so the rest of a
+// burst is skipped while a register is running or after it succeeded.
 static const int kAnnounceDedupWindowMs = 5000;
 
 Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network,
@@ -403,7 +405,7 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
             it.remove();
     }
     if (m_recentReplies.contains(peer.fingerprint)) {
-        qDebug() << "Discovery: repeated multicast from" << peer.alias << "- already answered";
+        qDebug() << "Discovery: repeated multicast from" << peer.alias << "- already answered or in progress";
         return;
     }
     m_recentReplies.insert(peer.fingerprint, now);
@@ -425,7 +427,7 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
     // A UDP answer (not an announcement) is checked the same way, but a
     // failure isn't answered by multicast again.
     startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol, v1,
-             https ? peer.fingerprint : QString(), isAnnounce);
+             https ? peer.fingerprint : QString(), isAnnounce, peer.fingerprint);
 }
 
 // ---------------------------------------------------------------- HTTP client
@@ -479,7 +481,8 @@ void Discovery::pumpScanQueue()
 }
 
 void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol, bool v1,
-                         const QString &expectedFingerprint, bool udpFallback)
+                         const QString &expectedFingerprint, bool udpFallback,
+                         const QString &announcer)
 {
     QUrl url;
     url.setScheme(protocol);
@@ -506,6 +509,7 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.expectedFingerprint = expectedFingerprint;
     job.udpFallback = udpFallback;
     job.certRejected = false;
+    job.announcer = announcer;
     m_jobs.insert(reply, job);
     if (kind == ScanJob)
         ++m_activeScanJobs;
@@ -573,6 +577,8 @@ void Discovery::onScanTick()
             emit scanProgressChanged();
         } else if (job.kind == LookUpJob) {
             emit lookUpFinished(job.ip, QString(), notFoundError(job.ip));
+        } else if (job.kind == AnnounceReplyJob) {
+            m_recentReplies.remove(job.announcer);
         }
     }
     if (!stuck.isEmpty())
@@ -707,6 +713,11 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error)
                  << reply->errorString();
     }
+
+    // The burst covers peers that aren't ready yet: let its next message try
+    // again. A refused certificate stays refused, so that isn't retried.
+    if (job.kind == AnnounceReplyJob && fingerprint.isEmpty() && !job.certRejected)
+        m_recentReplies.remove(job.announcer);
 
     if (job.kind == AnnounceReplyJob && job.udpFallback && !job.certRejected
             && error != QNetworkReply::NoError) {

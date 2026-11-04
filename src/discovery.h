@@ -114,6 +114,8 @@ private:
         QString expectedFingerprint;
         bool udpFallback;  // reply via UDP if the register fails (announcements)
         bool certRejected; // its certificate was refused
+        // AnnounceReplyJob: the multicast's fingerprint (m_recentReplies key).
+        QString announcer;
     };
 
     bool wantHttps() const;
@@ -124,7 +126,7 @@ private:
     static void abortReply(QNetworkReply *reply);
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
                   bool v1 = false, const QString &expectedFingerprint = QString(),
-                  bool udpFallback = false);
+                  bool udpFallback = false, const QString &announcer = QString());
     void pumpScanQueue();
     void finishScanIfDone();
     void replyViaUdp();
@@ -142,7 +144,9 @@ private:
     QNetworkAccessManager *m_nam;
 
     QHash<QNetworkReply *, Job> m_jobs;
-    QHash<QString, QDateTime> m_recentReplies; // fingerprint -> when we last answered its announcement
+    // fingerprint -> when we started answering its multicast; a failed answer
+    // is removed, so the next message of the burst tries again.
+    QHash<QString, QDateTime> m_recentReplies;
     QList<QString> m_scanQueue;
     int m_scanTotal;
     int m_scanDone;
