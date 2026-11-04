@@ -15,6 +15,7 @@
 #include "src/picker.h"
 #include "src/selectionmodel.h"
 #include "src/historymodel.h"
+#include "src/favoritesmodel.h"
 #include "src/sender.h"
 #include "src/receiver.h"
 #include "src/webshare.h"
@@ -42,6 +43,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     DeviceInfo device;
     PeerModel peers;
     HistoryModel history;
+    FavoritesModel favorites;
+    favorites.watchPeers(&peers);
     NetworkManager network;
     // Also picks http/https for the server (settings.encryption, webShare.encrypted).
     Discovery discovery(&device, &peers, &network, &settings);
@@ -49,7 +52,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Serves / and /i18n.json (the browser pages) on discovery's HTTP server.
     WebShare webShare(&discovery, &settings, &network, device.port());
     // Serves prepare-upload/upload/cancel on discovery's HTTP server.
-    Receiver receiver(discovery.httpServer(), &settings, &network, &webShare, &history);
+    Receiver receiver(discovery.httpServer(), &settings, &network, &webShare, &history, &favorites);
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
     QmlApplicationViewer viewer;
@@ -66,6 +69,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("receiver"), &receiver);
     ctx->setContextProperty(QLatin1String("webShare"), &webShare);
     ctx->setContextProperty(QLatin1String("history"), &history);
+    ctx->setContextProperty(QLatin1String("favorites"), &favorites);
     // image://verify/<name>/<rrggbb>, the Verify dialog's icons
     viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
 

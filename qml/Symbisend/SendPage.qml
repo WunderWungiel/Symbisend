@@ -13,6 +13,8 @@ Page {
     signal deviceInfoRequested(string fingerprint)
     // Edit button on the Selection card; main.qml opens SelectionPage.
     signal editSelectionRequested()
+    // Heart button next to Refresh; main.qml opens FavoritesPage.
+    signal favoritesRequested()
 
     // The Selection card's Add button toggles the send option row below it.
     property bool addOptionsShown: false
@@ -84,10 +86,18 @@ Page {
             ToolButton {
                 id: refreshButton
                 platformInverted: page.platformInverted
-                anchors.right: parent.right
+                anchors.right: favoritesButton.left
                 iconSource: "toolbar-refresh"
                 enabled: !discovery.scanning
                 onClicked: discovery.refresh()
+            }
+            ToolButton {
+                id: favoritesButton
+                platformInverted: page.platformInverted
+                anchors.right: parent.right
+                iconSource: page.platformInverted ? "images/favorite-inverted.svg"
+                                                  : "images/favorite.svg"
+                onClicked: page.favoritesRequested()
             }
         }
 

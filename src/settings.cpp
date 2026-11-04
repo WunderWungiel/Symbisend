@@ -15,6 +15,7 @@
 static const char *kThemeKey = "general/theme";
 static const char *kLanguageKey = "general/language";
 static const char *kQuickSaveKey = "receive/quickSave";
+static const char *kQuickSaveFromFavoritesKey = "receive/quickSaveFromFavorites";
 static const char *kRequirePinKey = "receive/requirePin";
 static const char *kPinKey = "receive/pin";
 static const char *kDownloadFolderKey = "transfer/downloadFolder";
@@ -35,6 +36,7 @@ Settings::Settings(QObject *parent)
     if (m_language.isEmpty())
         m_language = QLatin1String("system");
     m_quickSave = s.value(QLatin1String(kQuickSaveKey), false).toBool();
+    m_quickSaveFromFavorites = s.value(QLatin1String(kQuickSaveFromFavoritesKey), false).toBool();
     m_requirePin = s.value(QLatin1String(kRequirePinKey), false).toBool();
     m_pin = s.value(QLatin1String(kPinKey)).toString();
     if (m_requirePin && m_pin.isEmpty()) {
@@ -48,7 +50,8 @@ Settings::Settings(QObject *parent)
     m_receiveViaLinkAutoAccept = s.value(QLatin1String(kReceiveViaLinkAutoAcceptKey), false).toBool();
     m_encryption = s.value(QLatin1String(kEncryptionKey), true).toBool();
     qDebug() << "Settings: theme" << m_theme << "language" << m_language
-             << "quickSave" << m_quickSave << "requirePin" << m_requirePin
+             << "quickSave" << m_quickSave
+             << "quickSaveFromFavorites" << m_quickSaveFromFavorites << "requirePin" << m_requirePin
              << "saveMediaToGallery" << m_saveMediaToGallery
              << "autoFinish" << m_autoFinish << "saveToHistory" << m_saveToHistory
              << "receiveViaLinkAutoAccept" << m_receiveViaLinkAutoAccept
@@ -100,6 +103,12 @@ void Settings::setQuickSave(bool on)
 {
     if (store(kQuickSaveKey, &m_quickSave, on))
         emit quickSaveChanged();
+}
+
+void Settings::setQuickSaveFromFavorites(bool on)
+{
+    if (store(kQuickSaveFromFavoritesKey, &m_quickSaveFromFavorites, on))
+        emit quickSaveFromFavoritesChanged();
 }
 
 void Settings::setRequirePin(bool on)

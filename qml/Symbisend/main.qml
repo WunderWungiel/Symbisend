@@ -36,6 +36,7 @@ PageStackWindow {
                 onDeviceInfoRequested: mainPage.pageStack.push(Qt.resolvedUrl("DeviceDetailsPage.qml"),
                                                                { fingerprint: fingerprint })
                 onEditSelectionRequested: mainPage.pageStack.push(Qt.resolvedUrl("SelectionPage.qml"))
+                onFavoritesRequested: mainPage.pageStack.push(Qt.resolvedUrl("FavoritesPage.qml"))
             }
             SettingsPage {
                 id: settingsTab

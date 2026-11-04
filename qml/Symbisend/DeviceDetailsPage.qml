@@ -22,13 +22,25 @@ Page {
     property color mutedColor: platformInverted ? platformStyle.colorNormalMidInverted
                                                 : platformStyle.colorNormalMid
 
+    // favorites.contains() is not a notifying property: refreshed below.
+    property bool isFavourite: false
+
     function reload() {
         var d = peerModel.peer(fingerprint)
         if (d.fingerprint !== undefined)
             device = d
+        isFavourite = favorites.contains(fingerprint)
     }
 
     onFingerprintChanged: reload()
+
+    Connections {
+        target: favorites
+        onFavoritesChanged: {
+            if (fingerprint == page.fingerprint)
+                page.isFavourite = favorites.contains(page.fingerprint)
+        }
+    }
 
     Connections {
         target: peerModel
@@ -86,10 +98,15 @@ Page {
 
                 ToolButton {
                     platformInverted: page.platformInverted
-                    iconSource: page.platformInverted ? "images/favorite-border-inverted.svg"
-                                                      : "images/favorite-border.svg"
+                    iconSource: "images/" + (page.isFavourite ? "favorite" : "favorite-border")
+                                + (page.platformInverted ? "-inverted.svg" : ".svg")
                     text: "Favourite"
-                    onClicked: console.log("DeviceDetailsPage: favourite clicked (not implemented)")
+                    onClicked: {
+                        if (page.isFavourite)
+                            removeFavouriteDialog.open()
+                        else if (page.device.fingerprint !== undefined)
+                            favouriteDialog.openFor(page.device)
+                    }
                 }
                 ToolButton {
                     platformInverted: page.platformInverted
@@ -224,4 +241,17 @@ Page {
     }
 
     VerifyDialog { id: verifyDialog }
+
+    FavoriteDialog { id: favouriteDialog }
+
+    QueryDialog {
+        id: removeFavouriteDialog
+        platformInverted: page.platformInverted
+        titleText: "Remove from favourites"
+        message: "Do you really want to remove " + (page.device.alias || "this device")
+                 + " from favourites?"
+        acceptButtonText: "Delete"
+        rejectButtonText: "Cancel"
+        onAccepted: favorites.remove(page.fingerprint)
+    }
 }

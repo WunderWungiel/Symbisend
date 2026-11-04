@@ -7,6 +7,7 @@
 #include <QStringList>
 #include <QUuid>
 
+#include "favoritesmodel.h"
 #include "historymodel.h"
 #include "json.h"
 #include "networkmanager.h"
@@ -34,10 +35,11 @@ static QString route(const HttpRequest &request)
 }
 
 Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
-                   WebShare *webShare, HistoryModel *history, QObject *parent)
+                   WebShare *webShare, HistoryModel *history, FavoritesModel *favorites,
+                   QObject *parent)
     : QObject(parent),
       m_server(server), m_settings(settings), m_network(network), m_webShare(webShare),
-      m_history(history),
+      m_history(history), m_favorites(favorites),
       m_state(QLatin1String("idle")),
       m_peerHttps(false),
       m_totalSize(0),
@@ -270,6 +272,14 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
 
     if (m_settings->quickSave() && !m_isMessage) {
         qDebug() << "Receiver: quick save - accepting at once";
+        return startSession();
+    }
+    // Over https m_peerFingerprint is the sender's certificate hash, so only
+    // the favourite device itself gets in; over http it is what it claims.
+    if (m_settings->quickSaveFromFavorites() && !m_isMessage && m_favorites
+            && m_favorites->contains(m_peerFingerprint)) {
+        qDebug() << "Receiver: quick save for favourites -" << alias << "is a favourite,"
+                 << "accepting at once";
         return startSession();
     }
     if (viaLink && m_settings->receiveViaLinkAutoAccept() && !m_isMessage) {

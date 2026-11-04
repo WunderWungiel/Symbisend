@@ -10,7 +10,7 @@
 // it is the default for the drives present right now (F: > E: > C:/Data),
 // recomputed on every launch so inserting a memory card is picked up.
 //
-// quickSave, requirePin/pin, downloadFolder and receiveViaLinkAutoAccept are
+// quickSave, quickSaveFromFavorites, requirePin/pin, downloadFolder and receiveViaLinkAutoAccept are
 // used by Receiver; autoFinish by ReceiveDialog.qml; the
 // other receive settings are stored only for now.
 class Settings : public QObject
@@ -22,6 +22,8 @@ class Settings : public QObject
 
     // Receive
     Q_PROPERTY(bool quickSave READ quickSave WRITE setQuickSave NOTIFY quickSaveChanged)
+    // Like quickSave, but only for senders in `favorites`.
+    Q_PROPERTY(bool quickSaveFromFavorites READ quickSaveFromFavorites WRITE setQuickSaveFromFavorites NOTIFY quickSaveFromFavoritesChanged)
     // requirePin can only be on with a non-empty pin; turning it off clears the pin.
     Q_PROPERTY(bool requirePin READ requirePin WRITE setRequirePin NOTIFY requirePinChanged)
     Q_PROPERTY(QString pin READ pin WRITE setPin NOTIFY pinChanged)
@@ -52,6 +54,8 @@ public:
 
     bool quickSave() const { return m_quickSave; }
     void setQuickSave(bool on);
+    bool quickSaveFromFavorites() const { return m_quickSaveFromFavorites; }
+    void setQuickSaveFromFavorites(bool on);
     bool requirePin() const { return m_requirePin; }
     void setRequirePin(bool on);
     // Any text, not only digits. Setting an empty pin is ignored while
@@ -90,6 +94,7 @@ signals:
     void themeChanged();
     void languageChanged();
     void quickSaveChanged();
+    void quickSaveFromFavoritesChanged();
     void requirePinChanged();
     void pinChanged();
     void downloadFolderChanged();
@@ -113,6 +118,7 @@ private:
     QString m_theme;
     QString m_language;
     bool m_quickSave;
+    bool m_quickSaveFromFavorites;
     bool m_requirePin;
     QString m_pin;
     bool m_saveMediaToGallery;

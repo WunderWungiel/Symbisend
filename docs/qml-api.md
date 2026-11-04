@@ -84,6 +84,9 @@ General:
 Receive:
 - `quickSave` (bool, default false) — offers of files are accepted at once, without the
   receive dialog (messages are still shown)
+- `quickSaveFromFavorites` (bool, default false) — the same, but only for senders in
+  `favorites` (matched by fingerprint: over https the sender's certificate hash, over
+  http the fingerprint it claims). The official app's "Quick save for favorites".
 - `requirePin` (bool, default false) — senders must send `pin`; can only be turned on while `pin`
   is non-empty (otherwise the write is ignored); turning it off also clears `pin`
 - `pin` (string, default `""`) — any text, not only digits. Setting it
@@ -266,6 +269,34 @@ every accepted text message, unless `settings.saveToHistory` is off. Messages lo
   missing. False if nothing could show it.
 - `clear()` — forgets every entry (saved at once). The received files stay on disk.
 - Signal `countChanged()`.
+
+## `favorites` — favourite devices (ListView model)
+Like the official app's favourites, keyed by fingerprint, persisted in `QSettings`
+(`favorites` array). Used by `settings.quickSaveFromFavorites`.
+
+| role          | type   | example                                        |
+|---------------|--------|------------------------------------------------|
+| `fingerprint` | string | the device's fingerprint                        |
+| `alias`       | string | the name shown                                  |
+| `customAlias` | bool   | the user typed the name; false = it follows the device's alias whenever the device is discovered again |
+| `ip`          | string | `192.168.1.20`                                  |
+| `port`        | int    | `53317`                                         |
+
+- `count` (int), signal `countChanged()`
+- `contains(fingerprint)` → bool
+- `favorite(fingerprint)` → `{ fingerprint, alias, customAlias, ip, port }`, or `{}`
+- `add(fingerprint, alias, deviceAlias, ip, port)` → bool — adds the device, or updates
+  it if it is a favourite already. `alias` is what the user typed: `""` or the same as
+  `deviceAlias` (the device's own alias) means automatic. False (nothing stored) for an
+  empty fingerprint, an IP that isn't IPv4 (`a.b.c.d`) or a port outside 1–65535.
+- `remove(fingerprint)`
+- Signal `favoritesChanged(fingerprint)` — after `add`, `remove` or an automatic rename;
+  call `contains()` / `favorite()` again (they don't notify by themselves).
+- `FavoriteDialog.qml` is the "Add to favourites" dialog (`openFor(peerModel.peer(...))`)
+  and the "Edit favourite" one (`openEdit(favorites.favorite(...))`). An edit with an
+  empty name while the device's own alias is unknown keeps the stored name (automatic,
+  updated when the device is discovered again).
+- `FavoritesPage.qml` lists them (heart button next to Refresh on the Send page).
 
 ## `webShare` — "Receive via link" (browsers send files to us)
 Like the official app: while active, opening `url` in any browser on the network shows

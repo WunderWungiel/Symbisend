@@ -58,6 +58,11 @@ Page {
                 checked: settings.quickSave
                 onToggled: settings.quickSave = value
             }
+            SettingsSwitch {
+                title: "Quick save for favourites"
+                checked: settings.quickSaveFromFavorites
+                onToggled: settings.quickSaveFromFavorites = value
+            }
             // Turning it on asks for the PIN first (stays off on Cancel or
             // an empty PIN); tapping the row while on changes the PIN.
             SettingsSwitch {
