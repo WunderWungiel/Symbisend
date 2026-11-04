@@ -2,8 +2,9 @@ import QtQuick 1.1
 import com.nokia.symbian 1.1
 
 // An incoming transfer (receiver): the offer with Decline / Accept, then the
-// progress and the result. main.qml opens it when an offer arrives
-// (receiver.state "request"). Bare functional layout, meant to be polished.
+// progress and the result. main.qml opens it when an offer arrives (receiver.state
+// "request"), or at "receiving" / "failed" when an offer was accepted without
+// asking (quick save, link auto accept). Bare functional layout, meant to be polished.
 Dialog {
     id: root
 

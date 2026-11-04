@@ -210,7 +210,9 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `state` (string):
   - `idle` — nothing received yet, or the last offer was declined
   - `request` — an offer waits for `accept()` / `decline()` (no timeout; the sender may
-    withdraw it: `cancelled`). With `settings.quickSave` files skip this state.
+    withdraw it: `cancelled`). Files accepted without asking (`settings.quickSave`,
+    `settings.quickSaveFromFavorites` for a favourite, `settings.receiveViaLinkAutoAccept`
+    while the link is active) skip this state.
   - `receiving` — files are coming in
   - `finished` — everything was saved (or the message was accepted)
   - `failed` — see `errorText` (connection lost, the sender stopped sending for 30 s,
@@ -244,7 +246,8 @@ Network:
   Applied at once, see `discovery.serverHttps`. Sending to others always uses the protocol
   each peer announced, whatever this says.
 
-`main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`.
+`main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`, `receiving` or
+`failed`. The last two cover offers accepted without asking (quick save, link auto accept).
 
 ## `history` — received files and messages (ListView model)
 Newest first, at most 200 entries (older ones are dropped), persisted as JSON in its own

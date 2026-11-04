@@ -63,9 +63,12 @@ PageStackWindow {
 
     Connections {
         target: receiver
+        // "request" is the normal way in. Quick save and link auto accept skip
+        // it and start at "receiving", or at "failed" if the download folder
+        // can't be created. open() does nothing if the dialog is already open.
         onStateChanged: {
-            if (receiver.state == "request" && receiveDialog.status != DialogStatus.Open
-                    && receiveDialog.status != DialogStatus.Opening)
+            if (receiver.state == "request" || receiver.state == "receiving"
+                    || receiver.state == "failed")
                 receiveDialog.open()
         }
     }
