@@ -178,7 +178,8 @@ Methods:
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by
 one, streamed from disk). The selection is copied when sending starts; it is cleared when
 the transfer ends in `finished` and kept after anything else (to retry). A file that fails
-doesn't stop the others, as in the official app.
+doesn't stop the others, as in the official app. A file the receiver refuses with a
+checksum mismatch (422) is sent again first, 3 uploads in all.
 - `send(fingerprint)` → bool — starts sending `selection` to that peer. Returns false
   (state `failed`, `errorText` says why) when already busy, nothing is selected, offline,
   the peer is unknown, or it speaks protocol v1 (not supported yet).
@@ -191,6 +192,8 @@ doesn't stop the others, as in the official app.
 - `state` (string):
   - `idle` — nothing sent yet
   - `connecting` — `sendToAddress()` is finding the device; `peerAlias` is the IP until then
+  - `hashing` — `settings.createChecksums`: calculating the files' checksums before the
+    offer; `progress`, `bytesSent` and `bytesTotal` run over all the files, `cancel()` works
   - `waiting` — the receiver's user hasn't accepted yet (no timeout; with quick save this
     passes at once)
   - `pin` — the receiver wants a PIN; `errorText` is `Wrong PIN` after a wrong one
@@ -205,7 +208,7 @@ doesn't stop the others, as in the official app.
   - `failed` — the transfer stopped, see `errorText` (busy receiver, connection lost
     before sending began, no progress for 60 s, ...)
   - `cancelled` — by us, or by the receiver (`errorText` says so)
-- `busy` (bool) — `connecting`, `waiting`, `pin` or `sending`
+- `busy` (bool) — `connecting`, `hashing`, `waiting`, `pin` or `sending`
 - `peerAlias`, `errorText` (string)
 - `fileCount` (int, accepted files), `filesDone` (int, of those sent),
   `fileIndex` (int, 1-based, the file being uploaded),
@@ -235,7 +238,9 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
   - `finished` — everything was saved (or the message was accepted)
   - `finishedWithErrors` — every file arrived or failed, and some failed (memory full,
     the upload broke off, ...); `errorText` starts with `Not saved:` and has a line
-    `name: why` for the first few. A failed file can't be sent again in this session.
+    `name: why` for the first few. A failed file can't be sent again in this session,
+    except after a checksum mismatch: a file whose `sha256` from the offer doesn't match is
+    deleted, and the sender may upload it again, 3 uploads in all. Then it has failed.
   - `failed` — see `errorText` (connection lost, the sender stopped sending for 30 s, ...)
   - `cancelled` — by the sender (`errorText` says so) or by `cancel()`
 - `busy` (bool) — `request` or `receiving`
@@ -261,6 +266,11 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `accept()`, `decline()` — in state `request`
 - `cancel()` — stops receiving and tells the sender (in `request`: same as `decline()`)
 - Signals `stateChanged()`, `progressChanged()`.
+
+Send:
+- `createChecksums` (bool, default false) — `sender` hashes every file first (state
+  `hashing`) and offers it with its `sha256`. The official app has this on by default; it
+  is off here because hashing large files first is slow on a phone.
 
 Network:
 - `encryption` (bool, default true) — our server speaks https (LocalSend's "Encryption").

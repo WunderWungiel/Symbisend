@@ -77,6 +77,7 @@ SOURCES += main.cpp \
     src/clientidentity.cpp \
     src/tlsrandom.cpp \
     src/tlsserver.cpp \
+    src/sha256hash.cpp \
     src/verification.cpp
 
 HEADERS += \
@@ -99,6 +100,7 @@ HEADERS += \
     src/clientidentity.h \
     src/tlsrandom.h \
     src/tlsserver.h \
+    src/sha256hash.h \
     src/verification.h
 
 # Pages served to web browsers (official LocalSend assets, see web/README.md)

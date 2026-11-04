@@ -16,8 +16,13 @@ class QSslError;
 class DeviceInfo;
 class Discovery;
 class NetworkManager;
+class QFile;
+class Settings;
+class Sha256Hash;
 
 // Sends the selection to one peer (LocalSend v2 upload API):
+//  0. With settings.createChecksums: hash every file (in small steps, the UI
+//     stays usable), so that the offer can name their sha256.
 //  1. POST /prepare-upload with the file list. The receiver answers once its
 //     user accepted (or at once with quick save): a session id and a token
 //     per accepted file, 204 (nothing to transfer, e.g. a text message),
@@ -25,7 +30,8 @@ class NetworkManager;
 //  2. POST /upload for every accepted file, one after another, streamed from
 //     disk.
 //     A file that fails is marked as failed and the next one goes on, as in
-//     the official app: the transfer ends in "finishedWithErrors".
+//     the official app: the transfer ends in "finishedWithErrors". A 422 from
+//     the receiver (checksum mismatch) is retried first, 3 uploads in all.
 //  3. POST /cancel when the user cancels or the receiver stops responding. The
 //     receiver can cancel too, with a /cancel to our server: onCancelReceived().
 // One transfer at a time. See docs/qml-api.md.
@@ -33,11 +39,12 @@ class Sender : public QObject
 {
     Q_OBJECT
     // "idle", "connecting" (sendToAddress(): finding out who is there),
+    // "hashing" (settings.createChecksums; progress runs over all the files),
     // "waiting" (for the receiver to accept), "pin" (receiver wants a PIN:
     // submitPin()), "sending", "finished", "finishedWithErrors" (some accepted
     // files were not sent: errorText lists them), "declined", "failed", "cancelled"
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
-    // connecting, waiting, pin or sending
+    // connecting, hashing, waiting, pin or sending
     Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
     Q_PROPERTY(QString peerAlias READ peerAlias NOTIFY stateChanged)
     // Why it failed / was declined; also "Wrong PIN" in state "pin".
@@ -65,7 +72,9 @@ public:
     static QString failureText(const QString &title, const QStringList &lines);
 
     Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
-           NetworkManager *network, Discovery *discovery, QObject *parent = 0);
+           NetworkManager *network, Discovery *discovery, Settings *settings,
+           QObject *parent = 0);
+    ~Sender();
 
     QString state() const { return m_state; }
     bool isBusy() const;
@@ -108,6 +117,7 @@ private slots:
     void onUploadProgress(qint64 sent, qint64 total);
     void onUploadFinished();
     void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
+    void hashStep();
     void onTick();
     void onOnlineChanged();
     void onLookUpFinished(const QString &ip, const QString &fingerprint, const QString &error);
@@ -122,8 +132,10 @@ private:
         QString path;       // empty for text
         QString text;
         qint64 size;
+        QString sha256;     // lowercase hex, empty if not calculated
         QString token;      // from prepare-upload
         FileStatus status;  // only used in m_queue
+        int attempts;       // uploads started, only used in m_queue
         QString error;      // why it failed
     };
 
@@ -133,6 +145,9 @@ private:
     void postPrepare();
     void startNextUpload();
     bool postUpload(const OutFile &f);
+    void startHashing();
+    void nextHash();
+    void stopHashing();
     void fileFailed(const QString &error);
     void failRemaining(const QString &error);
     void finishUploads();
@@ -147,6 +162,7 @@ private:
     SelectionModel *m_selection;
     NetworkManager *m_network;
     Discovery *m_discovery;
+    Settings *m_settings;
     QNetworkAccessManager *m_nam;
 
     QString m_state;
@@ -161,9 +177,15 @@ private:
     QString m_sessionId;
     QNetworkReply *m_reply;   // the one request in flight (owns the upload's QFile)
     int m_current;            // index into m_queue, -1 before the first
+    // Also used by "hashing", over m_files.
     qint64 m_bytesTotal;
     qint64 m_bytesDone;       // completed files
     qint64 m_currentSent;     // of the current file
+    QTimer m_hashTimer;       // hashStep(), as often as the event loop allows
+    int m_hashIndex;          // index into m_files
+    QFile *m_hashFile;        // the file being hashed
+    Sha256Hash *m_hash;
+    QDateTime m_hashSince;
     QDateTime m_sendingSince;
     QDateTime m_lastActivity; // last upload progress (stall detection)
     int m_remainingSeconds;

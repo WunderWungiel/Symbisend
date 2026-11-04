@@ -21,6 +21,7 @@
 #include "networkmanager.h"
 #include "sender.h"
 #include "settings.h"
+#include "sha256hash.h"
 #include "webshare.h"
 
 static const int kTickMs = 500;
@@ -37,6 +38,8 @@ static const int kMaxPinAttempts = 3;
 // We cancelled: how long uploads may stay open while our /cancel reaches the
 // sender. Enough for a TLS handshake on the phone.
 static const int kDrainTimeoutMs = 5000;
+// Uploads of one file, for a sender retrying after a checksum mismatch.
+static const int kMaxUploadAttempts = 3;
 
 static const char *kRoutePrefix = "/api/localsend/v2/";
 
@@ -300,8 +303,10 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
         f.fileName = m.value(QLatin1String("fileName")).toString();
         f.fileType = m.value(QLatin1String("fileType")).toString();
         f.preview = m.value(QLatin1String("preview")).toString();
+        f.sha256 = m.value(QLatin1String("sha256")).toString();
         f.size = qint64(m.value(QLatin1String("size")).toDouble());
         f.status = Pending;
+        f.attempts = 0;
         f.received = 0;
         if (f.id.isEmpty() || f.fileName.isEmpty() || f.size < 0 || m_fileIndex.contains(f.id)) {
             qWarning() << "Receiver: skipping invalid file entry" << it.key();
@@ -466,7 +471,8 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
     if (index < 0 || m_files.at(index).token != token)
         return HttpResponse::message(403, QLatin1String("Invalid token"));
     InFile &f = m_files[index];
-    // Like the official app: one try per file, a failed one stays failed.
+    // Like the official app: a failed file stays failed. Only a checksum
+    // mismatch puts it back to Pending, see finishUpload().
     if (f.status != Pending)
         return HttpResponse::message(403, QLatin1String("Invalid token"));
 
@@ -494,11 +500,13 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
     f.status = Receiving;
+    ++f.attempts;
     f.received = 0;
     f.savedPath = path;
     Upload u;
     u.file = index;
     u.out = out;
+    u.hash = f.sha256.isEmpty() ? 0 : new Sha256Hash;
     m_uploads.insert(request.id, u);
     m_currentName = f.fileName;
     m_lastActivity = QDateTime::currentDateTime();
@@ -522,6 +530,8 @@ HttpResponse Receiver::writeUpload(const HttpRequest &request, const QByteArray 
         checkDone();
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
+    if (u.hash)
+        u.hash->update(data);
     f.received += data.size();
     m_lastActivity = QDateTime::currentDateTime();
     // progressChanged() comes from onTick(): one per network chunk would
@@ -533,13 +543,34 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
 {
     if (!m_uploads.contains(request.id))
         return HttpResponse::message(500, QLatin1String("No such upload"));
-    const InFile &f = m_files.at(m_uploads.value(request.id).file);
+    const Upload u = m_uploads.value(request.id);
+    InFile &f = m_files[u.file];
     if (f.received != f.size) {
         qWarning() << "Receiver:" << f.fileName << "ended after" << f.received << "of"
                    << f.size << "bytes";
         closeUpload(request.id, false, QLatin1String("Incomplete"));
         checkDone();
         return HttpResponse::message(400, QLatin1String("Incomplete file"));
+    }
+    if (u.hash) {
+        const QString actual = u.hash->result();
+        if (actual.compare(f.sha256, Qt::CaseInsensitive) != 0) {
+            qWarning() << "Receiver: checksum of" << f.fileName << "doesn't match, upload"
+                       << f.attempts << "of" << kMaxUploadAttempts << "- expected" << f.sha256
+                       << "got" << actual;
+            // Deleted, so that the next upload gets the same name.
+            closeUpload(request.id, false, QLatin1String("The checksum doesn't match"));
+            if (f.attempts < kMaxUploadAttempts) {
+                f.status = Pending; // the same token works again
+                f.error.clear();
+                m_lastActivity = QDateTime::currentDateTime();
+                emit progressChanged();
+            } else {
+                checkDone();
+            }
+            return HttpResponse::message(422, QLatin1String("Checksum mismatch"));
+        }
+        qDebug() << "Receiver: checksum of" << f.fileName << "is correct";
     }
     closeUpload(request.id, true);
     if (f.status != Done) {
@@ -576,6 +607,7 @@ void Receiver::closeUpload(quint32 requestId, bool keepFile, const QString &erro
         f.savedPath.clear();
     }
     delete u.out;
+    delete u.hash;
 }
 
 // Stops every running upload (the senders see their connection close).

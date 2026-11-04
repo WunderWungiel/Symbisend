@@ -503,6 +503,7 @@ static QByteArray reasonPhrase(int status)
     case 405: return "Method Not Allowed";
     case 409: return "Conflict";
     case 413: return "Payload Too Large";
+    case 422: return "Unprocessable Entity";
     case 429: return "Too Many Requests";
     case 431: return "Request Header Fields Too Large";
     default: return status >= 500 ? "Internal Server Error" : "Unknown";

@@ -36,6 +36,11 @@ class Settings : public QObject
     // While "Receive via link" is on, accept every request at once.
     Q_PROPERTY(bool receiveViaLinkAutoAccept READ receiveViaLinkAutoAccept WRITE setReceiveViaLinkAutoAccept NOTIFY receiveViaLinkAutoAcceptChanged)
 
+    // Send
+    // Hash every file before offering it, so that the receiver can check it
+    // (official app: on by default; off here, it is slow on a phone).
+    Q_PROPERTY(bool createChecksums READ createChecksums WRITE setCreateChecksums NOTIFY createChecksumsChanged)
+
     // Network
     // Our server speaks https (default) instead of http. Discovery restarts
     // the server when it changes (except while "Receive via link" is on,
@@ -70,6 +75,8 @@ public:
     void setSaveToHistory(bool on);
     bool receiveViaLinkAutoAccept() const { return m_receiveViaLinkAutoAccept; }
     void setReceiveViaLinkAutoAccept(bool on);
+    bool createChecksums() const { return m_createChecksums; }
+    void setCreateChecksums(bool on);
     bool encryption() const { return m_encryption; }
     void setEncryption(bool on);
 
@@ -102,6 +109,7 @@ signals:
     void autoFinishChanged();
     void saveToHistoryChanged();
     void receiveViaLinkAutoAcceptChanged();
+    void createChecksumsChanged();
     void encryptionChanged();
 
 private slots:
@@ -125,6 +133,7 @@ private:
     bool m_autoFinish;
     bool m_saveToHistory;
     bool m_receiveViaLinkAutoAccept;
+    bool m_createChecksums;
     bool m_encryption;
 
     QString m_custom;          // user's choice, "" = use default

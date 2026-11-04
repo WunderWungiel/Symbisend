@@ -21,6 +21,7 @@ CommonDialog {
 
     titleText: {
         if (sendState == "connecting") return "Connecting"
+        if (sendState == "hashing") return "Preparing"
         if (sendState == "waiting") return "Waiting for response"
         if (sendState == "pin") return "PIN required"
         if (sendState == "sending")
@@ -60,6 +61,7 @@ CommonDialog {
             wrapMode: Text.Wrap
             text: {
                 if (root.sendState == "connecting") return "Connecting to " + sender.peerAlias + "..."
+                if (root.sendState == "hashing") return "Calculating checksums..."
                 if (root.sendState == "waiting") return "Waiting for " + sender.peerAlias + " to accept..."
                 if (root.sendState == "pin") return sender.errorText != "" ? sender.errorText
                                                                        : sender.peerAlias + " asks for a PIN"
@@ -80,8 +82,8 @@ CommonDialog {
         ProgressBar {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
-            visible: root.sendState == "connecting" || root.sendState == "waiting"
-                     || root.sendState == "sending" || root.sendState == "finished"
+            visible: root.sendState == "connecting" || root.sendState == "hashing"
+                     || root.sendState == "waiting" || root.sendState == "sending" || root.sendState == "finished"
                      || root.sendState == "finishedWithErrors"
             indeterminate: root.sendState == "connecting" || root.sendState == "waiting"
             minimumValue: 0

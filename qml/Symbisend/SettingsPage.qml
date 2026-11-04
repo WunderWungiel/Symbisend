@@ -99,6 +99,16 @@ Page {
                 onToggled: settings.saveToHistory = value
             }
 
+            // ------------------------------------------------ Send
+            SettingsHeading { text: "Send" }
+
+            SettingsSwitch {
+                title: "Create checksums"
+                subTitle: "Slower start with large files"
+                checked: settings.createChecksums
+                onToggled: settings.createChecksums = value
+            }
+
             // ------------------------------------------------ Network
             SettingsHeading { text: "Network" }
 

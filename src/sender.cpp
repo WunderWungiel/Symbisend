@@ -17,6 +17,8 @@
 #include "discovery.h"
 #include "json.h"
 #include "networkmanager.h"
+#include "settings.h"
+#include "sha256hash.h"
 
 static const int kTickMs = 500;
 // An upload with no progress for this long is given up. Generous: after the
@@ -26,12 +28,18 @@ static const int kStallTimeoutMs = 60000;
 static const int kEstimateAfterMs = 2000;
 // Failed files named in errorText; the log has them all.
 static const int kMaxFailuresListed = 3;
+// Uploads of one file when the receiver keeps answering 422. The official
+// receiver stops taking retries after this many.
+static const int kMaxUploadAttempts = 3;
+// Read and hashed in one go. Small enough not to freeze the UI on the phone.
+static const qint64 kHashChunkBytes = 256 * 1024;
 
 Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
-               NetworkManager *network, Discovery *discovery, QObject *parent)
+               NetworkManager *network, Discovery *discovery, Settings *settings,
+               QObject *parent)
     : QObject(parent),
       m_device(device), m_peers(peers), m_selection(selection), m_network(network),
-      m_discovery(discovery),
+      m_discovery(discovery), m_settings(settings),
       m_nam(new QNetworkAccessManager(this)),
       m_state(QLatin1String("idle")),
       m_pinSent(false),
@@ -39,6 +47,7 @@ Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
       m_reply(0),
       m_current(-1),
       m_bytesTotal(0), m_bytesDone(0), m_currentSent(0),
+      m_hashIndex(0), m_hashFile(0), m_hash(0),
       m_remainingSeconds(-1)
 {
 #ifndef QT_NO_OPENSSL
@@ -50,6 +59,13 @@ Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
             this, SLOT(onLookUpFinished(QString,QString,QString)));
     m_tick.setInterval(kTickMs);
     connect(&m_tick, SIGNAL(timeout()), this, SLOT(onTick()));
+    m_hashTimer.setInterval(0);
+    connect(&m_hashTimer, SIGNAL(timeout()), this, SLOT(hashStep()));
+}
+
+Sender::~Sender()
+{
+    stopHashing();
 }
 
 int Sender::filesDone() const
@@ -64,8 +80,8 @@ int Sender::filesDone() const
 
 bool Sender::isBusy() const
 {
-    return m_state == QLatin1String("connecting") || m_state == QLatin1String("waiting")
-            || m_state == QLatin1String("pin") || m_state == QLatin1String("sending");
+    return m_state == QLatin1String("connecting") || m_state == QLatin1String("hashing")
+            || m_state == QLatin1String("waiting") || m_state == QLatin1String("pin") || m_state == QLatin1String("sending");
 }
 
 QString Sender::fileName() const
@@ -188,10 +204,100 @@ bool Sender::start(const QString &fingerprint)
     // Same access point as discovery (no connection dialog).
     m_nam->setConfiguration(m_network->configuration());
     m_nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    if (m_settings->createChecksums()) {
+        startHashing();
+        return true;
+    }
     setState(QLatin1String("waiting"));
     postPrepare();
     return true;
 }
+
+// ---------------------------------------------------------------- checksums
+
+void Sender::startHashing()
+{
+    foreach (const OutFile &f, m_files)
+        m_bytesTotal += f.size;
+    m_hashIndex = 0;
+    qDebug() << "Sender: calculating the checksums of" << m_files.size() << "item(s),"
+             << m_bytesTotal << "bytes";
+    m_hashSince = QDateTime::currentDateTime();
+    setState(QLatin1String("hashing"));
+    emit progressChanged();
+    m_tick.start();
+    m_hashTimer.start();
+}
+
+// One piece per call, so the event loop runs in between (taps on Cancel, the
+// progress bar, the server).
+void Sender::hashStep()
+{
+    if (m_hashIndex >= m_files.size()) {
+        qDebug() << "Sender: checksums done in"
+                 << m_hashSince.msecsTo(QDateTime::currentDateTime()) << "ms";
+        stopHashing();
+        m_bytesTotal = m_bytesDone = m_currentSent = 0;
+        setState(QLatin1String("waiting"));
+        emit progressChanged();
+        postPrepare();
+        return;
+    }
+    OutFile &f = m_files[m_hashIndex];
+    if (f.path.isEmpty()) {
+        Sha256Hash hash;
+        hash.update(f.text.toUtf8());
+        f.sha256 = hash.result();
+        nextHash();
+        return;
+    }
+    if (!m_hashFile) {
+        m_hashFile = new QFile(f.path);
+        // Sending the checksum is optional: like the official app, a file that
+        // can't be read here still gets its chance to be sent.
+        if (!m_hashFile->open(QIODevice::ReadOnly)) {
+            qWarning() << "Sender: no checksum for" << f.path << m_hashFile->errorString();
+            nextHash();
+            return;
+        }
+        m_hash = new Sha256Hash;
+    }
+    const QByteArray data = m_hashFile->read(kHashChunkBytes);
+    if (m_hashFile->error() != QFile::NoError) {
+        qWarning() << "Sender: no checksum for" << f.path << m_hashFile->errorString();
+        nextHash();
+        return;
+    }
+    if (data.isEmpty()) {
+        f.sha256 = m_hash->result();
+        nextHash();
+        return;
+    }
+    m_hash->update(data);
+    m_currentSent += data.size();
+}
+
+void Sender::nextHash()
+{
+    m_bytesDone += m_files.at(m_hashIndex).size;
+    m_currentSent = 0;
+    ++m_hashIndex;
+    delete m_hash;
+    m_hash = 0;
+    delete m_hashFile;
+    m_hashFile = 0;
+}
+
+void Sender::stopHashing()
+{
+    m_hashTimer.stop();
+    delete m_hash;
+    m_hash = 0;
+    delete m_hashFile;
+    m_hashFile = 0;
+}
+
+// ---------------------------------------------------------------- prepare
 
 QUrl Sender::url(const QString &route) const
 {
@@ -247,6 +353,8 @@ void Sender::postPrepare()
         m.insert(QLatin1String("id"), f.id);
         m.insert(QLatin1String("fileName"), f.fileName);
         m.insert(QLatin1String("size"), f.size);
+        if (!f.sha256.isEmpty())
+            m.insert(QLatin1String("sha256"), f.sha256);
         if (f.path.isEmpty()) {
             m.insert(QLatin1String("fileType"), QLatin1String("text/plain"));
             m.insert(QLatin1String("preview"), f.text);
@@ -334,6 +442,7 @@ void Sender::onPrepareFinished()
                 continue;
             f.token = tokens.value(f.id).toString();
             f.status = Queued;
+            f.attempts = 1;
             m_bytesTotal += f.size;
             m_queue.append(f);
         }
@@ -494,9 +603,25 @@ void Sender::onUploadFinished()
         failRemaining(certificateError());
         return;
     }
+    m_currentSent = 0;
+    if (status == 422) {
+        // The receiver threw the file away: it was damaged on the way, or
+        // changed while being read. Like the official app, send it again.
+        OutFile &f = m_queue[m_current];
+        if (f.attempts < kMaxUploadAttempts) {
+            ++f.attempts;
+            qDebug() << "Sender: checksum mismatch, upload" << f.attempts << "of" << kMaxUploadAttempts;
+            if (postUpload(f))
+                return;
+            fileFailed(QLatin1String("Can't read the file"));
+        } else {
+            fileFailed(QLatin1String("The checksum doesn't match"));
+        }
+        startNextUpload();
+        return;
+    }
     fileFailed(status == 0 ? reply->errorString()
                            : QString::fromLatin1("%1 answered with error %2").arg(m_peer.alias).arg(status));
-    m_currentSent = 0;
     startNextUpload();
 }
 
@@ -522,6 +647,10 @@ void Sender::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 
 void Sender::onTick()
 {
+    if (m_state == QLatin1String("hashing")) {
+        emit progressChanged();
+        return;
+    }
     if (m_state != QLatin1String("sending")) {
         m_tick.stop();
         return;
@@ -620,6 +749,7 @@ void Sender::sendCancel()
 
 void Sender::finish(const QString &state, const QString &error)
 {
+    stopHashing();
     dropReply();
     m_tick.stop();
     m_remainingSeconds = state == QLatin1String("finished") ? 0 : -1;

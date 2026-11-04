@@ -9,7 +9,7 @@
 #include "clientidentity.h"
 #include "verification.h"
 
-const char *DeviceInfo::ProtocolVersion = "2.0";
+const char *DeviceInfo::ProtocolVersion = "2.2";
 
 static QString randomAlias()
 {

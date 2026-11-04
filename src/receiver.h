@@ -16,6 +16,7 @@ class QFile;
 class QNetworkAccessManager;
 class QNetworkReply;
 class QSslError;
+class Sha256Hash;
 class FavoritesModel;
 class HistoryModel;
 class NetworkManager;
@@ -29,8 +30,11 @@ class WebShare;
 //     busy (409), quick save.
 //     A lone text message is answered with 204 after accepting.
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
-//     download folder. A file that fails is final: the others go on and the
-//     session ends in "finishedWithErrors", as in the official app.
+//     download folder. A file with a sha256 in the offer is checked while it
+//     streams in: on a mismatch it is deleted and answered with 422, and the
+//     sender may upload it again, 3 uploads in all. Otherwise a file that
+//     fails is final: the others go on and the session ends in
+//     "finishedWithErrors", as in the official app.
 //  3. POST /cancel?sessionId when the sender gives up. It works both ways:
 //     when our user cancels we POST /cancel to the sender, pinned to its
 //     fingerprint. A /cancel that isn't about our session may be for a
@@ -150,9 +154,11 @@ private:
         QString fileName;   // as sent; may contain folders ("Trip/a.jpg")
         QString fileType;
         QString preview;
+        QString sha256;     // from the offer, may be empty
         qint64 size;
         QString token;
         FileStatus status;
+        int attempts;       // uploads started
         qint64 received;
         QString savedPath;  // while receiving and once done
         QString error;      // why it failed
@@ -160,6 +166,7 @@ private:
     struct Upload {
         int file;           // index into m_files
         QFile *out;
+        Sha256Hash *hash;   // 0 if the offer had no sha256
     };
 
     HttpResponse prepareUpload(const HttpRequest &request);
