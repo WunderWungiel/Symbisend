@@ -176,8 +176,8 @@ bool Sender::start(const QString &fingerprint)
         OutFile f;
         f.id = QUuid::createUuid().toString().mid(1, 36);
         if (it.kind == QLatin1String("text")) {
-            // Like the official app: a text file whose preview is the text.
-            // A receiver shows a lone text as a message (and answers 204).
+            // Like the official app: a text file. Sent alone it carries its
+            // content as the preview, see postPrepare().
             f.fileName = f.id + QLatin1String(".txt");
             f.text = it.text;
             f.size = it.text.toUtf8().size();
@@ -357,7 +357,10 @@ void Sender::postPrepare()
             m.insert(QLatin1String("sha256"), f.sha256);
         if (f.path.isEmpty()) {
             m.insert(QLatin1String("fileType"), QLatin1String("text/plain"));
-            m.insert(QLatin1String("preview"), f.text);
+            // Like the official app: only a lone text is a message, shown by
+            // the receiver (which answers 204). With other items it is a file.
+            if (m_files.size() == 1)
+                m.insert(QLatin1String("preview"), f.text);
         } else {
             m.insert(QLatin1String("fileType"), mimeType(f.fileName));
             QFileInfo fi(f.path);

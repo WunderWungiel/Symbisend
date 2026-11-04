@@ -84,6 +84,12 @@ QString Picker::clipboardText() const
     return text;
 }
 
+void Picker::copyText(const QString &text)
+{
+    qDebug() << "Picker: copying" << text.length() << "chars to the clipboard";
+    QApplication::clipboard()->setText(text);
+}
+
 void Picker::showInfo(const QString &text)
 {
     qDebug() << "Picker: info note:" << text;

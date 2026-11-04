@@ -115,6 +115,20 @@ QString Receiver::message() const
     return m_isMessage && !m_files.isEmpty() ? m_files.first().preview : QString();
 }
 
+// Like the official app: one word that is an absolute URI (a scheme, no fragment).
+bool Receiver::messageIsLink() const
+{
+    const QString text = message().trimmed();
+    if (text.isEmpty())
+        return false;
+    foreach (const QChar &c, text) {
+        if (c.isSpace())
+            return false;
+    }
+    const QUrl url(text);
+    return url.isValid() && !url.scheme().isEmpty() && !url.hasFragment();
+}
+
 QString Receiver::folder() const
 {
     if (m_usedFolders.size() == 1)
@@ -348,6 +362,10 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
         qDebug() << "Receiver: receive via link with auto accept - accepting at once";
         return startSession();
     }
+    // Like the official app: a message has arrived already, whatever the
+    // user does with the dialog.
+    if (m_isMessage && m_history && m_settings->saveToHistory())
+        m_history->addText(message(), m_peerAlias);
     m_pendingRequest = request.id;
     setState(QLatin1String("request"));
     return HttpResponse(0); // answered by accept() / decline()
@@ -380,8 +398,6 @@ HttpResponse Receiver::startSession()
 {
     if (m_isMessage) {
         // Nothing to upload: the message is all there is.
-        if (m_history && m_settings->saveToHistory())
-            m_history->addText(message(), m_peerAlias);
         finish(QLatin1String("finished"));
         return HttpResponse(204);
     }

@@ -17,6 +17,17 @@ Dialog {
                                                : platformStyle.colorNormalLight
     // Two buttons side by side, or one of the same width centered (like CommonDialog).
     property real buttonWidth: Math.round((platformContentMaximumWidth - 3 * platformStyle.paddingMedium) / 2)
+    // A lone text message. Like the official app it stays on screen when the
+    // sender withdraws it: it has arrived already.
+    property bool showsMessage: receiver.isMessage
+                                && (recvState == "request" || recvState == "finished"
+                                    || recvState == "cancelled")
+    property bool showsOffer: recvState == "request" || showsMessage
+    // Verify, Copy and maybe Open share a line. A ToolButton's own width is too
+    // wide for that on a 360 px screen.
+    property int messageActions: receiver.messageIsLink ? 3 : 2
+    property real messageActionWidth: Math.floor((platformContentMaximumWidth - 2 * platformStyle.paddingLarge
+                                                  - (messageActions - 1) * platformStyle.paddingSmall) / messageActions)
 
     // 75 -> "1:15"
     function formatTime(s) {
@@ -27,7 +38,7 @@ Dialog {
 
     function offerText() {
         if (receiver.isMessage)
-            return "wants to send you a message"
+            return receiver.messageIsLink ? "sent you a link:" : "sent you a message:"
         var n = receiver.fileCount
         return "wants to send you " + (n == 1 ? "a file" : n + " files")
                 + " (" + selection.formatSize(receiver.totalSize) + ")"
@@ -39,6 +50,14 @@ Dialog {
                 // Own line for the folder: Qt allows a line break after
                 // "\", so "F:\Symbisend" would otherwise split there.
                 + "\nto " + receiver.folders.join("\n")
+    }
+
+    // A waiting message is answered as the dialog closes. Accepting does
+    // nothing once the sender has withdrawn it.
+    function dismiss() {
+        if (recvState == "request")
+            receiver.accept()
+        close()
     }
 
     // settings.autoFinish, like the official app: once every file is saved the
@@ -94,11 +113,12 @@ Dialog {
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
             text: {
-                if (root.recvState == "request") return receiver.isMessage ? "Message" : "Receive"
+                if (root.showsMessage) return "Message"
+                if (root.recvState == "request") return "Receive"
                 if (root.recvState == "receiving")
                     return receiver.remainingSeconds < 0 ? "Receiving"
                                                          : "Receiving (" + root.formatTime(receiver.remainingSeconds) + ")"
-                if (root.recvState == "finished") return receiver.isMessage ? "Message" : "Finished"
+                if (root.recvState == "finished") return "Finished"
                 if (root.recvState == "finishedWithErrors") return "Finished with error"
                 if (root.recvState == "cancelled") return "Cancelled"
                 return "Error"
@@ -117,7 +137,7 @@ Dialog {
         Label {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
-            visible: root.recvState == "request"
+            visible: root.showsOffer
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             font.pixelSize: Math.round(platformStyle.fontSizeLarge * 1.3)
@@ -127,7 +147,7 @@ Dialog {
         // System name (LocalSend's deviceModel: "Windows", "Samsung", ...).
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: root.recvState == "request" && receiver.peerDeviceModel != ""
+            visible: root.showsOffer && receiver.peerDeviceModel != ""
             width: systemText.paintedWidth + 2 * platformStyle.paddingMedium
             height: systemText.paintedHeight + platformStyle.paddingSmall
             radius: 3
@@ -145,16 +165,16 @@ Dialog {
         Label {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
-            visible: root.recvState == "request"
+            visible: root.showsOffer
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             text: root.offerText()
         }
 
-        // The message itself (before and after accepting), scrollable if long.
+        // The message itself, scrollable if long.
         Rectangle {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
-            visible: receiver.isMessage && (root.recvState == "request" || root.recvState == "finished")
+            visible: root.showsMessage
             height: Math.min(messageText.paintedHeight, 160) + 2 * platformStyle.paddingMedium
             radius: 3
             color: root.platformInverted ? "#14000000" : "#1affffff"
@@ -178,17 +198,43 @@ Dialog {
             }
         }
 
-        // Like the official app: only for senders on https, whose fingerprint
-        // is their certificate's hash.
-        ToolButton {
+        Row {
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: root.recvState == "request"
-            platformInverted: root.platformInverted
-            iconSource: root.platformInverted ? "images/verified-user-inverted.svg"
-                                              : "images/verified-user.svg"
-            text: "Verify"
-            enabled: receiver.peerHttps
-            onClicked: verifyDialog.openFor(receiver.peerFingerprint)
+            visible: root.showsOffer
+            spacing: platformStyle.paddingSmall
+
+            // Like the official app: only for senders on https, whose
+            // fingerprint is their certificate's hash.
+            ToolButton {
+                width: root.showsMessage ? root.messageActionWidth : implicitWidth
+                platformInverted: root.platformInverted
+                iconSource: root.showsMessage ? ""
+                            : root.platformInverted ? "images/verified-user-inverted.svg"
+                                                    : "images/verified-user.svg"
+                text: "Verify"
+                enabled: receiver.peerHttps
+                onClicked: verifyDialog.openFor(receiver.peerFingerprint)
+            }
+            ToolButton {
+                visible: root.showsMessage
+                width: root.messageActionWidth
+                platformInverted: root.platformInverted
+                text: "Copy"
+                onClicked: {
+                    picker.copyText(receiver.message)
+                    root.dismiss()
+                }
+            }
+            ToolButton {
+                visible: root.showsMessage && receiver.messageIsLink
+                width: root.messageActionWidth
+                platformInverted: root.platformInverted
+                text: "Open"
+                onClicked: {
+                    Qt.openUrlExternally(receiver.message.replace(/^\s+|\s+$/g, ""))
+                    root.dismiss()
+                }
+            }
         }
 
         // ------------------------------------------------ Progress
@@ -227,7 +273,8 @@ Dialog {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             visible: (root.recvState == "finished" && !receiver.isMessage)
-                     || root.recvState == "failed" || root.recvState == "cancelled"
+                     || root.recvState == "failed"
+                     || (root.recvState == "cancelled" && !receiver.isMessage)
                      || root.recvState == "finishedWithErrors"
             wrapMode: Text.Wrap
             text: {
@@ -251,7 +298,7 @@ Dialog {
             spacing: platformStyle.paddingMedium
 
             ToolButton {
-                visible: root.recvState == "request"
+                visible: root.recvState == "request" && !receiver.isMessage
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
@@ -260,7 +307,7 @@ Dialog {
                 onClicked: receiver.decline() // closes via state "idle"
             }
             ToolButton {
-                visible: root.recvState == "request"
+                visible: root.recvState == "request" && !receiver.isMessage
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
@@ -269,7 +316,7 @@ Dialog {
                 onClicked: receiver.accept()
             }
             ToolButton {
-                visible: root.recvState != "request"
+                visible: root.recvState != "request" || receiver.isMessage
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
@@ -279,7 +326,7 @@ Dialog {
                     if (root.recvState == "receiving")
                         receiver.cancel()
                     else
-                        root.close()
+                        root.dismiss()
                 }
             }
         }

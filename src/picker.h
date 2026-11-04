@@ -34,6 +34,8 @@ public:
     Q_INVOKABLE void pickFolder();
     // The clipboard's text ("" if empty).
     Q_INVOKABLE QString clipboardText() const;
+    // Puts text on the clipboard.
+    Q_INVOKABLE void copyText(const QString &text);
     bool clipboardHasText() const { return m_clipboardHasText; }
     // A short native information note (Avkon CAknInformationNote on Symbian,
     // a message box elsewhere). Returns at once; the note hides by itself.

@@ -140,6 +140,7 @@ Native pickers. Their results go straight into `selection` (connected in `main.c
   `folderPicked(path)`, and is added to `selection`. Nothing is emitted on cancel.
 - `clipboardText()` → string — the clipboard's text (`""` if empty); also logged. Not
   added to the selection by itself: call `selection.addText()`.
+- `copyText(text)` — puts text on the clipboard
 - `clipboardHasText` (bool) — whether the clipboard holds text (enable/disable Paste).
   Updates by itself when this app changes the clipboard; a copy made in another app is
   **not** signalled (Symbian), so call `checkClipboard()` when the app becomes active
@@ -235,7 +236,7 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
     `settings.quickSaveFromFavorites` for a favourite, `settings.receiveViaLinkAutoAccept`
     while the link is active) skip this state.
   - `receiving` — files are coming in
-  - `finished` — everything was saved (or the message was accepted)
+  - `finished` — everything was saved (or the message was closed with `accept()`)
   - `finishedWithErrors` — every file arrived or failed, and some failed (memory full,
     the upload broke off, ...); `errorText` starts with `Not saved:` and has a line
     `name: why` for the first few. A failed file can't be sent again in this session,
@@ -253,8 +254,12 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - The offer: `fileCount` (int), `totalSize` (number, bytes), `files` (list of
   `{ fileName, size, fileType }`; `fileName` may contain folders)
 - `isMessage` (bool), `message` (string) — the offer is a single text message (like the
-  official app: one `text/*` file with a preview). It is shown, not saved: accepting it
-  goes straight to `finished`.
+  official app: one `text/*` file with a preview). It is never saved as a file. It goes to
+  `history` when it arrives, in state `request`; `accept()` then only tells the sender it
+  was shown (204) and goes straight to `finished`. Both stay set after `cancelled`, so the
+  message can stay on screen when the sender withdraws it.
+- `messageIsLink` (bool) — the message is one word that is an absolute URI, like the
+  official app's check: offer to open it
 - `folder` (string, native separators) — where the files go / went: the download folder,
   or the media folder if every saved file went to the same one
 - `folders` (string list, native separators) — every folder files were saved to (e.g.
@@ -285,7 +290,7 @@ Network:
 Newest first, at most 200 entries (older ones are dropped), persisted as JSON in its own
 file (`history.json` in the app's data folder; older versions' `QSettings` key
 `history/entries` is moved there once). `receiver` adds every file once it is saved and
-every accepted text message, unless `settings.saveToHistory` is off. Messages longer than
+every text message as it arrives, unless `settings.saveToHistory` is off. Messages longer than
 10 000 characters are kept shortened (ending in `…`).
 - `count` (int)
 - Roles:

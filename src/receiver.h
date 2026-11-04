@@ -28,7 +28,8 @@ class WebShare;
 //     our user accepts (a session id and a token per file), declines (403),
 //     or right away: PIN missing/wrong (401), too many wrong PINs (429),
 //     busy (409), quick save.
-//     A lone text message is answered with 204 after accepting.
+//     A lone text message goes to the history at once and is answered with
+//     204 when the user closes it. It is never saved as a file.
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
 //     download folder. A file with a sha256 in the offer is checked while it
 //     streams in: on a mismatch it is deleted and answered with 422, and the
@@ -69,9 +70,11 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(qreal totalSize READ totalSize NOTIFY stateChanged)
     // [{ fileName, size, fileType }], in the sender's order
     Q_PROPERTY(QVariantList files READ files NOTIFY stateChanged)
-    // A lone text message (shown, not saved): isMessage, and its text.
+    // A lone text message (shown, not saved): isMessage, its text, and
+    // whether that text is a link.
     Q_PROPERTY(bool isMessage READ isMessage NOTIFY stateChanged)
     Q_PROPERTY(QString message READ message NOTIFY stateChanged)
+    Q_PROPERTY(bool messageIsLink READ messageIsLink NOTIFY stateChanged)
 
     // Receiving.
     // Where the files go: settings.downloadFolder, or the gallery folder if
@@ -88,7 +91,7 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(int remainingSeconds READ remainingSeconds NOTIFY progressChanged)
 
 public:
-    // history (may be 0) gets every saved file and accepted message;
+    // history (may be 0) gets every saved file and incoming message;
     // favorites (may be 0) is for settings.quickSaveFromFavorites.
     Receiver(HttpServer *server, Settings *settings, NetworkManager *network,
              WebShare *webShare, HistoryModel *history, FavoritesModel *favorites,
@@ -110,6 +113,7 @@ public:
     QVariantList files() const;
     bool isMessage() const { return m_isMessage; }
     QString message() const;
+    bool messageIsLink() const;
     QString folder() const;
     QStringList folders() const;
     int filesDone() const;
