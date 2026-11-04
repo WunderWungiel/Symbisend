@@ -28,7 +28,8 @@ class WebShare;
 //     or right away: PIN missing/wrong (401), busy (409), quick save.
 //     A lone text message is answered with 204 after accepting.
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
-//     download folder.
+//     download folder. A file that fails is final: the others go on and the
+//     session ends in "finishedWithErrors", as in the official app.
 //  3. POST /cancel?sessionId when the sender gives up. It works both ways:
 //     when our user cancels we POST /cancel to the sender, pinned to its
 //     fingerprint. A /cancel that isn't about our session may be for a
@@ -41,7 +42,8 @@ class Receiver : public QObject, public HttpHandler
 {
     Q_OBJECT
     // "idle", "request" (an offer waits for accept()/decline()), "receiving",
-    // "finished", "failed", "cancelled" (by the sender or by us)
+    // "finished", "finishedWithErrors" (every file arrived or failed, some
+    // failed: errorText lists them), "failed", "cancelled" (by the sender or by us)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     // request or receiving
     Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
@@ -73,6 +75,7 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(QString folder READ folder NOTIFY stateChanged)
     Q_PROPERTY(QStringList folders READ folders NOTIFY stateChanged)
     Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
+    Q_PROPERTY(int filesFailed READ filesFailed NOTIFY progressChanged)
     Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
     Q_PROPERTY(qreal bytesReceived READ bytesReceived NOTIFY progressChanged)
     Q_PROPERTY(qreal bytesTotal READ totalSize NOTIFY progressChanged)
@@ -105,6 +108,7 @@ public:
     QString folder() const;
     QStringList folders() const;
     int filesDone() const;
+    int filesFailed() const;
     QString fileName() const { return m_currentName; }
     qreal bytesReceived() const;
     qreal progress() const;
@@ -149,6 +153,7 @@ private:
         FileStatus status;
         qint64 received;
         QString savedPath;  // while receiving and once done
+        QString error;      // why it failed
     };
     struct Upload {
         int file;           // index into m_files
@@ -161,7 +166,7 @@ private:
     HttpResponse writeUpload(const HttpRequest &request, const QByteArray &data);
     HttpResponse finishUpload(const HttpRequest &request);
     HttpResponse startSession();
-    void closeUpload(quint32 requestId, bool keepFile);
+    void closeUpload(quint32 requestId, bool keepFile, const QString &error = QString());
     void dropUploads();
     bool notifySender();
     void checkDone();

@@ -33,6 +33,14 @@ Dialog {
                 + " (" + selection.formatSize(receiver.totalSize) + ")"
     }
 
+    function savedText() {
+        return "Saved " + (receiver.filesDone == 1 ? "1 file" : receiver.filesDone + " files")
+                + " from " + receiver.peerAlias
+                // Own line for the folder: Qt allows a line break after
+                // "\", so "F:\Symbisend" would otherwise split there.
+                + "\nto " + receiver.folders.join("\n")
+    }
+
     // settings.autoFinish, like the official app: once every file is saved the
     // Close button counts down "Close (3)", "Close (2)", ... and the dialog
     // closes by itself. Not for messages (they are there to be read) nor for
@@ -91,6 +99,7 @@ Dialog {
                     return receiver.remainingSeconds < 0 ? "Receiving"
                                                          : "Receiving (" + root.formatTime(receiver.remainingSeconds) + ")"
                 if (root.recvState == "finished") return receiver.isMessage ? "Message" : "Finished"
+                if (root.recvState == "finishedWithErrors") return "Finished with error"
                 if (root.recvState == "cancelled") return "Cancelled"
                 return "Error"
             }
@@ -190,14 +199,16 @@ Dialog {
             wrapMode: Text.WrapAnywhere
             text: (receiver.fileName != "" ? receiver.fileName : "Waiting for " + receiver.peerAlias + "...")
                   + (receiver.fileCount > 1
-                     ? " (" + Math.min(receiver.filesDone + 1, receiver.fileCount) + " of " + receiver.fileCount + ")"
+                     ? " (" + Math.min(receiver.filesDone + receiver.filesFailed + 1, receiver.fileCount)
+                       + " of " + receiver.fileCount + ")"
                      : "")
         }
 
         ProgressBar {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
-            visible: root.recvState == "receiving" || (root.recvState == "finished" && !receiver.isMessage)
+            visible: root.recvState == "receiving" || root.recvState == "finishedWithErrors"
+                     || (root.recvState == "finished" && !receiver.isMessage)
             minimumValue: 0
             maximumValue: 1
             value: receiver.progress
@@ -217,14 +228,13 @@ Dialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             visible: (root.recvState == "finished" && !receiver.isMessage)
                      || root.recvState == "failed" || root.recvState == "cancelled"
+                     || root.recvState == "finishedWithErrors"
             wrapMode: Text.Wrap
             text: {
                 if (root.recvState == "finished")
-                    return "Saved " + (receiver.filesDone == 1 ? "1 file" : receiver.filesDone + " files")
-                            + " from " + receiver.peerAlias
-                            // Own line for the folder: Qt allows a line break after
-                            // "\", so "F:\Symbisend" would otherwise split there.
-                            + "\nto " + receiver.folders.join("\n")
+                    return root.savedText()
+                if (root.recvState == "finishedWithErrors" && receiver.filesDone > 0)
+                    return root.savedText() + "\n" + receiver.errorText
                 return receiver.errorText
             }
         }

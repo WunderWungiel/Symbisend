@@ -166,7 +166,8 @@ Methods:
 ## `sender` — sending the selection to a device
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by
 one, streamed from disk). The selection is copied when sending starts; it is cleared when
-the transfer ends in `finished` and kept after `declined`, `failed` or `cancelled` (to retry).
+the transfer ends in `finished` and kept after anything else (to retry). A file that fails
+doesn't stop the others, as in the official app.
 - `send(fingerprint)` → bool — starts sending `selection` to that peer. Returns false
   (state `failed`, `errorText` says why) when already busy, nothing is selected, offline,
   the peer is unknown, or it speaks protocol v1 (not supported yet).
@@ -185,12 +186,18 @@ the transfer ends in `finished` and kept after `declined`, `failed` or `cancelle
   - `sending` — uploading
   - `finished` — everything accepted was sent (also: a text message was shown, or the
     receiver accepted nothing)
+  - `finishedWithErrors` — some accepted files were not sent: they failed one by one, or
+    the connection was lost or the receiver's certificate changed while sending, which
+    fails the rest. `errorText` starts with `Not sent:` and has a line `name: why` for the
+    first few
   - `declined` — the receiver said no
-  - `failed` — see `errorText` (busy receiver, connection lost, no progress for 60 s, ...)
+  - `failed` — the transfer stopped, see `errorText` (busy receiver, connection lost
+    before sending began, no progress for 60 s, ...)
   - `cancelled` — by us, or by the receiver (`errorText` says so)
 - `busy` (bool) — `connecting`, `waiting`, `pin` or `sending`
 - `peerAlias`, `errorText` (string)
-- `fileCount` (int, accepted files), `fileIndex` (int, 1-based, the file being uploaded),
+- `fileCount` (int, accepted files), `filesDone` (int, of those sent),
+  `fileIndex` (int, 1-based, the file being uploaded),
   `fileName` (string, its relative path; `Text` for a text message)
 - `bytesSent`, `bytesTotal` (number, bytes of the accepted files), `progress` (0–1)
 - `remainingSeconds` (int) — estimated time left from the average speed so far; -1 while
@@ -215,8 +222,10 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
     while the link is active) skip this state.
   - `receiving` — files are coming in
   - `finished` — everything was saved (or the message was accepted)
-  - `failed` — see `errorText` (connection lost, the sender stopped sending for 30 s,
-    memory full, ...)
+  - `finishedWithErrors` — every file arrived or failed, and some failed (memory full,
+    the upload broke off, ...); `errorText` starts with `Not saved:` and has a line
+    `name: why` for the first few. A failed file can't be sent again in this session.
+  - `failed` — see `errorText` (connection lost, the sender stopped sending for 30 s, ...)
   - `cancelled` — by the sender (`errorText` says so) or by `cancel()`
 - `busy` (bool) — `request` or `receiving`
 - `errorText` (string)
@@ -234,7 +243,8 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
   or the media folder if every saved file went to the same one
 - `folders` (string list, native separators) — every folder files were saved to (e.g.
   `F:\Images\Symbisend` and `F:\Symbisend` for photos plus a PDF); final once `finished`
-- `filesDone` (int, files saved), `fileName` (string, the file coming in now)
+- `filesDone` (int, files saved), `filesFailed` (int), `fileName` (string, the file coming
+  in now)
 - `bytesReceived`, `bytesTotal` (number), `progress` (0–1), `remainingSeconds` (int, -1
   while unknown). Progress properties update every 0.5 s.
 - `accept()`, `decline()` — in state `request`
@@ -246,8 +256,9 @@ Network:
   Applied at once, see `discovery.serverHttps`. Sending to others always uses the protocol
   each peer announced, whatever this says.
 
-`main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`, `receiving` or
-`failed`. The last two cover offers accepted without asking (quick save, link auto accept).
+`main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`, `receiving`,
+`failed` or `finishedWithErrors`. All but the first cover offers accepted without asking
+(quick save, link auto accept), and bring the dialog back if it was closed.
 
 ## `history` — received files and messages (ListView model)
 Newest first, at most 200 entries (older ones are dropped), persisted as JSON in its own

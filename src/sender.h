@@ -24,15 +24,18 @@ class NetworkManager;
 //     401 (PIN), 403 (declined), 409 (busy), ...
 //  2. POST /upload for every accepted file, one after another, streamed from
 //     disk.
-//  3. POST /cancel when the user cancels or an upload fails. The receiver can
-//     cancel too, with a /cancel to our server: onCancelReceived().
+//     A file that fails is marked as failed and the next one goes on, as in
+//     the official app: the transfer ends in "finishedWithErrors".
+//  3. POST /cancel when the user cancels or the receiver stops responding. The
+//     receiver can cancel too, with a /cancel to our server: onCancelReceived().
 // One transfer at a time. See docs/qml-api.md.
 class Sender : public QObject
 {
     Q_OBJECT
     // "idle", "connecting" (sendToAddress(): finding out who is there),
     // "waiting" (for the receiver to accept), "pin" (receiver wants a PIN:
-    // submitPin()), "sending", "finished", "declined", "failed", "cancelled"
+    // submitPin()), "sending", "finished", "finishedWithErrors" (some accepted
+    // files were not sent: errorText lists them), "declined", "failed", "cancelled"
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     // connecting, waiting, pin or sending
     Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
@@ -41,6 +44,8 @@ class Sender : public QObject
     Q_PROPERTY(QString errorText READ errorText NOTIFY stateChanged)
     // Accepted files (a declined part of the selection is not counted).
     Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
+    // Accepted files that were sent.
+    Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
     // 1-based index of the file being uploaded, 0 before the first one.
     Q_PROPERTY(int fileIndex READ fileIndex NOTIFY progressChanged)
     Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
@@ -56,6 +61,8 @@ public:
     // MIME type from the file name's extension, "application/octet-stream"
     // if unknown.
     static QString mimeType(const QString &fileName);
+    // title, then the first few of lines ("a.jpg: why"), one per line.
+    static QString failureText(const QString &title, const QStringList &lines);
 
     Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
            NetworkManager *network, Discovery *discovery, QObject *parent = 0);
@@ -65,6 +72,7 @@ public:
     QString peerAlias() const { return m_peer.alias; }
     QString errorText() const { return m_errorText; }
     int fileCount() const { return m_queue.size(); }
+    int filesDone() const;
     int fileIndex() const { return m_current + 1; }
     QString fileName() const;
     qreal bytesSent() const { return qreal(m_bytesDone + m_currentSent); }
@@ -107,6 +115,7 @@ private slots:
 private:
     QString certificateError() const;
 
+    enum FileStatus { Queued, Done, Failed };
     struct OutFile {
         QString id;
         QString fileName;   // relative path for folder contents
@@ -114,6 +123,8 @@ private:
         QString text;
         qint64 size;
         QString token;      // from prepare-upload
+        FileStatus status;  // only used in m_queue
+        QString error;      // why it failed
     };
 
     void reset();
@@ -121,6 +132,10 @@ private:
     QUrl url(const QString &route) const;
     void postPrepare();
     void startNextUpload();
+    bool postUpload(const OutFile &f);
+    void fileFailed(const QString &error);
+    void failRemaining(const QString &error);
+    void finishUploads();
     void finish(const QString &state, const QString &error = QString());
     void setState(const QString &state, const QString &error = QString());
     void sendCancel();

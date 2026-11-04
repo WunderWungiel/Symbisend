@@ -24,6 +24,8 @@ static const int kTickMs = 500;
 static const int kStallTimeoutMs = 60000;
 // No time estimate before this much sending (the first numbers jump around).
 static const int kEstimateAfterMs = 2000;
+// Failed files named in errorText; the log has them all.
+static const int kMaxFailuresListed = 3;
 
 Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
                NetworkManager *network, Discovery *discovery, QObject *parent)
@@ -48,6 +50,16 @@ Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
             this, SLOT(onLookUpFinished(QString,QString,QString)));
     m_tick.setInterval(kTickMs);
     connect(&m_tick, SIGNAL(timeout()), this, SLOT(onTick()));
+}
+
+int Sender::filesDone() const
+{
+    int n = 0;
+    foreach (const OutFile &f, m_queue) {
+        if (f.status == Done)
+            ++n;
+    }
+    return n;
 }
 
 bool Sender::isBusy() const
@@ -321,6 +333,7 @@ void Sender::onPrepareFinished()
             if (!tokens.contains(f.id))
                 continue;
             f.token = tokens.value(f.id).toString();
+            f.status = Queued;
             m_bytesTotal += f.size;
             m_queue.append(f);
         }
@@ -366,14 +379,55 @@ void Sender::onPrepareFinished()
 
 void Sender::startNextUpload()
 {
-    ++m_current;
-    m_currentSent = 0;
-    if (m_current >= m_queue.size()) {
-        qDebug() << "Sender: all" << m_queue.size() << "file(s) sent to" << m_peer.alias;
-        finish(QLatin1String("finished"));
-        return;
+    // A loop: every unreadable file of a large folder would otherwise be one
+    // more stack frame.
+    while (++m_current < m_queue.size()) {
+        m_currentSent = 0;
+        if (postUpload(m_queue.at(m_current)))
+            return;
+        fileFailed(QLatin1String("Can't read the file"));
     }
-    const OutFile &f = m_queue.at(m_current);
+    finishUploads();
+}
+
+// Like the official app: no /cancel, the receiver finishes by itself.
+void Sender::finishUploads()
+{
+    m_currentSent = 0;
+    QStringList failures;
+    foreach (const OutFile &f, m_queue) {
+        if (f.status == Failed)
+            failures.append(f.fileName + QLatin1String(": ") + f.error);
+    }
+    qDebug() << "Sender:" << filesDone() << "of" << m_queue.size() << "file(s) sent to" << m_peer.alias;
+    if (failures.isEmpty())
+        finish(QLatin1String("finished"));
+    else
+        finish(QLatin1String("finishedWithErrors"),
+               failureText(QLatin1String("Not sent:"), failures));
+}
+
+void Sender::fileFailed(const QString &error)
+{
+    OutFile &f = m_queue[m_current];
+    f.status = Failed;
+    f.error = error;
+    qWarning() << "Sender:" << f.fileName << "failed, going on:" << error;
+}
+
+// The current file and all after it can't be sent either. The end result of
+// trying each one (as the official app does), without the wait.
+void Sender::failRemaining(const QString &error)
+{
+    dropReply();
+    for (; m_current < m_queue.size(); ++m_current)
+        fileFailed(error);
+    finishUploads();
+}
+
+// False if the file can't be read; nothing is sent then.
+bool Sender::postUpload(const OutFile &f)
+{
     QUrl u = url(QLatin1String("upload"));
     u.addEncodedQueryItem("sessionId", QUrl::toPercentEncoding(m_sessionId));
     u.addEncodedQueryItem("fileId", QUrl::toPercentEncoding(f.id));
@@ -390,11 +444,8 @@ void Sender::startNextUpload()
         QFile *file = new QFile(f.path);
         if (!file->open(QIODevice::ReadOnly)) {
             qWarning() << "Sender: cannot open" << f.path << file->errorString();
-            const QString error = QString::fromLatin1("Can't read %1").arg(f.fileName);
             delete file;
-            sendCancel();
-            finish(QLatin1String("failed"), error);
-            return;
+            return false;
         }
         // Streamed in chunks, not loaded into memory. The reply owns the
         // file, so it lives exactly as long as the reply reads it.
@@ -405,6 +456,7 @@ void Sender::startNextUpload()
     connect(m_reply, SIGNAL(finished()), this, SLOT(onUploadFinished()));
     m_lastActivity = QDateTime::currentDateTime();
     emit progressChanged();
+    return true;
 }
 
 void Sender::onUploadProgress(qint64 sent, qint64 total)
@@ -427,24 +479,25 @@ void Sender::onUploadFinished()
     m_reply = 0;
     reply->deleteLater();
     const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    const OutFile &f = m_queue.at(m_current);
     if (status >= 200 && status < 300) {
-        m_bytesDone += f.size;
+        m_queue[m_current].status = Done;
+        m_bytesDone += m_queue.at(m_current).size;
         m_currentSent = 0;
+        emit progressChanged();
         startNextUpload();
         return;
     }
-    qWarning() << "Sender: upload of" << f.fileName << "failed:" << status
+    qWarning() << "Sender: upload of" << m_queue.at(m_current).fileName << "failed:" << status
                << int(reply->error()) << reply->errorString();
-    QString error;
-    switch (status) {
-    case 0:   error = m_certRejected ? certificateError() : reply->errorString(); break;
-    case 403: error = QString::fromLatin1("%1 cancelled the transfer").arg(m_peer.alias); break;
-    case 409: error = QString::fromLatin1("%1 is busy with another transfer").arg(m_peer.alias); break;
-    default:  error = QString::fromLatin1("%1 answered with error %2").arg(m_peer.alias).arg(status);
+    // Not about this file: every other upload would be refused the same way.
+    if (m_certRejected) {
+        failRemaining(certificateError());
+        return;
     }
-    sendCancel();
-    finish(QLatin1String("failed"), error);
+    fileFailed(status == 0 ? reply->errorString()
+                           : QString::fromLatin1("%1 answered with error %2").arg(m_peer.alias).arg(status));
+    m_currentSent = 0;
+    startNextUpload();
 }
 
 QString Sender::certificateError() const
@@ -496,9 +549,22 @@ void Sender::onOnlineChanged()
 {
     if (!m_network->isOnline() && isBusy()) {
         qWarning() << "Sender: connection lost during the transfer";
+        if (m_state == QLatin1String("sending")) {
+            failRemaining(QLatin1String("Connection lost"));
+            return;
+        }
         dropReply();
         finish(QLatin1String("failed"), QLatin1String("Connection lost"));
     }
+}
+
+QString Sender::failureText(const QString &title, const QStringList &lines)
+{
+    QStringList text = lines.mid(0, kMaxFailuresListed);
+    text.prepend(title);
+    if (lines.size() > kMaxFailuresListed)
+        text.append(QString::fromLatin1("and %1 more").arg(lines.size() - kMaxFailuresListed));
+    return text.join(QLatin1String("\n"));
 }
 
 // ---------------------------------------------------------------- stop
@@ -563,7 +629,8 @@ void Sender::finish(const QString &state, const QString &error)
     }
     m_sessionId.clear();
     // Sent: the selection was copied at send(), so it can go. Kept after
-    // declined/failed/cancelled so the user can try again.
+    // anything else so the user can try again (as in the official app, also
+    // after finishedWithErrors).
     if (state == QLatin1String("finished")) {
         qDebug() << "Sender: clearing the selection";
         m_selection->clear();

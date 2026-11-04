@@ -26,8 +26,8 @@
 static const int kTickMs = 500;
 // No upload running and none started for this long: the sender is gone.
 static const int kGoneTimeoutMs = 30000;
-// Every file finished or failed (and some failed): wait this long for the
-// sender's /cancel, so a cancelled transfer is reported as cancelled.
+// The last upload broke off: wait this long for the sender's /cancel, so a
+// cancelled transfer is reported as cancelled.
 static const int kSettleMs = 3000;
 // No time estimate before this much receiving (the first numbers jump around).
 static const int kEstimateAfterMs = 2000;
@@ -131,6 +131,16 @@ int Receiver::filesDone() const
     return n;
 }
 
+int Receiver::filesFailed() const
+{
+    int n = 0;
+    foreach (const InFile &f, m_files) {
+        if (f.status == Failed)
+            ++n;
+    }
+    return n;
+}
+
 qreal Receiver::bytesReceived() const
 {
     qint64 n = 0;
@@ -202,9 +212,9 @@ void Receiver::requestAborted(const HttpRequest &request)
         const InFile &f = m_files.at(m_uploads.value(request.id).file);
         qWarning() << "Receiver: upload of" << f.fileName << "broke off after"
                    << f.received << "of" << f.size << "bytes";
-        closeUpload(request.id, false);
+        closeUpload(request.id, false, QLatin1String("The connection broke off"));
         // Not the end of the session by itself: the sender may still send
-        // /cancel or the other files. onTick() gives up eventually.
+        // /cancel or the other files. onTick() settles it.
         m_lastActivity = QDateTime::currentDateTime();
     }
 }
@@ -436,8 +446,9 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
     if (index < 0 || m_files.at(index).token != token)
         return HttpResponse::message(403, QLatin1String("Invalid token"));
     InFile &f = m_files[index];
-    if (f.status == Done || f.status == Receiving)
-        return HttpResponse::message(409, QLatin1String("File already received"));
+    // Like the official app: one try per file, a failed one stays failed.
+    if (f.status != Pending)
+        return HttpResponse::message(403, QLatin1String("Invalid token"));
 
     QString base = m_folder;
     const int kind = m_toGallery ? mediaKind(f) : 0;
@@ -458,8 +469,8 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
         qWarning() << "Receiver: cannot write" << path << out->errorString();
         delete out;
         f.status = Failed;
-        finish(QLatin1String("failed"),
-               QString::fromLatin1("Can't save %1").arg(f.fileName));
+        f.error = QLatin1String("Can't create the file");
+        checkDone();
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
     f.status = Receiving;
@@ -481,15 +492,14 @@ HttpResponse Receiver::writeUpload(const HttpRequest &request, const QByteArray 
     InFile &f = m_files[u.file];
     if (f.received + data.size() > f.size) {
         qWarning() << "Receiver:" << f.fileName << "is larger than the" << f.size << "bytes announced";
-        closeUpload(request.id, false);
+        closeUpload(request.id, false, QLatin1String("Larger than announced"));
+        checkDone();
         return HttpResponse::message(400, QLatin1String("More data than announced"));
     }
     if (u.out->write(data) != data.size()) {
         qWarning() << "Receiver: writing" << f.savedPath << "failed:" << u.out->errorString();
-        const QString name = f.fileName;
-        closeUpload(request.id, false);
-        finish(QLatin1String("failed"),
-               QString::fromLatin1("Can't save %1 (memory full?)").arg(name));
+        closeUpload(request.id, false, QLatin1String("Can't write the file (memory full?)"));
+        checkDone();
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
     f.received += data.size();
@@ -507,11 +517,16 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
     if (f.received != f.size) {
         qWarning() << "Receiver:" << f.fileName << "ended after" << f.received << "of"
                    << f.size << "bytes";
-        closeUpload(request.id, false);
+        closeUpload(request.id, false, QLatin1String("Incomplete"));
+        checkDone();
         return HttpResponse::message(400, QLatin1String("Incomplete file"));
     }
     closeUpload(request.id, true);
-    if (f.status == Done && m_history && m_settings->saveToHistory())
+    if (f.status != Done) {
+        checkDone();
+        return HttpResponse::message(500, QLatin1String("Cannot save the file"));
+    }
+    if (m_history && m_settings->saveToHistory())
         m_history->addFile(f.savedPath, f.size, m_peerAlias);
     qDebug() << "Receiver: saved" << QDir::toNativeSeparators(f.savedPath)
              << "(" << filesDone() << "of" << m_files.size() << ")";
@@ -522,7 +537,7 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
 }
 
 // Ends an upload; a file that isn't kept is deleted and marked failed.
-void Receiver::closeUpload(quint32 requestId, bool keepFile)
+void Receiver::closeUpload(quint32 requestId, bool keepFile, const QString &error)
 {
     if (!m_uploads.contains(requestId))
         return;
@@ -536,6 +551,7 @@ void Receiver::closeUpload(quint32 requestId, bool keepFile)
             qWarning() << "Receiver: closing" << f.savedPath << "failed:" << u.out->errorString();
         u.out->remove();
         f.status = Failed;
+        f.error = keepFile ? QString::fromLatin1("Can't write the file (memory full?)") : error;
         f.received = 0;
         f.savedPath.clear();
     }
@@ -555,12 +571,19 @@ void Receiver::checkDone()
 {
     if (m_state != QLatin1String("receiving"))
         return;
+    QStringList failures;
     foreach (const InFile &f, m_files) {
-        if (f.status != Done)
+        if (f.status == Pending || f.status == Receiving)
             return;
+        if (f.status == Failed)
+            failures.append(f.fileName + QLatin1String(": ") + f.error);
     }
-    qDebug() << "Receiver: all" << m_files.size() << "file(s) received from" << m_peerAlias;
-    finish(QLatin1String("finished"));
+    qDebug() << "Receiver:" << filesDone() << "of" << m_files.size() << "file(s) received from" << m_peerAlias;
+    if (failures.isEmpty())
+        finish(QLatin1String("finished"));
+    else
+        finish(QLatin1String("finishedWithErrors"),
+               Sender::failureText(QLatin1String("Not saved:"), failures));
 }
 
 void Receiver::onTick()
@@ -577,7 +600,11 @@ void Receiver::onTick()
                 pending = true;
         }
         const qint64 idle = m_lastActivity.msecsTo(now);
-        if ((!pending && idle >= kSettleMs) || idle >= kGoneTimeoutMs) {
+        if (!pending && idle >= kSettleMs) {
+            checkDone();
+            return;
+        }
+        if (idle >= kGoneTimeoutMs) {
             const int done = filesDone();
             qWarning() << "Receiver: nothing more from" << m_peerAlias << "-" << done
                        << "of" << m_files.size() << "file(s) received";

@@ -27,6 +27,7 @@ CommonDialog {
             return sender.remainingSeconds < 0 ? "Total progress"
                                                : "Total progress (" + formatTime(sender.remainingSeconds) + ")"
         if (sendState == "finished") return "Finished"
+        if (sendState == "finishedWithErrors") return "Finished with error"
         if (sendState == "declined") return "Declined"
         if (sendState == "cancelled") return "Cancelled"
         return "Error"
@@ -66,6 +67,10 @@ CommonDialog {
                     return sender.fileName + (sender.fileCount > 1
                                               ? " (" + sender.fileIndex + " of " + sender.fileCount + ")" : "")
                 if (root.sendState == "finished") return "Sent to " + sender.peerAlias
+                if (root.sendState == "finishedWithErrors")
+                    return (sender.filesDone > 0
+                            ? "Sent " + sender.filesDone + " of " + sender.fileCount + " files to " + sender.peerAlias + "\n"
+                            : "") + sender.errorText
                 if (root.sendState == "cancelled")
                     return sender.errorText != "" ? sender.errorText : "The transfer was cancelled"
                 return sender.errorText
@@ -77,6 +82,7 @@ CommonDialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             visible: root.sendState == "connecting" || root.sendState == "waiting"
                      || root.sendState == "sending" || root.sendState == "finished"
+                     || root.sendState == "finishedWithErrors"
             indeterminate: root.sendState == "connecting" || root.sendState == "waiting"
             minimumValue: 0
             maximumValue: 1
