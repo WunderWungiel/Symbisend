@@ -89,7 +89,9 @@ Receive:
   http the fingerprint it claims). The official app's "Quick save for favorites".
 - `requirePin` (bool, default false) — senders must send `pin`; can only be turned on while `pin`
   is non-empty (otherwise the write is ignored); turning it off also clears `pin`
-- `pin` (string, default `""`) — any text, not only digits. Setting it
+- `pin` (string, default `""`) — any text, not only digits. After 3 wrong PINs an address is
+  refused (429), even with the right PIN, until the server restarts or a PIN or link setting
+  changes. Setting it
   to `""` is ignored while `requirePin` is on. To enable: set `pin`, then `requirePin = true`.
 - `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
   received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else

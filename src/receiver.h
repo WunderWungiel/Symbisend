@@ -25,7 +25,8 @@ class WebShare;
 // Receives files from other devices (LocalSend v2 upload API, our side):
 //  1. POST /prepare-upload: the sender's info and file list. Answered once
 //     our user accepts (a session id and a token per file), declines (403),
-//     or right away: PIN missing/wrong (401), busy (409), quick save.
+//     or right away: PIN missing/wrong (401), too many wrong PINs (429),
+//     busy (409), quick save.
 //     A lone text message is answered with 204 after accepting.
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
 //     download folder. A file that fails is final: the others go on and the
@@ -140,6 +141,7 @@ private slots:
     void onCancelSent();
     void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
     void dropDraining();
+    void clearPinAttempts();
 
 private:
     enum FileStatus { Pending, Receiving, Done, Failed };
@@ -214,7 +216,7 @@ private:
     QDateTime m_receivingSince;
     QDateTime m_lastActivity;
     int m_remainingSeconds;
-    QHash<QString, int> m_wrongPins;  // sender IP -> wrong PINs in a row
+    QHash<QString, int> m_wrongPins;  // sender IP -> wrong PINs since the last right one
     QTimer m_tick;
 };
 

@@ -30,8 +30,9 @@ struct HttpRequest
     // without a certificate (browsers, while not required).
     QString peerFingerprint;
 
-    // Percent-decoded value of a query parameter ("" if missing).
-    QString queryValue(const QString &key) const;
+    // Percent-decoded value of a query parameter ("" if missing). present, if
+    // given, tells a missing parameter from an empty one.
+    QString queryValue(const QString &key, bool *present = 0) const;
 };
 
 struct HttpResponse
@@ -117,6 +118,10 @@ public:
     // Closes a request's connection without an answer (and without
     // requestAborted()).
     void drop(quint32 requestId);
+
+signals:
+    // listen() succeeded.
+    void started();
 
 private slots:
     void onNewConnection();

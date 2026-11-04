@@ -22,13 +22,17 @@ static const int kIdleTimeoutMs = 10000;
 static const int kStreamIdleTimeoutMs = 30000;
 static const int kIdleCheckIntervalMs = 2000;
 
-QString HttpRequest::queryValue(const QString &key) const
+QString HttpRequest::queryValue(const QString &key, bool *present) const
 {
+    if (present)
+        *present = false;
     foreach (const QString &pair, query.split(QLatin1Char('&'), QString::SkipEmptyParts)) {
         const int eq = pair.indexOf(QLatin1Char('='));
         const QString name = eq >= 0 ? pair.left(eq) : pair;
         if (name != key)
             continue;
+        if (present)
+            *present = true;
         QByteArray value = eq >= 0 ? pair.mid(eq + 1).toLatin1() : QByteArray();
         value.replace('+', ' ');
         return QUrl::fromPercentEncoding(value);
@@ -107,6 +111,7 @@ bool HttpServer::listen(quint16 port, bool https, bool requireClientCert)
     qDebug() << "HTTP: listening on port" << port
              << (!isHttps() ? "(http)" : requireClientCert ? "(https, client certificate required)"
                                                            : "(https, client certificate optional)");
+    emit started();
     return true;
 }
 

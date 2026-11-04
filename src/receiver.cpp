@@ -31,8 +31,9 @@ static const int kGoneTimeoutMs = 30000;
 static const int kSettleMs = 3000;
 // No time estimate before this much receiving (the first numbers jump around).
 static const int kEstimateAfterMs = 2000;
-// Wrong PINs in a row from one address before we answer 429.
-static const int kMaxPinAttempts = 5;
+// Wrong PINs from one address before every request from it, even with the
+// right PIN, is answered with 429 (see clearPinAttempts()).
+static const int kMaxPinAttempts = 3;
 // We cancelled: how long uploads may stay open while our /cancel reaches the
 // sender. Enough for a TLS handshake on the phone.
 static const int kDrainTimeoutMs = 5000;
@@ -68,6 +69,13 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
     m_drainTimer.setInterval(kDrainTimeoutMs);
     m_drainTimer.setSingleShot(true);
     connect(&m_drainTimer, SIGNAL(timeout()), this, SLOT(dropDraining()));
+    connect(m_server, SIGNAL(started()), this, SLOT(clearPinAttempts()));
+    connect(m_settings, SIGNAL(requirePinChanged()), this, SLOT(clearPinAttempts()));
+    connect(m_settings, SIGNAL(pinChanged()), this, SLOT(clearPinAttempts()));
+    if (m_webShare) {
+        connect(m_webShare, SIGNAL(receiveActiveChanged()), this, SLOT(clearPinAttempts()));
+        connect(m_webShare, SIGNAL(pinChanged()), this, SLOT(clearPinAttempts()));
+    }
 #ifndef QT_NO_OPENSSL
     connect(m_nam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
             this, SLOT(onSslErrors(QNetworkReply*,QList<QSslError>)));
@@ -219,10 +227,45 @@ void Receiver::requestAborted(const HttpRequest &request)
     }
 }
 
+// The official app forgets wrong PINs when its server restarts, which it does
+// for every PIN or web share change. Our server keeps running through those.
+void Receiver::clearPinAttempts()
+{
+    m_wrongPins.clear();
+}
+
 // ---------------------------------------------------------------- offer
 
 HttpResponse Receiver::prepareUpload(const HttpRequest &request)
 {
+    const QString ip = request.remoteAddress.toString();
+    // While the link is active its PIN applies to everyone (official app:
+    // the web share PIN replaces the receive PIN).
+    const bool viaLink = m_webShare && m_webShare->isReceiveActive();
+    const QString requiredPin = viaLink ? m_webShare->pin()
+                                        : (m_settings->requirePin() ? m_settings->pin() : QString());
+    // Like the official app: before anything else, and an empty pin= is a
+    // wrong attempt, unlike no pin at all.
+    if (!requiredPin.isEmpty()) {
+        const int wrong = m_wrongPins.value(ip);
+        if (wrong >= kMaxPinAttempts) {
+            qWarning() << "Receiver:" << ip << "is blocked after too many wrong PINs";
+            return HttpResponse::message(429, QLatin1String("Too many requests"));
+        }
+        bool sent = false;
+        const QString pin = request.queryValue(QLatin1String("pin"), &sent);
+        if (!sent) {
+            qDebug() << "Receiver:" << ip << "sent no PIN";
+            return HttpResponse::message(401, QLatin1String("PIN required"));
+        }
+        if (pin != requiredPin) {
+            m_wrongPins.insert(ip, wrong + 1);
+            qDebug() << "Receiver:" << ip << "sent a wrong PIN, attempt" << wrong + 1;
+            return HttpResponse::message(401, QLatin1String("Invalid PIN"));
+        }
+        m_wrongPins.remove(ip);
+    }
+
     bool ok = false;
     const QVariantMap body = Json::parseObject(request.body, &ok);
     const QVariantMap info = body.value(QLatin1String("info")).toMap();
@@ -235,29 +278,6 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
     if (isBusy()) {
         qDebug() << "Receiver: request from" << alias << "refused, busy with" << m_peerAlias;
         return HttpResponse::message(409, QLatin1String("Blocked by another session"));
-    }
-
-    const QString ip = request.remoteAddress.toString();
-    // While the link is active its PIN applies to everyone (official app:
-    // the web share PIN replaces the receive PIN).
-    const bool viaLink = m_webShare && m_webShare->isReceiveActive();
-    const QString requiredPin = viaLink ? m_webShare->pin()
-                                        : (m_settings->requirePin() ? m_settings->pin() : QString());
-    if (!requiredPin.isEmpty()) {
-        const QString pin = request.queryValue(QLatin1String("pin"));
-        if (pin != requiredPin) {
-            int wrong = m_wrongPins.value(ip);
-            if (!pin.isEmpty())
-                m_wrongPins.insert(ip, ++wrong);
-            if (wrong >= kMaxPinAttempts) {
-                qWarning() << "Receiver:" << alias << ip << "- too many wrong PINs";
-                return HttpResponse::message(429, QLatin1String("Too many attempts"));
-            }
-            qDebug() << "Receiver:" << alias << (pin.isEmpty() ? "sent no PIN" : "sent a wrong PIN");
-            return HttpResponse::message(401, pin.isEmpty() ? QLatin1String("PIN required")
-                                                            : QLatin1String("Invalid PIN"));
-        }
-        m_wrongPins.remove(ip);
     }
 
     reset();
