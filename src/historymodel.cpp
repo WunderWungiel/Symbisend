@@ -167,6 +167,18 @@ bool HistoryModel::openFolder(const QString &folder)
 #endif
 }
 
+void HistoryModel::removeEntry(int row)
+{
+    if (row < 0 || row >= m_entries.size())
+        return;
+    qDebug() << "History: removed entry" << row;
+    beginRemoveRows(QModelIndex(), row, row);
+    m_entries.removeAt(row);
+    endRemoveRows();
+    emit countChanged();
+    m_saveTimer.start();
+}
+
 void HistoryModel::clear()
 {
     if (m_entries.isEmpty())

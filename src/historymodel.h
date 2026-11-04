@@ -73,6 +73,9 @@ public:
     // Creates the folder first if needed. False if nothing could show it.
     Q_INVOKABLE bool openFolder(const QString &folder);
 
+    // Forgets entry `row`. Its file stays on disk.
+    Q_INVOKABLE void removeEntry(int row);
+
     // Forgets every entry. The received files themselves stay on disk.
     Q_INVOKABLE void clear();
 

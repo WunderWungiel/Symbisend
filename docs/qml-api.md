@@ -273,6 +273,7 @@ every accepted text message, unless `settings.saveToHistory` is off. Messages lo
   in the phone's File manager (Symbian; started with the folder as its document, or the
   running one switched to it) or the desktop's file browser. Creates the folder if
   missing. False if nothing could show it.
+- `removeEntry(int row)` — forgets that entry. Its file stays on disk.
 - `clear()` — forgets every entry (saved at once). The received files stay on disk.
 - Signal `countChanged()`.
 

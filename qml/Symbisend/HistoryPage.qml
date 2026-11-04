@@ -6,7 +6,8 @@ import com.nokia.symbian 1.1
 // folder / Clear, then every entry with its type icon, name (or the
 // message), date, size and sender. Has its own back button at the top, so
 // main.qml hides the toolbar. Tapping a file opens it in the phone's app for
-// it; tapping a text message shows it in a dialog.
+// it; tapping a text message shows it in a dialog. The three dots button of an
+// entry opens a menu: Open file, Information, Delete from history.
 Page {
     id: page
 
@@ -98,6 +99,26 @@ Page {
 
             property bool isText: model.kind == "text"
 
+            function openEntry() {
+                if (isText)
+                    textDialog.openWith(model.text, model.senderAlias)
+                else if (!history.openFile(index))
+                    openFailedDialog.open()
+            }
+
+            function showInformation() {
+                var lines = []
+                if (!isText) {
+                    lines.push("File name: " + model.fileName)
+                    lines.push("Path: " + model.path)
+                }
+                lines.push("Size: " + model.sizeText)
+                lines.push("Sender: " + model.senderAlias)
+                lines.push("Time: " + model.timeText)
+                infoDialog.openWith(isText ? "Message information" : "File information",
+                                    lines.join("\n"))
+            }
+
             // Press feedback; moreButton (declared later) stays on top.
             Rectangle {
                 anchors.fill: parent
@@ -108,12 +129,7 @@ Page {
             MouseArea {
                 id: rowMouse
                 anchors.fill: parent
-                onClicked: {
-                    if (row.isText)
-                        textDialog.openWith(model.text, model.senderAlias)
-                    else if (!history.openFile(index))
-                        openFailedDialog.open()
-                }
+                onClicked: row.openEntry()
             }
 
             SelectionTile {
@@ -161,7 +177,12 @@ Page {
                     verticalCenter: parent.verticalCenter
                 }
                 iconSource: page.platformInverted ? "images/more-vert-inverted.svg" : "images/more-vert.svg"
-                // TODO: entry menu
+                onClicked: {
+                    // The menu acts on list.currentIndex/currentItem: ListView
+                    // keeps them on this entry if a new one arrives meanwhile.
+                    list.currentIndex = index
+                    entryMenu.open()
+                }
             }
         }
     }
@@ -174,7 +195,69 @@ Page {
         text: "No history"
     }
 
+    // ------------------------------------------------ Entry menu
+    ContextMenu {
+        id: entryMenu
+        platformInverted: page.platformInverted
+        MenuLayout {
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Open file"
+                // Tapping a message shows it; it has no file.
+                visible: list.currentItem != null && !list.currentItem.isText
+                onClicked: list.currentItem.openEntry()
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Information"
+                onClicked: list.currentItem.showInformation()
+            }
+            MenuItem {
+                platformInverted: page.platformInverted
+                text: "Delete from history"
+                onClicked: history.removeEntry(list.currentIndex)
+            }
+        }
+    }
+
     // ------------------------------------------------ Dialogs
+    // Not a QueryDialog: its message breaks lines only between words (a long
+    // path would be cut off) and would treat a sender's name as rich text.
+    CommonDialog {
+        id: infoDialog
+        platformInverted: page.platformInverted
+        buttonTexts: ["Close"]
+
+        function openWith(title, text) {
+            titleText = title
+            infoLabel.text = text
+            open()
+        }
+
+        content: Item {
+            width: infoDialog.platformContentMaximumWidth
+            height: Math.min(infoLabel.paintedHeight + 2 * platformStyle.paddingLarge,
+                             infoDialog.platformContentMaximumHeight)
+
+            Flickable {
+                id: infoFlickable
+                anchors { fill: parent; margins: platformStyle.paddingLarge }
+                contentHeight: infoLabel.paintedHeight
+                flickableDirection: Flickable.VerticalFlick
+                interactive: contentHeight > height
+                clip: true
+
+                Label {
+                    id: infoLabel
+                    platformInverted: page.platformInverted
+                    width: infoFlickable.width
+                    wrapMode: Text.Wrap
+                    textFormat: Text.PlainText
+                }
+            }
+        }
+    }
+
     // A received text message, in full, in an editable field (like the
     // Device name dialog in Settings) so it can be selected and copied.
     // Edits are not saved.
