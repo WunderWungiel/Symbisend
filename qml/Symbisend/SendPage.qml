@@ -39,13 +39,21 @@ Page {
         onActiveChanged: page.updateClipboard()
     }
 
-    // Keep the device list current while it is on screen: not on another
-    // tab, under a pushed page, or with the app in the background.
-    Binding {
-        target: discovery
-        property: "autoRefresh"
+    // The Send tab is the selected one (it may be under a pushed page).
+    property bool currentTab: false
+    onCurrentTabChanged: discoverIfEmpty()
+
+    // Like the official app, look for devices when the tab opens and there
+    // are none; the list is otherwise only touched by the refresh button.
+    function discoverIfEmpty() {
         // No scans while sending or receiving: they would compete with the transfer.
-        value: page.visible && Qt.application.active && !sender.busy && !receiver.busy
+        if (page.currentTab && Qt.application.active && peerModel.count === 0
+                && !sender.busy && !receiver.busy)
+            discovery.discover()
+    }
+    Connections {
+        target: network
+        onOnlineChanged: page.discoverIfEmpty()
     }
 
     // There must be something to send before a device is chosen.

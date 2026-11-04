@@ -51,6 +51,8 @@ public:
     // { fingerprint, alias, customAlias, ip, port }, or {} if not a favourite.
     Q_INVOKABLE QVariantMap favorite(const QString &fingerprint) const;
 
+    const QList<Favorite> &favorites() const { return m_favorites; }
+
     // Automatic names follow the alias of the discovered devices in peers.
     void watchPeers(PeerModel *peers);
 

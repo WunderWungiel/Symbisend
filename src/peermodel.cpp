@@ -121,19 +121,6 @@ void PeerModel::upsert(const Peer &peer)
     emit peerChanged(peer.fingerprint);
 }
 
-void PeerModel::removeOlderThan(const QDateTime &cutoff)
-{
-    for (int i = m_peers.size() - 1; i >= 0; --i) {
-        if (m_peers.at(i).lastSeen < cutoff) {
-            qDebug() << "Peer expired:" << m_peers.at(i).alias << m_peers.at(i).ip;
-            beginRemoveRows(QModelIndex(), i, i);
-            m_peers.removeAt(i);
-            endRemoveRows();
-            emit countChanged();
-        }
-    }
-}
-
 bool PeerModel::find(const QString &fingerprint, Peer *out) const
 {
     const int row = indexOf(fingerprint);

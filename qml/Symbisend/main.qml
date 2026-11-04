@@ -33,6 +33,7 @@ PageStackWindow {
             }
             SendPage {
                 id: sendTab
+                currentTab: tabGroup.currentTab === sendTab
                 onDeviceInfoRequested: mainPage.pageStack.push(Qt.resolvedUrl("DeviceDetailsPage.qml"),
                                                                { fingerprint: fingerprint })
                 onEditSelectionRequested: mainPage.pageStack.push(Qt.resolvedUrl("SelectionPage.qml"))

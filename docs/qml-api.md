@@ -17,7 +17,7 @@ Roles (use as `model.<role>` in delegates; `alias` clashes with a QML keyword):
 | `deviceModel` | string   | `Windows`, `Samsung`, ...       |
 | `deviceType`  | string   | `mobile`, `desktop`, `web`, `headless`, `server` |
 | `fingerprint` | string   | unique device id                |
-| `source`      | string   | `scan`, `register`, `multicast`, `announce`, `address` (debug info) |
+| `source`      | string   | `scan`, `register`, `multicast`, `announce`, `favorite`, `address` (debug info) |
 | `lastSeen`    | datetime |                                 |
 
 Properties: `count` (int).  Methods: `clear()`.
@@ -28,29 +28,37 @@ Properties: `count` (int).  Methods: `clear()`.
   answer), like LocalSend's device details page. `time` is the local short time
   (`7:27 PM`), `text` is `Discovered via HTTPS (192.168.1.79)` for the first entry and
   `Updated via HTTPS (192.168.1.79)` for later ones. Logs are cleared along with the peer
-  (expiry, `clear()`, going offline).
+  (`clear()`, `discovery.refresh()`, going offline).
+- Like in the official app, devices don't expire: one that left stays listed until
+  `discovery.refresh()` or going offline.
 - Signal `peerChanged(fingerprint)` — a peer was added or re-confirmed; call `peer()`
   again to refresh.
 
 ## `discovery`
-- `scanning` (bool), `scanProgress` (0–100)
+- `scanning` (bool) — `discover()`, `refresh()` or `scan()` is running, in any stage
+- `scanProgress` (0–100) — of the subnet scan; stays 0 when none was needed
 - `serverRunning` (bool) — our HTTP server on port 53317 is up
 - `serverHttps` (bool) — the running server speaks https (false while stopped). It
   follows `settings.encryption`, or `webShare.encrypted` while `webShare.receiveActive`;
   a change restarts a running server at once (requests in progress are aborted) and
   re-announces us. Without a usable certificate (e.g. desktop builds) it stays http.
 - `multicastListening` (bool) — we receive other devices' announcements
-- `refresh()` — announce + rescan the subnet (also connects if offline)
-- `autoRefresh` (bool, read/write, default false) — while true, `refresh()` runs every
-  60 s, and once right away if the last refresh is older than 15 s. Never connects by
-  itself: does nothing while offline. Devices missing from two refreshes in a row are
-  dropped, so set it while the device list is visible (the Send page binds it to
-  `visible && Qt.application.active && !sender.busy && !receiver.busy`); without it the list is
-  only pruned on manual refreshes.
-- `announce()`, `scan()` — the two halves separately
+- `discover()` — looks for devices, keeping the list, like the official app's staged scan:
+  announces us and asks the favourites at their stored address, then scans the subnet only
+  if no device was confirmed within 1 s of that (any confirmation counts: a `/register`
+  from someone, a favourite's answer, a known device). Takes at least the announcement
+  burst (2.6 s). Does nothing while offline or already running, and never connects, so
+  it's safe to call automatically. Nothing runs it periodically: the Send page calls it
+  when its tab opens or the connection comes up, if `peerModel` is empty and no transfer
+  is running.
+- `refresh()` — the refresh button: connects if offline, otherwise clears `peerModel` and
+  runs `discover()`. Ignored while `scanning`.
+- `announce()` — just the announcement, `scan()` — just the subnet scan. Going online only
+  announces.
 - `startServer()`, `stopServer()`, `restartServer()` — the HTTP server and the multicast
   listener together (whether others can find us / send to us); `serverRunning` reflects
-  the result. While stopped we don't announce ourselves, but `scan()` still works.
+  the result. While stopped we don't announce ourselves, but `discover()` and `scan()`
+  still work.
   Stopping is not persisted. `startServer()` while offline connects first.
 
 ## `network`
@@ -59,7 +67,8 @@ Properties: `count` (int).  Methods: `clear()`.
 - `connectNetwork()`
 - When the connection is lost (out of range, AP off) `online` turns false, `peerModel` is
   cleared and discovery stops. There is no automatic reconnect: `connectNetwork()` or
-  `discovery.refresh()` reconnects, and discovery restarts by itself once online again.
+  `discovery.refresh()` reconnects, and the server and multicast listener restart by
+  themselves once online again.
 
 ## `myDevice` — our identity as other devices see it
 - `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`

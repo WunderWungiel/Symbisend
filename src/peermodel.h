@@ -64,7 +64,6 @@ public:
     static bool isV1(const QString &version) { return version.startsWith(QLatin1String("1.")); }
 
     void upsert(const Peer &peer);
-    void removeOlderThan(const QDateTime &cutoff);
     Q_INVOKABLE void clear();
 
     // All data of one peer for the device details page, or an empty map when

@@ -34,11 +34,11 @@ build_symbian.bat debug
 
 Flow:
 1. `NetworkManager` opens a `QNetworkSession` (Symbian access point), finds the local IPv4 address/prefix, and emits `onlineChanged`.
-2. On going online, `Discovery` starts `HttpServer` on port 53317, joins multicast group `224.0.0.167:53317` via `MulticastReceiver`, and runs `refresh()` (= `announce()` + `scan()`).
-3. Peers are found three ways, all ending in `PeerModel::upsert()` (keyed by fingerprint, `source` records how it was found):
+2. On going online, `Discovery` starts `HttpServer` on port 53317, joins multicast group `224.0.0.167:53317` via `MulticastReceiver`, and announces us. Looking for devices is `discover()` (staged like the official app: announce + probe favourites, then a subnet scan only if nothing was confirmed within 1 s), run by the Send page when its tab opens with an empty list; the refresh button (`refresh()`) clears the list first. Nothing runs periodically and devices don't expire.
+3. Peers are found these ways, all ending in `PeerModel::upsert()` (keyed by fingerprint, `source` records how it was found):
    - incoming multicast messages → POST `/register` to the sender (pinned over https); the peer is stored only when that succeeds, as in the official app;
    - incoming `/register` and `/info` requests to our server (`Discovery` implements `HttpHandler::handleRequest`);
-   - HTTP(S) subnet scan fallback via `QNetworkAccessManager` (bounded concurrency, per-request timeout, driven by `onScanTick`).
+   - register requests to the favourites' stored addresses, and the HTTP(S) subnet scan fallback, via `QNetworkAccessManager` (bounded concurrency, per-request timeout, driven by `onScanTick`).
 4. `DeviceInfo` holds our identity (alias, fingerprint persisted in `QSettings`) and builds register/announce JSON bodies.
 5. `Logger` installs a Qt message handler: every `qDebug`/`qWarning` goes to the log file and the last ~300 lines are shown on the Log page. Log liberally with a `Component:` prefix — it is the main debugging channel on device.
 

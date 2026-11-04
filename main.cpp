@@ -47,7 +47,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     favorites.watchPeers(&peers);
     NetworkManager network;
     // Also picks http/https for the server (settings.encryption, webShare.encrypted).
-    Discovery discovery(&device, &peers, &network, &settings);
+    Discovery discovery(&device, &peers, &favorites, &network, &settings);
     Sender sender(&device, &peers, &selection, &network, &discovery);
     // Serves / and /i18n.json (the browser pages) on discovery's HTTP server.
     WebShare webShare(&discovery, &settings, &network, device.port());

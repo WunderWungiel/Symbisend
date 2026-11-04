@@ -15,6 +15,7 @@
 class QNetworkReply;
 class QSslError;
 class DeviceInfo;
+class FavoritesModel;
 class PeerModel;
 class NetworkManager;
 class MulticastReceiver;
@@ -23,10 +24,12 @@ class Settings;
 // LocalSend v2 discovery:
 //  - multicast announcements (send) + receiving announcements (raw socket)
 //  - HTTP server answering /register and /info
-//  - HTTP(S) subnet scan as a fallback
+//  - discover(): announcing and probing the favourites, then an HTTP(S) subnet
+//    scan only if neither confirmed a device
 class Discovery : public QObject, public HttpHandler
 {
     Q_OBJECT
+    // A discover(), refresh() or scan() is running, in any of its stages.
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
     Q_PROPERTY(bool serverRunning READ isServerRunning NOTIFY statusChanged)
@@ -34,23 +37,22 @@ class Discovery : public QObject, public HttpHandler
     // webShare.encrypted).
     Q_PROPERTY(bool serverHttps READ isServerHttps NOTIFY statusChanged)
     Q_PROPERTY(bool multicastListening READ isMulticastListening NOTIFY statusChanged)
-    // While true (the Send page is on screen), refresh() runs every minute so
-    // the list stays current and departed devices expire.
-    Q_PROPERTY(bool autoRefresh READ autoRefresh WRITE setAutoRefresh NOTIFY autoRefreshChanged)
 
 public:
-    Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network, Settings *settings,
-              QObject *parent = 0);
+    Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favorites,
+              NetworkManager *network, Settings *settings, QObject *parent = 0);
 
     bool isScanning() const { return m_scanning; }
     int scanProgress() const;
     bool isServerRunning() const;
     bool isServerHttps() const;
     bool isMulticastListening() const;
-    bool autoRefresh() const { return m_autoRefresh; }
-    void setAutoRefresh(bool on);
 
-    // Announce + rescan the subnet.
+    // Looks for devices in stages, cheapest first, keeping the list. Does
+    // nothing while offline or while already running. Never connects: it must
+    // not pop up the connection dialog by itself.
+    Q_INVOKABLE void discover();
+    // The refresh button: connects if offline, clears the list, discover().
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void announce();
     Q_INVOKABLE void scan();
@@ -83,7 +85,6 @@ signals:
     void scanningChanged();
     void scanProgressChanged();
     void statusChanged();
-    void autoRefreshChanged();
     // After lookUp(): the device's fingerprint, or what went wrong in error.
     void lookUpFinished(const QString &ip, const QString &fingerprint, const QString &error);
 
@@ -96,11 +97,13 @@ private slots:
     void onScanTick();
     void sendAnnouncement();
     void onAliasChanged();
-    void onAutoRefreshTimer();
+    void onPeerConfirmed();
+    void onGraceTimer();
+    void finishScanIfDone();
     void applyEncryption();
 
 private:
-    enum JobKind { ScanJob, AnnounceReplyJob, LookUpJob };
+    enum JobKind { ScanJob, FavoriteJob, AnnounceReplyJob, LookUpJob };
     struct Job {
         JobKind kind;
         QString ip;
@@ -127,14 +130,15 @@ private:
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
                   bool v1 = false, const QString &expectedFingerprint = QString(),
                   bool udpFallback = false, const QString &announcer = QString());
+    void scanSubnet();
     void pumpScanQueue();
-    void finishScanIfDone();
     void replyViaUdp();
     void sendDatagram(const QByteArray &data);
     void resetUdpSocket(bool create);
 
     DeviceInfo *m_device;
     PeerModel *m_peers;
+    FavoritesModel *m_favorites;
     NetworkManager *m_network;
     Settings *m_settings;
     HttpServer *m_server;
@@ -151,15 +155,15 @@ private:
     int m_scanTotal;
     int m_scanDone;
     int m_activeScanJobs;
+    int m_activeFavoriteJobs;
     bool m_scanning;
+    bool m_confirmed;      // a device was confirmed since discover() started
     bool m_serverEnabled;  // false after stopServer() until startServer()
     bool m_linkActive;     // see setLinkEncryption()
     bool m_linkEncrypted;
-    QDateTime m_scanStarted;
-    QDateTime m_previousScanStarted; // start of the refresh before the current one
     QTimer m_tickTimer;
-    bool m_autoRefresh;
-    QTimer m_autoRefreshTimer;
+    QTimer m_graceTimer;   // after the favourites: does anything still confirm?
+    QTimer m_burstTimer;   // discover() lasts at least as long as its announce()
 };
 
 #endif // DISCOVERY_H

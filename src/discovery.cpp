@@ -12,6 +12,7 @@
 
 #include "clientidentity.h"
 #include "deviceinfo.h"
+#include "favoritesmodel.h"
 #include "json.h"
 #include "multicastreceiver.h"
 #include "networkmanager.h"
@@ -24,10 +25,13 @@ static const int kScanTimeoutMs = 3000;
 static const int kAnnounceReplyTimeoutMs = 5000;
 // lookUp(): the user is waiting, but a phone needs time for the handshake.
 static const int kLookUpTimeoutMs = 8000;
-// Refresh while the device list is on screen (autoRefresh). A device is
-// dropped after missing two refreshes, i.e. within about two minutes.
-static const int kAutoRefreshIntervalMs = 60000;
-static const int kAutoRefreshMinGapMs = 15000;
+// discover(): how long after the favourites were probed something must have
+// confirmed a device, or the subnet is scanned. Same as the official app.
+static const int kDiscoverGraceMs = 1000;
+// The delays of announce().
+static const int kAnnounceDelay1Ms = 100;
+static const int kAnnounceDelay2Ms = 500;
+static const int kAnnounceDelay3Ms = 2000;
 // How long past its deadline a request may take to report finished().
 static const int kStuckJobGraceMs = 5000;
 // An announcement is sent as a burst of 3 (see announce()). The official app
@@ -35,23 +39,25 @@ static const int kStuckJobGraceMs = 5000;
 // burst is skipped while a register is running or after it succeeded.
 static const int kAnnounceDedupWindowMs = 5000;
 
-Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *network,
-                     Settings *settings, QObject *parent)
+Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favorites,
+                     NetworkManager *network, Settings *settings, QObject *parent)
     : QObject(parent),
-      m_device(device), m_peers(peers), m_network(network), m_settings(settings),
+      m_device(device), m_peers(peers), m_favorites(favorites), m_network(network),
+      m_settings(settings),
       m_server(new HttpServer(this)),
       m_multicast(new MulticastReceiver(this)),
       m_udp(0),
       m_nam(new QNetworkAccessManager(this)),
-      m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_scanning(false), m_serverEnabled(true),
-      m_linkActive(false), m_linkEncrypted(false),
-      m_autoRefresh(false)
+      m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_activeFavoriteJobs(0),
+      m_scanning(false), m_confirmed(false), m_serverEnabled(true),
+      m_linkActive(false), m_linkEncrypted(false)
 {
     m_device->setHttps(wantHttps()); // until the server actually starts
     connect(m_settings, SIGNAL(encryptionChanged()), this, SLOT(applyEncryption()));
     m_server->addHandler(this);
     connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
+    connect(m_peers, SIGNAL(peerChanged(QString)), this, SLOT(onPeerConfirmed()));
     connect(m_multicast, SIGNAL(datagramReceived(QByteArray,QHostAddress,quint16)),
             this, SLOT(onDatagram(QByteArray,QHostAddress,quint16)));
     connect(m_nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(onReplyFinished(QNetworkReply*)));
@@ -63,36 +69,12 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, NetworkManager *netwo
 #endif
     m_tickTimer.setInterval(500);
     connect(&m_tickTimer, SIGNAL(timeout()), this, SLOT(onScanTick()));
-    m_autoRefreshTimer.setInterval(kAutoRefreshIntervalMs);
-    connect(&m_autoRefreshTimer, SIGNAL(timeout()), this, SLOT(onAutoRefreshTimer()));
-}
-
-void Discovery::setAutoRefresh(bool on)
-{
-    if (on == m_autoRefresh)
-        return;
-    m_autoRefresh = on;
-    qDebug() << "Discovery: auto refresh" << (on ? "on" : "off");
-    if (on) {
-        m_autoRefreshTimer.start();
-        // Coming back to the list after a while: refresh right away, unless
-        // the last refresh was just now (e.g. switching tabs back and forth).
-        if (!m_scanStarted.isValid()
-                || m_scanStarted.msecsTo(QDateTime::currentDateTime()) >= kAutoRefreshMinGapMs)
-            onAutoRefreshTimer();
-    } else {
-        m_autoRefreshTimer.stop();
-    }
-    emit autoRefreshChanged();
-}
-
-void Discovery::onAutoRefreshTimer()
-{
-    // Never connect from here: an automatic refresh must not pop up the
-    // connection dialog. The user's refresh button does that.
-    if (!m_network->isOnline() || m_scanning)
-        return;
-    refresh();
+    m_graceTimer.setSingleShot(true);
+    m_graceTimer.setInterval(kDiscoverGraceMs);
+    connect(&m_graceTimer, SIGNAL(timeout()), this, SLOT(onGraceTimer()));
+    m_burstTimer.setSingleShot(true);
+    m_burstTimer.setInterval(kAnnounceDelay1Ms + kAnnounceDelay2Ms + kAnnounceDelay3Ms);
+    connect(&m_burstTimer, SIGNAL(timeout()), this, SLOT(finishScanIfDone()));
 }
 
 int Discovery::scanProgress() const
@@ -173,7 +155,12 @@ void Discovery::onOnlineChanged()
         startListening();
     else
         qDebug() << "Discovery: online, but the server was stopped by the user";
-    refresh();
+    // Only let the others know we're here (who answers joins the list). The
+    // official app doesn't even announce until its Send tab opens, but a phone
+    // can come back on a connection it lost. Looking for devices is up to the
+    // Send page, see discover().
+    if (isServerRunning())
+        announce();
 }
 
 // (Re)starts the HTTP server and the multicast listener.
@@ -256,11 +243,10 @@ void Discovery::stopAll()
     abortJobs();
     resetUdpSocket(false);
     m_tickTimer.stop();
-    m_scanStarted = QDateTime();
-    m_previousScanStarted = QDateTime();
 }
 
-// Drops all pending HTTP jobs and ends a running scan without completing it.
+// Drops all pending HTTP jobs and ends a running discover() or scan() without
+// completing it.
 void Discovery::abortJobs()
 {
     // abort() emits finished() synchronously; with m_jobs already cleared
@@ -282,6 +268,9 @@ void Discovery::abortJobs()
 
     m_scanQueue.clear();
     m_activeScanJobs = 0;
+    m_activeFavoriteJobs = 0;
+    m_graceTimer.stop();
+    m_burstTimer.stop();
     if (m_scanning) {
         m_scanning = false;
         emit scanningChanged();
@@ -306,10 +295,64 @@ void Discovery::refresh()
         m_network->connectNetwork();
         return;
     }
+    if (m_scanning) {
+        qDebug() << "Discovery: refresh requested while already looking for devices";
+        return;
+    }
+    m_peers->clear();
+    // A device that just multicast must be able to come back on the list.
+    m_recentReplies.clear();
+    discover();
+}
+
+// Like the official app's discover_staged(), cheapest first: announcing makes
+// the others register with us, and the favourites are asked directly. Scanning
+// the subnet is the fallback for networks that don't carry multicast, and runs
+// only if nothing was confirmed within a second of probing the favourites. Any
+// confirmation counts, of a new or a known device: it proves the cheap stages
+// work here.
+void Discovery::discover()
+{
+    if (!m_network->isOnline()) {
+        qDebug() << "Discovery: offline, not looking for devices";
+        return;
+    }
+    if (m_scanning) {
+        qDebug() << "Discovery: already looking for devices";
+        return;
+    }
+    m_scanning = true;
+    m_confirmed = false;
+    m_scanTotal = 0;
+    m_scanDone = 0;
+    qDebug() << "Discovery: looking for devices," << m_favorites->favorites().size() << "favourite(s)";
+    emit scanningChanged();
+    emit scanProgressChanged();
+
     // Without our server nobody could answer an announcement.
-    if (isServerRunning())
+    if (isServerRunning()) {
         announce();
-    scan();
+        m_burstTimer.start();
+    }
+    foreach (const Favorite &favorite, m_favorites->favorites())
+        startJob(FavoriteJob, favorite.ip, favorite.port, QLatin1String("https"));
+    if (m_activeFavoriteJobs == 0)
+        m_graceTimer.start();
+}
+
+void Discovery::onPeerConfirmed()
+{
+    m_confirmed = true;
+}
+
+void Discovery::onGraceTimer()
+{
+    if (m_confirmed) {
+        qDebug() << "Discovery: devices answered, no subnet scan needed";
+        finishScanIfDone();
+    } else {
+        scanSubnet();
+    }
 }
 
 // ---------------------------------------------------------------- multicast
@@ -318,9 +361,10 @@ void Discovery::announce()
 {
     // Same burst as the official app (delays of 100, 500 and 2000 ms before
     // each message): UDP may be lost and peers may not be ready to answer yet.
-    QTimer::singleShot(100, this, SLOT(sendAnnouncement()));
-    QTimer::singleShot(100 + 500, this, SLOT(sendAnnouncement()));
-    QTimer::singleShot(100 + 500 + 2000, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(kAnnounceDelay1Ms, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(kAnnounceDelay1Ms + kAnnounceDelay2Ms, this, SLOT(sendAnnouncement()));
+    QTimer::singleShot(kAnnounceDelay1Ms + kAnnounceDelay2Ms + kAnnounceDelay3Ms,
+                       this, SLOT(sendAnnouncement()));
 }
 
 void Discovery::sendAnnouncement()
@@ -438,9 +482,17 @@ void Discovery::scan()
         qDebug() << "Discovery: scan already running";
         return;
     }
+    m_scanning = true;
+    emit scanningChanged();
+    scanSubnet();
+}
+
+void Discovery::scanSubnet()
+{
     QHostAddress local = m_network->localAddress();
     if (local.isNull()) {
         qWarning() << "Discovery: no local address, cannot scan";
+        finishScanIfDone();
         return;
     }
     const int prefix = m_network->prefixLength();
@@ -456,12 +508,8 @@ void Discovery::scan()
     }
     m_scanTotal = m_scanQueue.size();
     m_scanDone = 0;
-    m_scanning = true;
-    m_previousScanStarted = m_scanStarted;
-    m_scanStarted = QDateTime::currentDateTime();
     qDebug() << "Discovery: scanning" << m_scanTotal << "hosts in"
              << QHostAddress(network).toString() + "/" + QString::number(prefix);
-    emit scanningChanged();
     emit scanProgressChanged();
     m_tickTimer.start();
     pumpScanQueue();
@@ -503,8 +551,9 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.protocol = protocol;
     job.v1 = v1;
     job.deadline = QDateTime::currentDateTime().addMSecs(
-                kind == ScanJob ? kScanTimeoutMs
-                                : kind == LookUpJob ? kLookUpTimeoutMs : kAnnounceReplyTimeoutMs);
+                kind == LookUpJob ? kLookUpTimeoutMs
+                                  : kind == AnnounceReplyJob ? kAnnounceReplyTimeoutMs
+                                                             : kScanTimeoutMs);
     job.timedOut = false;
     job.expectedFingerprint = expectedFingerprint;
     job.udpFallback = udpFallback;
@@ -513,6 +562,8 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     m_jobs.insert(reply, job);
     if (kind == ScanJob)
         ++m_activeScanJobs;
+    else if (kind == FavoriteJob)
+        ++m_activeFavoriteJobs;
     if (!m_tickTimer.isActive())
         m_tickTimer.start();
 }
@@ -575,6 +626,9 @@ void Discovery::onScanTick()
             --m_activeScanJobs;
             ++m_scanDone;
             emit scanProgressChanged();
+        } else if (job.kind == FavoriteJob) {
+            if (--m_activeFavoriteJobs == 0)
+                m_graceTimer.start();
         } else if (job.kind == LookUpJob) {
             emit lookUpFinished(job.ip, QString(), notFoundError(job.ip));
         } else if (job.kind == AnnounceReplyJob) {
@@ -641,6 +695,8 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
     Job job = m_jobs.take(reply);
     if (job.kind == ScanJob)
         --m_activeScanJobs;
+    else if (job.kind == FavoriteJob)
+        --m_activeFavoriteJobs;
 
     QNetworkReply::NetworkError error = reply->error();
 
@@ -693,6 +749,7 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
             map.insert(QLatin1String("protocol"), job.protocol); // the one that actually worked
             map.insert(QLatin1String("port"), job.port);
             const char *source = job.kind == ScanJob ? "scan"
+                               : job.kind == FavoriteJob ? "favorite"
                                : job.kind == LookUpJob ? "address" : "announce";
             m_peers->upsert(PeerModel::peerFromMap(map, job.ip, job.port, job.protocol,
                                                    QLatin1String(source)));
@@ -743,20 +800,20 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         emit scanProgressChanged();
         pumpScanQueue();
     }
+
+    if (job.kind == FavoriteJob && m_activeFavoriteJobs == 0)
+        m_graceTimer.start();
 }
 
+// The stages of discover() overlap: the announcement burst outlasts the grace
+// period, and a subnet scan may outlast the burst.
 void Discovery::finishScanIfDone()
 {
-    if (!m_scanning || !m_scanQueue.isEmpty() || m_activeScanJobs > 0)
+    if (!m_scanning || m_activeFavoriteJobs > 0 || m_graceTimer.isActive() || m_burstTimer.isActive()
+            || !m_scanQueue.isEmpty() || m_activeScanJobs > 0)
         return;
     m_scanning = false;
-    qDebug() << "Discovery: scan finished," << m_peers->rowCount() << "device(s) known";
-    // Drop devices not seen (scan, register or multicast) during this refresh
-    // *and* the one before it. A single miss is common and not a reason to
-    // drop a device: a slow TLS handshake on the phone, a lost UDP packet, or
-    // a peer outside the scanned /24 whose register reply got lost.
-    if (m_previousScanStarted.isValid())
-        m_peers->removeOlderThan(m_previousScanStarted);
+    qDebug() << "Discovery: finished looking for devices," << m_peers->rowCount() << "device(s) known";
     emit scanningChanged();
 }
 
