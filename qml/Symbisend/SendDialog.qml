@@ -66,7 +66,8 @@ CommonDialog {
                     return sender.fileName + (sender.fileCount > 1
                                               ? " (" + sender.fileIndex + " of " + sender.fileCount + ")" : "")
                 if (root.sendState == "finished") return "Sent to " + sender.peerAlias
-                if (root.sendState == "cancelled") return "The transfer was cancelled"
+                if (root.sendState == "cancelled")
+                    return sender.errorText != "" ? sender.errorText : "The transfer was cancelled"
                 return sender.errorText
             }
         }

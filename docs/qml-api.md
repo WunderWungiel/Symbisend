@@ -187,7 +187,7 @@ the transfer ends in `finished` and kept after `declined`, `failed` or `cancelle
     receiver accepted nothing)
   - `declined` — the receiver said no
   - `failed` — see `errorText` (busy receiver, connection lost, no progress for 60 s, ...)
-  - `cancelled` — by us
+  - `cancelled` — by us, or by the receiver (`errorText` says so)
 - `busy` (bool) — `connecting`, `waiting`, `pin` or `sending`
 - `peerAlias`, `errorText` (string)
 - `fileCount` (int, accepted files), `fileIndex` (int, 1-based, the file being uploaded),
@@ -236,7 +236,7 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
 - `bytesReceived`, `bytesTotal` (number), `progress` (0–1), `remainingSeconds` (int, -1
   while unknown). Progress properties update every 0.5 s.
 - `accept()`, `decline()` — in state `request`
-- `cancel()` — stops receiving (in `request`: same as `decline()`)
+- `cancel()` — stops receiving and tells the sender (in `request`: same as `decline()`)
 - Signals `stateChanged()`, `progressChanged()`.
 
 Network:

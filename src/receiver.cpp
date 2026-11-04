@@ -4,9 +4,17 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QStringList>
+#include <QUrl>
 #include <QUuid>
+#ifndef QT_NO_OPENSSL
+#include <QSslError>
+#endif
 
+#include "clientidentity.h"
 #include "favoritesmodel.h"
 #include "historymodel.h"
 #include "json.h"
@@ -25,6 +33,9 @@ static const int kSettleMs = 3000;
 static const int kEstimateAfterMs = 2000;
 // Wrong PINs in a row from one address before we answer 429.
 static const int kMaxPinAttempts = 5;
+// We cancelled: how long uploads may stay open while our /cancel reaches the
+// sender. Enough for a TLS handshake on the phone.
+static const int kDrainTimeoutMs = 5000;
 
 static const char *kRoutePrefix = "/api/localsend/v2/";
 
@@ -40,8 +51,10 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
     : QObject(parent),
       m_server(server), m_settings(settings), m_network(network), m_webShare(webShare),
       m_history(history), m_favorites(favorites),
+      m_nam(new QNetworkAccessManager(this)),
       m_state(QLatin1String("idle")),
       m_peerHttps(false),
+      m_peerPort(0),
       m_totalSize(0),
       m_isMessage(false),
       m_pendingRequest(0),
@@ -52,6 +65,13 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
     m_tick.setInterval(kTickMs);
     connect(&m_tick, SIGNAL(timeout()), this, SLOT(onTick()));
+    m_drainTimer.setInterval(kDrainTimeoutMs);
+    m_drainTimer.setSingleShot(true);
+    connect(&m_drainTimer, SIGNAL(timeout()), this, SLOT(dropDraining()));
+#ifndef QT_NO_OPENSSL
+    connect(m_nam, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),
+            this, SLOT(onSslErrors(QNetworkReply*,QList<QSslError>)));
+#endif
 }
 
 Receiver::~Receiver()
@@ -142,6 +162,8 @@ bool Receiver::streamsBody(const HttpRequest &request) const
 
 HttpResponse Receiver::bodyData(const HttpRequest &request, const QByteArray &data)
 {
+    if (m_draining.contains(request.id))
+        return HttpResponse(0); // thrown away
     if (!m_uploads.contains(request.id))
         return startUpload(request); // called once with empty data, after the headers
     return writeUpload(request, data);
@@ -156,11 +178,15 @@ HttpResponse Receiver::handleRequest(const HttpRequest &request)
         return prepareUpload(request);
     if (r == QLatin1String("cancel"))
         return cancelRequest(request);
+    if (m_draining.contains(request.id))
+        return HttpResponse(0); // no answer: dropDraining() closes it
     return finishUpload(request);
 }
 
 void Receiver::requestAborted(const HttpRequest &request)
 {
+    if (m_draining.removeAll(request.id))
+        return;
     if (request.id == m_pendingRequest) {
         m_pendingRequest = 0;
         if (m_state == QLatin1String("request")) {
@@ -234,6 +260,7 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
             ? request.peerFingerprint : info.value(QLatin1String("fingerprint")).toString();
     m_peerVersion = info.value(QLatin1String("version")).toString();
     m_peerHttps = info.value(QLatin1String("protocol")).toString() == QLatin1String("https");
+    m_peerPort = info.value(QLatin1String("port")).toInt();
     m_peerIp = request.remoteAddress;
 
     for (QVariantMap::const_iterator it = filesMap.constBegin(); it != filesMap.constEnd(); ++it) {
@@ -376,8 +403,11 @@ HttpResponse Receiver::cancelRequest(const HttpRequest &request)
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the request";
         finish(QLatin1String("cancelled"),
                QString::fromLatin1("%1 cancelled the transfer").arg(m_peerAlias));
+    } else if (!sessionId.isEmpty()) {
+        // Not ours to receive: maybe the device we are sending to is cancelling.
+        emit cancelReceived(request.remoteAddress.toString(), sessionId);
     } else {
-        qDebug() << "Receiver: cancel for an unknown session ignored";
+        qDebug() << "Receiver: cancel without a session ignored";
     }
     return HttpResponse(200);
 }
@@ -585,7 +615,72 @@ void Receiver::cancel()
     if (m_state != QLatin1String("receiving"))
         return;
     qDebug() << "Receiver: cancelled by the user";
+    // The official sender only takes our /cancel while it is still sending, and
+    // a broken upload would end that first (it ends ours too, as a failure). So
+    // running uploads stay connected until the sender has heard from us; their
+    // files are gone already and the rest of their data is thrown away.
+    if (notifySender()) {
+        foreach (quint32 id, m_uploads.keys()) {
+            closeUpload(id, false);
+            m_draining.append(id);
+        }
+        if (!m_draining.isEmpty())
+            m_drainTimer.start();
+    }
     finish(QLatin1String("cancelled"), QLatin1String("The transfer was cancelled"));
+}
+
+// Tells the sender that we stopped. Like the official app: fire and forget,
+// pinned to its fingerprint. False if it can't be told: browsers have no server.
+bool Receiver::notifySender()
+{
+    if (m_peerPort <= 0 || m_sessionId.isEmpty())
+        return false;
+    QUrl u;
+    u.setScheme(QLatin1String(m_peerHttps ? "https" : "http"));
+    u.setHost(m_peerIp.toString());
+    u.setPort(m_peerPort);
+    u.setPath(QLatin1String(kRoutePrefix) + QLatin1String("cancel"));
+    u.addEncodedQueryItem("sessionId", QUrl::toPercentEncoding(m_sessionId));
+    qDebug() << "Receiver: telling" << m_peerAlias << "that session" << m_sessionId << "is cancelled";
+    // Same access point as discovery (no connection dialog).
+    m_nam->setConfiguration(m_network->configuration());
+    m_nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    QNetworkReply *reply = m_nam->post(QNetworkRequest(u), QByteArray());
+    reply->setProperty("fingerprint", m_peerFingerprint); // for onSslErrors()
+    connect(reply, SIGNAL(finished()), this, SLOT(onCancelSent()));
+    return true;
+}
+
+void Receiver::onCancelSent()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    if (!reply)
+        return;
+    qDebug() << "Receiver: cancel answered"
+             << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()
+             << "(error" << int(reply->error()) << reply->errorString() + ")";
+    reply->deleteLater();
+    dropDraining();
+}
+
+void Receiver::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
+{
+    // Self-signed, like every LocalSend certificate: pinned to the sender's.
+    QString why;
+    if (!ClientIdentity::acceptPeer(errors, reply->property("fingerprint").toString(), &why)) {
+        qWarning() << "Receiver: certificate of" << reply->url().host() << "rejected:" << why;
+        return; // the handshake fails, nothing is sent
+    }
+    reply->ignoreSslErrors();
+}
+
+void Receiver::dropDraining()
+{
+    m_drainTimer.stop();
+    foreach (quint32 id, m_draining)
+        m_server->drop(id);
+    m_draining.clear();
 }
 
 // ---------------------------------------------------------------- state
@@ -625,6 +720,7 @@ void Receiver::reset()
     m_peerFingerprint.clear();
     m_peerVersion.clear();
     m_peerHttps = false;
+    m_peerPort = 0;
     m_peerIp = QHostAddress();
     m_files.clear();
     m_fileIndex.clear();

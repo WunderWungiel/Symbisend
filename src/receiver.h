@@ -13,6 +13,9 @@
 #include "httpserver.h"
 
 class QFile;
+class QNetworkAccessManager;
+class QNetworkReply;
+class QSslError;
 class FavoritesModel;
 class HistoryModel;
 class NetworkManager;
@@ -26,7 +29,10 @@ class WebShare;
 //     A lone text message is answered with 204 after accepting.
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
 //     download folder.
-//  3. POST /cancel?sessionId when the sender gives up.
+//  3. POST /cancel?sessionId when the sender gives up. It works both ways:
+//     when our user cancels we POST /cancel to the sender, pinned to its
+//     fingerprint. A /cancel that isn't about our session may be for a
+//     transfer we are sending: cancelReceived().
 // One session at a time. While "Receive via link" is on (WebShare), browsers
 // send through the same endpoints; the link's PIN replaces the settings PIN
 // and settings.receiveViaLinkAutoAccept works like quick save, as in the
@@ -120,10 +126,16 @@ public:
 signals:
     void stateChanged();
     void progressChanged();
+    // A /cancel for a session that isn't ours to receive: the device we are
+    // sending to may be cancelling (see Sender::onCancelReceived()).
+    void cancelReceived(const QString &ip, const QString &sessionId);
 
 private slots:
     void onTick();
     void onOnlineChanged();
+    void onCancelSent();
+    void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
+    void dropDraining();
 
 private:
     enum FileStatus { Pending, Receiving, Done, Failed };
@@ -151,6 +163,7 @@ private:
     HttpResponse startSession();
     void closeUpload(quint32 requestId, bool keepFile);
     void dropUploads();
+    bool notifySender();
     void checkDone();
     void finish(const QString &state, const QString &error = QString());
     void setState(const QString &state, const QString &error = QString());
@@ -166,6 +179,7 @@ private:
     WebShare *m_webShare;
     HistoryModel *m_history;
     FavoritesModel *m_favorites;
+    QNetworkAccessManager *m_nam;     // only for the /cancel to the sender
 
     QString m_state;
     QString m_errorText;
@@ -175,6 +189,7 @@ private:
     QString m_peerFingerprint;
     QString m_peerVersion;
     bool m_peerHttps;
+    int m_peerPort;                   // of its server; 0 for browsers, which have none
     QHostAddress m_peerIp;
     QList<InFile> m_files;
     QHash<QString, int> m_fileIndex;  // file id -> index into m_files
@@ -186,6 +201,10 @@ private:
     bool m_toGallery;                 // images/videos go to settings' media folders
     QStringList m_usedFolders;        // base folders files were saved to, Qt separators
     QHash<quint32, Upload> m_uploads; // running uploads by request id
+    // Uploads we cancelled: their data is thrown away and their connections
+    // stay open until the sender has our /cancel (see cancel()).
+    QList<quint32> m_draining;
+    QTimer m_drainTimer;
     QString m_currentName;
     QDateTime m_receivingSince;
     QDateTime m_lastActivity;

@@ -24,7 +24,8 @@ class NetworkManager;
 //     401 (PIN), 403 (declined), 409 (busy), ...
 //  2. POST /upload for every accepted file, one after another, streamed from
 //     disk.
-//  3. POST /cancel when the user cancels or an upload fails.
+//  3. POST /cancel when the user cancels or an upload fails. The receiver can
+//     cancel too, with a /cancel to our server: onCancelReceived().
 // One transfer at a time. See docs/qml-api.md.
 class Sender : public QObject
 {
@@ -83,6 +84,12 @@ public:
     Q_INVOKABLE void submitPin(const QString &pin);
     // Stops the transfer (and tells the receiver, if it accepted already).
     Q_INVOKABLE void cancel();
+
+public slots:
+    // A /cancel reached our server for a session that isn't one we receive
+    // (Receiver::cancelReceived()). Ours if it comes from the receiver of the
+    // transfer we are sending, as in the official app.
+    void onCancelReceived(const QString &ip, const QString &sessionId);
 
 signals:
     void stateChanged();

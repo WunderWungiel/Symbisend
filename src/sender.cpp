@@ -513,6 +513,17 @@ void Sender::cancel()
     finish(QLatin1String("cancelled"));
 }
 
+void Sender::onCancelReceived(const QString &ip, const QString &sessionId)
+{
+    if (m_state != QLatin1String("sending") || sessionId != m_sessionId || ip != m_peer.ip) {
+        qDebug() << "Sender: cancel from" << ip << "for an unknown session ignored";
+        return;
+    }
+    qDebug() << "Sender:" << m_peer.alias << "cancelled the session";
+    finish(QLatin1String("cancelled"),
+           QString::fromLatin1("%1 cancelled the transfer").arg(m_peer.alias));
+}
+
 // Forgets the request in flight without its finished() reaching us.
 void Sender::dropReply()
 {

@@ -53,6 +53,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     WebShare webShare(&discovery, &settings, &network, device.port());
     // Serves prepare-upload/upload/cancel on discovery's HTTP server.
     Receiver receiver(discovery.httpServer(), &settings, &network, &webShare, &history, &favorites);
+    // A receiver cancelling what we send arrives at our server, like any /cancel.
+    QObject::connect(&receiver, SIGNAL(cancelReceived(QString,QString)),
+                     &sender, SLOT(onCancelReceived(QString,QString)));
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
     QmlApplicationViewer viewer;
