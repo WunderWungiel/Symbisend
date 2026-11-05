@@ -1,10 +1,39 @@
 #include "json.h"
 
+#include <QDebug>
 #include <QScriptEngine>
 #include <QScriptValue>
 #include <QStringList>
 
 namespace Json {
+
+// Parsing and toVariant() recurse, so a body nested deeply enough overflows
+// the stack, and a phone has only 80 KB of it. LocalSend messages nest about 4
+// levels; the official app's serde_json refuses more than 128.
+static const int kMaxDepth = 32;
+
+static bool nestedTooDeep(const QString &text)
+{
+    int depth = 0;
+    bool inString = false;
+    for (int i = 0; i < text.size(); ++i) {
+        const ushort c = text.at(i).unicode();
+        if (inString) {
+            if (c == '\\')
+                ++i;
+            else if (c == '"')
+                inString = false;
+        } else if (c == '"') {
+            inString = true;
+        } else if (c == '{' || c == '[') {
+            if (++depth > kMaxDepth)
+                return true;
+        } else if (c == '}' || c == ']') {
+            --depth;
+        }
+    }
+    return false;
+}
 
 static QScriptEngine *engine()
 {
@@ -18,11 +47,16 @@ QVariantMap parseObject(const QByteArray &data, bool *ok)
 {
     if (ok)
         *ok = false;
+    const QString text = QString::fromUtf8(data);
+    if (nestedTooDeep(text)) {
+        qWarning() << "JSON: refused, nested too deeply";
+        return QVariantMap();
+    }
     QScriptEngine *e = engine();
     QScriptValue parse = e->globalObject().property(QLatin1String("JSON"))
             .property(QLatin1String("parse"));
     QScriptValue result = parse.call(QScriptValue(),
-                                     QScriptValueList() << QScriptValue(QString::fromUtf8(data)));
+                                     QScriptValueList() << QScriptValue(text));
     if (e->hasUncaughtException()) {
         e->clearExceptions();
         return QVariantMap();

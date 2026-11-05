@@ -20,7 +20,7 @@ build_symbian.bat debug
 
 ## Platform constraints (compile against Qt 4.7.4, run on 4.8)
 
-- No `QJsonDocument` — use `src/json.h` (`Json::parseObject` / `Json::serialize`), which goes through `QScriptEngine`'s `JSON` object (hence `QT += script`).
+- No `QJsonDocument` — use `src/json.h` (`Json::parseObject` / `Json::serialize`), which goes through `QScriptEngine`'s `JSON` object (hence `QT += script`) and refuses nesting deeper than 32 levels, because that object recurses.
 - No `QUdpSocket::joinMulticastGroup()` — `MulticastReceiver` uses a raw Open C / POSIX BSD socket watched by a `QSocketNotifier` (Qt's Symbian event dispatcher selects on Open C descriptors in its own thread), with a slow fallback poll until the notifier has fired once; don't go back to fast timer polling (disabled on Windows via `SYMBISEND_NO_RAW_MULTICAST`). `NetworkManager::setDefaultInterfaceForOpenC()` calls `setdefaultif()` so that Open C uses the same access point as the Qt `QNetworkSession`.
 - Old C++ (pre-C++11): no `auto`, lambdas, `nullptr`, or new-style `connect`; use `SIGNAL()/SLOT()`.
 - TLS, client side (sending, discovery requests): Qt/OpenSSL with a system-level patch on the phone that provides TLS 1.2/1.3. Do not add TLS protocol code there. LocalSend certificates are self-signed: `sslErrors` slots ask `ClientIdentity::acceptPeer()` before `ignoreSslErrors`. Like the official app, requests to a known device are **pinned** to its fingerprint (answering a multicast, everything `Sender` does), and a subnet scan takes the peer's fingerprint from its certificate, not from the body. Replies are checked again with `ClientIdentity::peerFingerprint()`, because QNAM reuses kept-alive connections without a new `sslErrors`.
