@@ -39,7 +39,8 @@ class WebShare;
 //     streams in: on a mismatch it is deleted and answered with 422, and the
 //     sender may upload it again, 3 uploads in all. Otherwise a file that
 //     fails is final: the others go on and the session ends in
-//     "finishedWithErrors", as in the official app.
+//     "finishedWithErrors", as in the official app. A saved file gets the
+//     modified and accessed times of the offer (only modified on Symbian).
 //  3. POST /cancel?sessionId when the sender gives up. It works both ways:
 //     when our user cancels we POST /cancel to the sender, pinned to its
 //     fingerprint. A /cancel that isn't about our session may be for a
@@ -178,6 +179,8 @@ private:
         QString fileType;
         QString preview;
         QString sha256;     // from the offer, may be empty
+        QDateTime modified; // from the offer, UTC, invalid if missing
+        QDateTime accessed; // the same
         qint64 size;
         QString token;
         FileStatus status;
@@ -200,12 +203,14 @@ private:
     HttpResponse startSession();
     void applySelection();
     void closeUpload(quint32 requestId, bool keepFile, const QString &error = QString());
+    void applyFileTimes(const InFile &f);
     void dropUploads();
     bool notifySender();
     void checkDone();
     void finish(const QString &state, const QString &error = QString());
     void setState(const QString &state, const QString &error = QString());
     void reset();
+    static QDateTime parseTime(const QString &text);
     static int mediaKind(const InFile &f);
     static QString safeRelativePath(const QString &fileName);
     static QString uniquePath(const QString &path);

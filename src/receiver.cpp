@@ -7,6 +7,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QRegExp>
 #include <QStringList>
 #include <QUrl>
 #include <QUuid>
@@ -24,6 +25,13 @@
 #include "settings.h"
 #include "sha256hash.h"
 #include "webshare.h"
+
+#ifdef Q_OS_SYMBIAN
+#include <coemain.h>
+#include <f32file.h>
+#else
+#include <utime.h>
+#endif
 
 static const int kTickMs = 500;
 // No upload running and none started for this long: the sender is gone.
@@ -324,6 +332,9 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
         f.preview = m.value(QLatin1String("preview")).toString();
         f.sha256 = m.value(QLatin1String("sha256")).toString();
         f.size = qint64(m.value(QLatin1String("size")).toDouble());
+        const QVariantMap metadata = m.value(QLatin1String("metadata")).toMap();
+        f.modified = parseTime(metadata.value(QLatin1String("modified")).toString());
+        f.accessed = parseTime(metadata.value(QLatin1String("accessed")).toString());
         f.status = Pending;
         f.attempts = 0;
         f.received = 0;
@@ -644,6 +655,7 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
         checkDone();
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
+    applyFileTimes(f);
     if (m_history && m_settings->saveToHistory())
         m_history->addFile(f.savedPath, f.size, m_peerAlias);
     qDebug() << "Receiver: saved" << QDir::toNativeSeparators(f.savedPath)
@@ -675,6 +687,32 @@ void Receiver::closeUpload(quint32 requestId, bool keepFile, const QString &erro
     }
     delete u.out;
     delete u.hash;
+}
+
+// The sender's times, as in the official app. Best effort: the file is saved
+// either way.
+void Receiver::applyFileTimes(const InFile &f)
+{
+    if (!f.modified.isValid() && !f.accessed.isValid())
+        return;
+#ifdef Q_OS_SYMBIAN
+    // Symbian files have only a modification time, in UTC.
+    if (!f.modified.isValid())
+        return;
+    const QString native = QDir::toNativeSeparators(f.savedPath);
+    const TTime epoch(TDateTime(1970, EJanuary, 0, 0, 0, 0, 0));
+    const TTime time = epoch + TTimeIntervalMicroSeconds(TInt64(f.modified.toTime_t()) * 1000000);
+    const int result = CCoeEnv::Static()->FsSession().SetModified(
+            TPtrC(reinterpret_cast<const TUint16 *>(native.utf16()), native.length()), time);
+#else
+    const QFileInfo info(f.savedPath);
+    struct utimbuf times;
+    times.modtime = (f.modified.isValid() ? f.modified : info.lastModified()).toTime_t();
+    times.actime = (f.accessed.isValid() ? f.accessed : info.lastRead()).toTime_t();
+    const int result = utime(QFile::encodeName(f.savedPath).constData(), &times);
+#endif
+    if (result != 0)
+        qWarning() << "Receiver: cannot set the time of" << f.savedPath << "- error" << result;
 }
 
 // Stops every running upload (the senders see their connection close).
@@ -882,6 +920,29 @@ void Receiver::reset()
 }
 
 // ---------------------------------------------------------------- helpers
+
+// An RFC 3339 time, in UTC: "2026-08-01T10:20:30.456Z", "2026-08-01T12:20:30+02:00".
+// Invalid if missing, malformed or before 1970 (files can't be set to that
+// here). Fractions of a second are dropped: senders use up to 9 digits.
+QDateTime Receiver::parseTime(const QString &text)
+{
+    if (text.isEmpty())
+        return QDateTime();
+    QRegExp format(QLatin1String("(\\d{4}-\\d{2}-\\d{2})[Tt](\\d{2}:\\d{2}:\\d{2})(?:\\.\\d+)?"
+                                 "(?:[Zz]|([+-])(\\d{2}):(\\d{2}))"));
+    QDateTime time;
+    if (format.exactMatch(text)) {
+        time = QDateTime(QDate::fromString(format.cap(1), Qt::ISODate),
+                         QTime::fromString(format.cap(2), Qt::ISODate), Qt::UTC);
+        const int offset = format.cap(4).toInt() * 3600 + format.cap(5).toInt() * 60;
+        time = time.addSecs(format.cap(3) == QLatin1String("-") ? offset : -offset);
+    }
+    if (!time.isValid() || time.toTime_t() == uint(-1)) {
+        qWarning() << "Receiver: ignoring the file time" << text;
+        return QDateTime();
+    }
+    return time;
+}
 
 // 1 for an image, 2 for a video, 0 otherwise. Like the official app this
 // goes by the announced MIME type ("image/...", "video/..."); a missing or

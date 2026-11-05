@@ -28,6 +28,8 @@ symbian:LIBS += -lavkon -leikdlg -leikctl
 symbian:LIBS += -lmgfetch -lbafl
 # History page's Open folder: starts the File manager app (src/historymodel.cpp)
 symbian:LIBS += -lapgrfx -lapparc -lcone -lws32
+# Received files keep the time of the original (src/receiver.cpp)
+symbian:LIBS += -lefsrv
 # The fetcher talks to the Photos metadata/MPX/thumbnail servers, which refuse
 # clients without these capabilities (MGFetch::RunL leaves with -46
 # otherwise). ReadUserData/WriteUserData alone were not enough on a Belle

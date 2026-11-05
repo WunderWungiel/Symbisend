@@ -244,7 +244,8 @@ Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain H
 are told we're busy. Files go to the session's `folder`, at first `settings.downloadFolder`
 (images/videos to the media folders with `saveToGallery`), folders inside it are created
 as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one becomes
-`a (1).jpg`. Unfinished files are deleted.
+`a (1).jpg`. Unfinished files are deleted. A saved file gets the `modified` and `accessed`
+times the sender gave, like the official app (Symbian files only have the first).
 - `state` (string):
   - `idle` — nothing received yet, or the last offer was declined
   - `request` — an offer waits for `accept()` / `decline()` (no timeout; the sender may
