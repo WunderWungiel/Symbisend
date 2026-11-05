@@ -108,6 +108,11 @@ public:
     // are reported to their handlers as aborted).
     void close();
     bool isListening() const { return m_server.isListening(); }
+    // Tries to connect to our own port at this address. Qt 4 doesn't report a
+    // listening socket that died, so this is how to find out; a failure gives
+    // probeFailed(). Does nothing while clients are connected, which shows
+    // that it works, and whose TLS handshakes could delay the answer.
+    void probe(const QHostAddress &address);
     // Whether the server (while listening) speaks https.
     bool isHttps() const { return !m_tlsConfig.isNull(); }
     // Whether the running https server refuses clients without a certificate.
@@ -123,12 +128,17 @@ public:
 signals:
     // listen() succeeded.
     void started();
+    // See probe().
+    void probeFailed();
 
 private slots:
     void onNewConnection();
     void onReadyRead();
     void onDisconnected();
     void onIdleCheck();
+    void onProbeConnected();
+    void onProbeError();
+    void onProbeTimeout();
 
 private:
     struct Connection;
@@ -143,6 +153,7 @@ private:
     void remove(Connection *c, bool notifyHandler);
     bool alive(quint32 id) const { return m_byId.contains(id); }
     bool mayConnect(const QHostAddress &peer);
+    void endProbe();
 
     QTcpServer m_server;
     // Set while listening with https; every connection gets a TlsSession on it.
@@ -154,6 +165,8 @@ private:
     quint32 m_nextId;
     QTimer m_idleTimer;
     bool m_refusing;     // refusals are logged once until a connection is accepted
+    QTcpSocket *m_probe; // while probe() runs
+    QTimer m_probeTimer;
 };
 
 #endif // HTTPSERVER_H

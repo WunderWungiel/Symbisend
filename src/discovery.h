@@ -81,6 +81,9 @@ public:
     bool handles(const HttpRequest &request) const;
     HttpResponse handleRequest(const HttpRequest &request);
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event);
+
 signals:
     void scanningChanged();
     void scanProgressChanged();
@@ -103,6 +106,7 @@ private slots:
     void applyEncryption();
     void onMulticastFailed();
     void onHealTimer();
+    void onServerDead();
 
 private:
     enum JobKind { ScanJob, FavoriteJob, AnnounceReplyJob, LookUpJob };

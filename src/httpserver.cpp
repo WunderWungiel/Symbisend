@@ -25,6 +25,9 @@ static const int kIdleCheckIntervalMs = 2000;
 // that one peer can't take every slot. A sender uses a few, a browser up to 6.
 static const int kMaxConnections = 64;
 static const int kMaxConnectionsPerIp = 8;
+// probe(): the official app allows 1 s, but our socket shares its thread with
+// everything else in the app, so a busy moment must not look like a dead server.
+static const int kProbeTimeoutMs = 3000;
 
 QString HttpRequest::queryValue(const QString &key, bool *present) const
 {
@@ -80,11 +83,15 @@ struct HttpServer::Connection
 };
 
 HttpServer::HttpServer(QObject *parent)
-    : QObject(parent), m_requireClientCert(true), m_nextId(1), m_refusing(false)
+    : QObject(parent), m_requireClientCert(true), m_nextId(1), m_refusing(false),
+      m_probe(0)
 {
     connect(&m_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
     m_idleTimer.setInterval(kIdleCheckIntervalMs);
     connect(&m_idleTimer, SIGNAL(timeout()), this, SLOT(onIdleCheck()));
+    m_probeTimer.setSingleShot(true);
+    m_probeTimer.setInterval(kProbeTimeoutMs);
+    connect(&m_probeTimer, SIGNAL(timeout()), this, SLOT(onProbeTimeout()));
 }
 
 HttpServer::~HttpServer()
@@ -124,6 +131,7 @@ void HttpServer::close()
 {
     if (m_server.isListening())
         qDebug() << "HTTP: server closed";
+    endProbe();
     m_server.close();
     m_idleTimer.stop();
     // A handler's requestAborted() may drop other requests: look each one up again.
@@ -132,6 +140,52 @@ void HttpServer::close()
             remove(c, true);
     }
     m_tlsConfig.clear();
+}
+
+void HttpServer::probe(const QHostAddress &address)
+{
+    if (!m_server.isListening() || m_probe || !m_byId.isEmpty())
+        return;
+    // A new socket each time: on Symbian it belongs to the connection that was
+    // current when it was created.
+    m_probe = new QTcpSocket(this);
+    connect(m_probe, SIGNAL(connected()), this, SLOT(onProbeConnected()));
+    connect(m_probe, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onProbeError()));
+    m_probeTimer.start();
+    m_probe->connectToHost(address, m_server.serverPort());
+}
+
+void HttpServer::endProbe()
+{
+    m_probeTimer.stop();
+    if (m_probe) {
+        m_probe->disconnect(this);
+        m_probe->abort();
+        m_probe->deleteLater();
+        m_probe = 0;
+    }
+}
+
+void HttpServer::onProbeConnected()
+{
+    endProbe();
+    qDebug() << "HTTP: probe connected, the server is alive";
+}
+
+void HttpServer::onProbeError()
+{
+    if (!m_probe)
+        return;
+    qWarning() << "HTTP: probe failed:" << m_probe->errorString();
+    endProbe();
+    emit probeFailed();
+}
+
+void HttpServer::onProbeTimeout()
+{
+    qWarning() << "HTTP: probe timed out";
+    endProbe();
+    emit probeFailed();
 }
 
 void HttpServer::respond(quint32 requestId, const HttpResponse &response)

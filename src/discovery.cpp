@@ -1,6 +1,8 @@
 #include "discovery.h"
 
+#include <QCoreApplication>
 #include <QDebug>
+#include <QEvent>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -65,6 +67,7 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
     connect(m_multicast, SIGNAL(datagramReceived(QByteArray,QHostAddress,quint16)),
             this, SLOT(onDatagram(QByteArray,QHostAddress,quint16)));
     connect(m_multicast, SIGNAL(failed()), this, SLOT(onMulticastFailed()));
+    connect(m_server, SIGNAL(probeFailed()), this, SLOT(onServerDead()));
     connect(m_nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(onReplyFinished(QNetworkReply*)));
     connect(m_nam, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)),
             this, SLOT(onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)));
@@ -82,6 +85,7 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
     connect(&m_burstTimer, SIGNAL(timeout()), this, SLOT(finishScanIfDone()));
     m_healTimer.setSingleShot(true);
     connect(&m_healTimer, SIGNAL(timeout()), this, SLOT(onHealTimer()));
+    qApp->installEventFilter(this);
 }
 
 int Discovery::scanProgress() const
@@ -228,6 +232,27 @@ void Discovery::onMulticastFailed()
     m_healDelayMs = kHealMinDelayMs;
     scheduleHeal();
     emit statusChanged();
+}
+
+// A server that silently stopped accepting (see HttpServer::probe()).
+void Discovery::onServerDead()
+{
+    qWarning() << "Discovery: the server doesn't accept connections, restarting it";
+    startListening();
+    if (isServerRunning())
+        announce();
+}
+
+// The official app checks its server whenever it comes to the foreground,
+// connecting to the loopback address. We use the WLAN address: on Symbian a
+// socket belongs to the access point, which may not reach loopback.
+bool Discovery::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() == QEvent::ApplicationActivate && m_network->isOnline()) {
+        const QHostAddress address = m_network->localAddress();
+        m_server->probe(address.isNull() ? QHostAddress(QHostAddress::LocalHost) : address);
+    }
+    return QObject::eventFilter(watched, event);
 }
 
 void Discovery::stopListening()
