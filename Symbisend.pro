@@ -40,6 +40,10 @@ symbian:TARGET.CAPABILITY += ReadUserData WriteUserData UserEnvironment LocalSer
 
 symbian:TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
 
+# GCCE builds Thumb-1 by default, which has no 32x32 to 64 bit multiply: that
+# is what RSA and ECC in mbedTLS spend their time on, on the UI thread.
+symbian:MMP_RULES += ALWAYS_BUILD_AS_ARM
+
 # TLS client certificate (src/clientidentity.cpp), created with OpenSSL's
 # libcrypto, the library Qt's SSL uses too (Open C on Symbian).
 symbian|unix {
