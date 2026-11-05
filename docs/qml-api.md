@@ -127,10 +127,10 @@ Receive:
   `application/octet-stream` type is guessed from the extension). Not applied when the
   transfer contains folders (any `fileName` with `/`): then everything stays together in
   `downloadFolder`. If a media folder can't be created, the file goes to `downloadFolder`.
-- `autoFinish` (bool, default false) — applied in QML (`ReceiveDialog.qml`): after files
-  were received (`receiver.state` `finished`, not a message) the Close button counts down
-  3 s and the dialog closes by itself, like the official app. Failed/cancelled transfers
-  and messages stay open.
+- `autoFinish` (bool, default false) — applied in QML (`ReceiveDialog.qml`, `SendDialog.qml`):
+  after files were received or sent (`state` `finished`, not a received message) the Close
+  button counts down 3 s and the dialog closes by itself, like the official app.
+  Failed/cancelled transfers, those with errors, and received messages stay open.
 - `saveToHistory` (bool, default true) — when off, `receiver` adds nothing to `history`
   (received files and messages are not recorded; existing entries stay), like the official app.
 - `receiveViaLinkAutoAccept` (bool, default false) — while `webShare.receiveActive`, every

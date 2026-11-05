@@ -25,6 +25,7 @@
         <file>qml/Symbisend/SettingsPage.qml</file>
         <file>qml/Symbisend/SettingsSwitch.qml</file>
         <file>qml/Symbisend/VerifyDialog.qml</file>
+        <file>qml/Symbisend/CountdownTimer.qml</file>
         <file>qml/Symbisend/images/ads-click-inverted.svg</file>
         <file>qml/Symbisend/images/ads-click.svg</file>
         <file>qml/Symbisend/images/check-circle-inverted.svg</file>

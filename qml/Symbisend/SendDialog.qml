@@ -4,6 +4,8 @@ import com.nokia.symbian 1.1
 // Progress of a transfer started with sender.send() or sendToAddress():
 // connecting, waiting for the receiver, PIN entry, total progress with the time left in the title, and
 // the result. Cancel stops the transfer; Close just hides the finished one.
+// With settings.autoFinish a fully sent transfer closes by itself, like
+// ReceiveDialog.
 CommonDialog {
     id: root
 
@@ -33,7 +35,7 @@ CommonDialog {
         if (sendState == "cancelled") return "Cancelled"
         return "Error"
     }
-    buttonTexts: [busy ? "Cancel" : "Close"]
+    buttonTexts: [busy ? "Cancel" : finishTimer.running ? "Close (" + finishTimer.counter + ")" : "Close"]
 
     // Size the dialog from the column explicitly: the default sizing reads
     // childrenRect, which lags behind when rows appear (state changes,
@@ -45,8 +47,25 @@ CommonDialog {
             sender.cancel()
     }
 
-    // Opened while the PIN field is shown: start with an empty one.
-    onSendStateChanged: if (sendState == "pin") pinField.text = ""
+    CountdownTimer {
+        id: finishTimer
+        onElapsed: {
+            console.log("SendDialog: auto finish - closing")
+            root.close()
+        }
+    }
+
+    onSendStateChanged: {
+        finishTimer.stop()
+        // Opened while the PIN field is shown: start with an empty one.
+        if (sendState == "pin")
+            pinField.text = ""
+        else if (sendState == "finished" && settings.autoFinish
+                 && (status == DialogStatus.Open || status == DialogStatus.Opening))
+            finishTimer.begin(3)
+    }
+    // Closed by hand during the countdown.
+    onStatusChanged: if (status == DialogStatus.Closing || status == DialogStatus.Closed) finishTimer.stop()
 
     content: Column {
         id: contentColumn
