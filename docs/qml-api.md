@@ -288,6 +288,12 @@ times the sender gave, like the official app (Symbian files only have the first)
   `F:\Images\Symbisend` and `F:\Symbisend` for photos plus a PDF); final once `finished`
 - `filesDone` (int, files saved), `filesFailed` (int), `fileName` (string, the file coming
   in now)
+- `quickSaved` (bool) — `finished`, and `settings.quickSave` or
+  `settings.quickSaveFromFavorites` applies to this sender. Like the official app the
+  session then closes by itself: `ReceiveDialog.qml` closes at once, whatever
+  `settings.autoFinish` says, and `main.qml` opens `OpenFileDialog.qml`. Link auto accept
+  doesn't count, and neither does a transfer with errors.
+- `lastFilePath` (string, Qt separators) — the file saved last, empty before the first one
 - `bytesReceived`, `bytesTotal` (number), `progress` (0–1), `remainingSeconds` (int, -1
   while unknown). Progress properties update every 0.5 s.
 - `accept()`, `decline()` — in state `request`. `accept()` takes the files selected in
@@ -364,6 +370,7 @@ every text message as it arrives, unless `settings.saveToHistory` is off. Messag
 - `openFile(int row)` → bool — opens that entry's file in the system's app for it
   (`QDesktopServices::openUrl`). False for text entries, a missing file, or when nothing
   could open it.
+- `openPath(string path)` → bool — the same for any file.
 - `openFolder(string folder)` → bool — shows that folder (pass `settings.downloadFolder`)
   in the phone's File manager (Symbian; started with the folder as its document, or the
   running one switched to it) or the desktop's file browser. Creates the folder if

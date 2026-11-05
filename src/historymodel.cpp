@@ -85,18 +85,22 @@ bool HistoryModel::openFile(int row)
 {
     if (row < 0 || row >= m_entries.size())
         return false;
-    const HistoryEntry &e = m_entries.at(row);
-    if (e.path.isEmpty())
+    return openPath(m_entries.at(row).path);
+}
+
+bool HistoryModel::openPath(const QString &path)
+{
+    if (path.isEmpty())
         return false;
-    if (!QFileInfo(e.path).exists()) {
-        qWarning() << "History: cannot open" << e.path << "- file no longer exists";
+    if (!QFileInfo(path).exists()) {
+        qWarning() << "History: cannot open" << path << "- file no longer exists";
         return false;
     }
-    bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(e.path));
+    bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     if (ok)
-        qDebug() << "History: opened" << e.path;
+        qDebug() << "History: opened" << path;
     else
-        qWarning() << "History: no application could open" << e.path;
+        qWarning() << "History: no application could open" << path;
     return ok;
 }
 

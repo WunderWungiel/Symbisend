@@ -67,6 +67,8 @@ public:
     // document handler). False if it is a text entry, the file is gone or
     // nothing could open it.
     Q_INVOKABLE bool openFile(int row);
+    // The same for any file.
+    Q_INVOKABLE bool openPath(const QString &path);
 
     // Shows `folder` (native or '/' separators) in the phone's file manager
     // (Symbian: the File manager app; elsewhere: the desktop's file browser).

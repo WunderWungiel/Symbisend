@@ -376,16 +376,8 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
                              : QString::fromLatin1("%1 file(s), %2 bytes")
                                .arg(m_files.size()).arg(m_totalSize));
 
-    if (m_settings->quickSave() && !m_isMessage) {
+    if (quickSaves()) {
         qDebug() << "Receiver: quick save - accepting at once";
-        return startSession();
-    }
-    // Over https m_peerFingerprint is the sender's certificate hash, so only
-    // the favourite device itself gets in; over http it is what it claims.
-    if (m_settings->quickSaveFromFavorites() && !m_isMessage && m_favorites
-            && m_favorites->contains(m_peerFingerprint)) {
-        qDebug() << "Receiver: quick save for favourites -" << alias << "is a favourite,"
-                 << "accepting at once";
         return startSession();
     }
     if (viaLink && m_settings->receiveViaLinkAutoAccept() && !m_isMessage) {
@@ -466,6 +458,24 @@ void Receiver::decline()
     if (id)
         m_server->respond(id, HttpResponse::message(403, QLatin1String("Rejected")));
     setState(QLatin1String("idle"));
+}
+
+// Whether quick save takes this offer without asking.
+bool Receiver::quickSaves() const
+{
+    if (m_isMessage)
+        return false;
+    if (m_settings->quickSave())
+        return true;
+    // Over https m_peerFingerprint is the sender's certificate hash, so only
+    // the favourite device itself gets in; over http it is what it claims.
+    return m_settings->quickSaveFromFavorites() && m_favorites
+            && m_favorites->contains(m_peerFingerprint);
+}
+
+bool Receiver::quickSaved() const
+{
+    return m_state == QLatin1String("finished") && quickSaves();
 }
 
 // The answer to an accepted prepare-upload.
@@ -656,6 +666,7 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
     applyFileTimes(f);
+    m_lastFilePath = f.savedPath;
     if (m_history && m_settings->saveToHistory())
         m_history->addFile(f.savedPath, f.size, m_peerAlias);
     qDebug() << "Receiver: saved" << QDir::toNativeSeparators(f.savedPath)
@@ -915,6 +926,7 @@ void Receiver::reset()
     m_toGallery = false;
     m_hasFolders = false;
     m_usedFolders.clear();
+    m_lastFilePath.clear();
     m_currentName.clear();
     m_remainingSeconds = -1;
 }

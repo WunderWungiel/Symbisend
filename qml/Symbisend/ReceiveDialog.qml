@@ -77,8 +77,9 @@ Dialog {
 
     onRecvStateChanged: {
         finishTimer.stop()
-        // Declined (idle): nothing more to show.
-        if (recvState == "idle") {
+        // Declined (idle): nothing more to show. A finished quick save closes
+        // at once, main.qml then offers to open the file.
+        if (recvState == "idle" || receiver.quickSaved) {
             close()
         } else if (recvState == "finished" && !receiver.isMessage && settings.autoFinish
                    && (status == DialogStatus.Open || status == DialogStatus.Opening)) {

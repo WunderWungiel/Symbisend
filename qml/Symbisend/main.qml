@@ -71,6 +71,10 @@ PageStackWindow {
         }
     }
 
+    OpenFileDialog {
+        id: openFileDialog
+    }
+
     function showReceiveDialog() {
         receiveDialog.open()
     }
@@ -85,6 +89,8 @@ PageStackWindow {
             if (receiver.state == "request" || receiver.state == "receiving"
                     || receiver.state == "failed" || receiver.state == "finishedWithErrors")
                 receiveDialog.open()
+            else if (receiver.quickSaved)
+                openFileDialog.openFor(receiver.lastFilePath)
         }
     }
 }

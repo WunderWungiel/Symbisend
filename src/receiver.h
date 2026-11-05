@@ -93,6 +93,11 @@ class Receiver : public QObject, public HttpHandler
     Q_PROPERTY(QStringList folders READ folders NOTIFY stateChanged)
     Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
     Q_PROPERTY(int filesFailed READ filesFailed NOTIFY progressChanged)
+    // Quick save got every file: state "finished", and the session closes by
+    // itself and offers to open lastFilePath, as in the official app.
+    Q_PROPERTY(bool quickSaved READ quickSaved NOTIFY stateChanged)
+    // The file saved last, Qt separators; empty before the first one.
+    Q_PROPERTY(QString lastFilePath READ lastFilePath NOTIFY stateChanged)
     Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
     Q_PROPERTY(qreal bytesReceived READ bytesReceived NOTIFY progressChanged)
     Q_PROPERTY(qreal bytesTotal READ totalSize NOTIFY progressChanged)
@@ -131,6 +136,8 @@ public:
     QStringList folders() const;
     int filesDone() const;
     int filesFailed() const;
+    bool quickSaved() const;
+    QString lastFilePath() const { return m_lastFilePath; }
     QString fileName() const { return m_currentName; }
     qreal bytesReceived() const;
     qreal progress() const;
@@ -201,6 +208,7 @@ private:
     HttpResponse writeUpload(const HttpRequest &request, const QByteArray &data);
     HttpResponse finishUpload(const HttpRequest &request);
     HttpResponse startSession();
+    bool quickSaves() const;
     void applySelection();
     void closeUpload(quint32 requestId, bool keepFile, const QString &error = QString());
     void applyFileTimes(const InFile &f);
@@ -245,6 +253,7 @@ private:
     bool m_toGallery;                 // images/videos go to settings' media folders
     bool m_hasFolders;                // some file name contains a folder
     QStringList m_usedFolders;        // base folders files were saved to, Qt separators
+    QString m_lastFilePath;
     QHash<quint32, Upload> m_uploads; // running uploads by request id
     // Uploads we cancelled: their data is thrown away and their connections
     // stay open until the sender has our /cancel (see cancel()).
