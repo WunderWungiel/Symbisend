@@ -101,6 +101,8 @@ private slots:
     void onGraceTimer();
     void finishScanIfDone();
     void applyEncryption();
+    void onMulticastFailed();
+    void onHealTimer();
 
 private:
     enum JobKind { ScanJob, FavoriteJob, AnnounceReplyJob, LookUpJob };
@@ -125,6 +127,8 @@ private:
     void stopAll();
     void startListening();
     void stopListening();
+    void startMulticast();
+    void scheduleHeal();
     void abortJobs();
     static void abortReply(QNetworkReply *reply);
     void startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
@@ -164,6 +168,9 @@ private:
     QTimer m_tickTimer;
     QTimer m_graceTimer;   // after the favourites: does anything still confirm?
     QTimer m_burstTimer;   // discover() lasts at least as long as its announce()
+    // Tries again to start what should be listening but isn't (see scheduleHeal()).
+    QTimer m_healTimer;
+    int m_healDelayMs;
 };
 
 #endif // DISCOVERY_H

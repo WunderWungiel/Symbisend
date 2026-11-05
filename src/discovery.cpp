@@ -38,6 +38,10 @@ static const int kStuckJobGraceMs = 5000;
 // answers every message; a TLS handshake costs a phone more, so the rest of a
 // burst is skipped while a register is running or after it succeeded.
 static const int kAnnounceDedupWindowMs = 5000;
+// Retrying a server or multicast listener that isn't running, doubling up to
+// the maximum. It may never work: a mobile access point can refuse multicast.
+static const int kHealMinDelayMs = 5000;
+static const int kHealMaxDelayMs = 300000;
 
 Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favorites,
                      NetworkManager *network, Settings *settings, QObject *parent)
@@ -50,7 +54,7 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
       m_nam(new QNetworkAccessManager(this)),
       m_scanTotal(0), m_scanDone(0), m_activeScanJobs(0), m_activeFavoriteJobs(0),
       m_scanning(false), m_confirmed(false), m_serverEnabled(true),
-      m_linkActive(false), m_linkEncrypted(false)
+      m_linkActive(false), m_linkEncrypted(false), m_healDelayMs(kHealMinDelayMs)
 {
     m_device->setHttps(wantHttps()); // until the server actually starts
     connect(m_settings, SIGNAL(encryptionChanged()), this, SLOT(applyEncryption()));
@@ -60,6 +64,7 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
     connect(m_peers, SIGNAL(peerChanged(QString)), this, SLOT(onPeerConfirmed()));
     connect(m_multicast, SIGNAL(datagramReceived(QByteArray,QHostAddress,quint16)),
             this, SLOT(onDatagram(QByteArray,QHostAddress,quint16)));
+    connect(m_multicast, SIGNAL(failed()), this, SLOT(onMulticastFailed()));
     connect(m_nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(onReplyFinished(QNetworkReply*)));
     connect(m_nam, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)),
             this, SLOT(onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)));
@@ -75,6 +80,8 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
     m_burstTimer.setSingleShot(true);
     m_burstTimer.setInterval(kAnnounceDelay1Ms + kAnnounceDelay2Ms + kAnnounceDelay3Ms);
     connect(&m_burstTimer, SIGNAL(timeout()), this, SLOT(finishScanIfDone()));
+    m_healTimer.setSingleShot(true);
+    connect(&m_healTimer, SIGNAL(timeout()), this, SLOT(onHealTimer()));
 }
 
 int Discovery::scanProgress() const
@@ -172,13 +179,60 @@ void Discovery::startListening()
         m_device->setHttps(m_server->isHttps());
     else
         m_device->setHttps(https);
+    startMulticast();
+    m_healDelayMs = kHealMinDelayMs;
+    scheduleHeal();
+    emit statusChanged();
+}
+
+void Discovery::startMulticast()
+{
     m_multicast->start(QHostAddress(QLatin1String(kMulticastGroup)), m_device->port(),
                        m_network->localAddress());
+}
+
+// Failing to start either listener, or losing the multicast socket, would
+// otherwise leave us unreachable until the connection changes.
+void Discovery::scheduleHeal()
+{
+    if (!m_serverEnabled || !m_network->isOnline()
+            || (isServerRunning() && isMulticastListening())) {
+        m_healTimer.stop();
+        return;
+    }
+    if (m_healTimer.isActive())
+        return;
+    qDebug() << "Discovery: trying the" << (isServerRunning() ? "multicast listener" : "server")
+             << "again in" << m_healDelayMs / 1000 << "s";
+    m_healTimer.start(m_healDelayMs);
+    m_healDelayMs = qMin(m_healDelayMs * 2, kHealMaxDelayMs);
+}
+
+void Discovery::onHealTimer()
+{
+    if (!m_serverEnabled || !m_network->isOnline())
+        return;
+    const bool serverDown = !isServerRunning();
+    if (serverDown && m_server->listen(m_device->port(), wantHttps(), !m_linkActive))
+        m_device->setHttps(m_server->isHttps());
+    if (!isMulticastListening())
+        startMulticast();
+    if (serverDown && isServerRunning())
+        announce();
+    scheduleHeal();
+    emit statusChanged();
+}
+
+void Discovery::onMulticastFailed()
+{
+    m_healDelayMs = kHealMinDelayMs;
+    scheduleHeal();
     emit statusChanged();
 }
 
 void Discovery::stopListening()
 {
+    m_healTimer.stop();
     m_multicast->stop();
     m_server->close();
     m_recentReplies.clear();

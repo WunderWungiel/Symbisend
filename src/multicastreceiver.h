@@ -30,6 +30,8 @@ public:
 
 signals:
     void datagramReceived(const QByteArray &data, const QHostAddress &sender, quint16 senderPort);
+    // Reading kept failing, so the receiver stopped itself. start() again.
+    void failed();
 
 private slots:
     void onActivated();
@@ -41,6 +43,7 @@ private:
     // (empty reads or errors, e.g. while the link goes down).
     bool readPending();
     void pauseNotifier();
+    void readFailed();
 
     int m_fd;
     QSocketNotifier *m_notifier;
@@ -49,6 +52,7 @@ private:
     bool m_oddAddressLogged;  // unusable sender addresses are logged once per start()
     bool m_selectErrorLogged; // select() failures are logged once per start()
     bool m_fallbackLogged;    // a datagram found by the fallback poll, logged once per start()
+    int m_readFailures;       // since the last datagram
     QTimer m_fallbackTimer;
     QTimer m_resumeTimer;     // re-enables the notifier after a pause
 };

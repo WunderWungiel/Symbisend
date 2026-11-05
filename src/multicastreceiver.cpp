@@ -27,10 +27,14 @@ static const int kPauseMs = 1000;
 static const int kMaxDatagram = 8192;
 // Datagrams read per wake-up at most; the rest waits for the next one.
 static const int kMaxReadsPerWakeUp = 32;
+// Failed reads in a row before the socket is given up on. Same as the official
+// app: a single one can be transient.
+static const int kMaxReadFailures = 10;
 
 MulticastReceiver::MulticastReceiver(QObject *parent)
     : QObject(parent), m_fd(-1), m_notifier(0), m_notifierFired(false), m_badReadLogged(false),
-      m_oddAddressLogged(false), m_selectErrorLogged(false), m_fallbackLogged(false)
+      m_oddAddressLogged(false), m_selectErrorLogged(false), m_fallbackLogged(false),
+      m_readFailures(0)
 {
     m_fallbackTimer.setInterval(kFallbackPollMs);
     connect(&m_fallbackTimer, SIGNAL(timeout()), this, SLOT(onFallbackPoll()));
@@ -58,6 +62,7 @@ void MulticastReceiver::onFallbackPoll() {}
 void MulticastReceiver::resumeNotifier() {}
 bool MulticastReceiver::readPending() { return false; }
 void MulticastReceiver::pauseNotifier() {}
+void MulticastReceiver::readFailed() {}
 
 #else
 
@@ -119,6 +124,7 @@ bool MulticastReceiver::start(const QHostAddress &group, quint16 port, const QHo
     m_oddAddressLogged = false;
     m_selectErrorLogged = false;
     m_fallbackLogged = false;
+    m_readFailures = 0;
     m_notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
     connect(m_notifier, SIGNAL(activated(int)), this, SLOT(onActivated()));
     if (!m_notifierFired)
@@ -154,7 +160,7 @@ void MulticastReceiver::onActivated()
         qDebug() << "Multicast: socket notifier works, fallback poll off";
     }
     if (!readPending())
-        pauseNotifier();
+        readFailed();
 }
 
 void MulticastReceiver::onFallbackPoll()
@@ -165,7 +171,23 @@ void MulticastReceiver::onFallbackPoll()
     }
     if (m_fd < 0 || m_resumeTimer.isActive())
         return;
-    readPending();
+    if (!readPending())
+        readFailed();
+}
+
+// Pauses, or gives up for good if the socket doesn't recover. The usual cause,
+// the link going down, ends in going offline before that.
+void MulticastReceiver::readFailed()
+{
+    if (m_fd < 0)
+        return; // stopped by a slot meanwhile
+    if (++m_readFailures < kMaxReadFailures) {
+        pauseNotifier();
+        return;
+    }
+    qWarning() << "Multicast: giving up after" << m_readFailures << "failed reads";
+    stop();
+    emit failed();
 }
 
 void MulticastReceiver::pauseNotifier()
@@ -256,6 +278,7 @@ bool MulticastReceiver::readPending()
             qWarning() << "Multicast: unusable sender address (family" << int(from.sin_family)
                        << ", length" << int(fromLen) << ") - further ones not logged";
         }
+        m_readFailures = 0;
         emit datagramReceived(QByteArray(buffer, int(n)), sender, senderPort);
     }
     return true;
