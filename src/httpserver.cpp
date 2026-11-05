@@ -285,6 +285,8 @@ quint32 HttpServer::newId()
 // Forgets a connection; tells its handler if the request is still open.
 void HttpServer::remove(Connection *c, bool notifyHandler)
 {
+    if (c->tls && !c->tls->handshakeDone())
+        qDebug() << "HTTP: connection from" << c->peer.toString() << "gone before its TLS handshake finished";
     m_bySocket.remove(c->socket);
     m_byId.remove(c->id);
     c->socket->disconnect(this);

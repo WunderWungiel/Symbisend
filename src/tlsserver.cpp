@@ -1,6 +1,7 @@
 #include "tlsserver.h"
 
 #include <QDebug>
+#include <QElapsedTimer>
 #include <string.h>
 
 #include "clientidentity.h"
@@ -17,6 +18,8 @@ extern "C" {
 
 // Plaintext read per mbedtls_ssl_read() call: one full TLS record.
 static const int kReadChunk = 16384;
+// Handshake steps run on the UI thread: the slow ones are worth a log line.
+static const int kLogHandshakeStepMs = 20;
 
 struct TlsServerConfigPrivate
 {
@@ -243,7 +246,12 @@ QByteArray TlsSession::feed(const QByteArray &ciphertext)
     }
 
     if (!d->handshakeDone) {
+        QElapsedTimer timer;
+        timer.start();
         const int ret = mbedtls_ssl_handshake(&d->ssl);
+        const qint64 ms = timer.elapsed();
+        if (ms >= kLogHandshakeStepMs)
+            qDebug() << "TLS: handshake step took" << ms << "ms";
         if (ret == 0) {
             if (!checkPeer(d))
                 return plain;
