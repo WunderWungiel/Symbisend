@@ -82,7 +82,8 @@ public:
 
 // Very small HTTP/1.1 server: one request per connection, Content-Length
 // or chunked bodies. Headers up to 16 KB; buffered bodies up to 1 MB,
-// streamed ones (see HttpHandler::streamsBody()) of any size.
+// streamed ones (see HttpHandler::streamsBody()) of any size. Serves 64
+// connections at once, 8 per IP; further ones are closed right away.
 //
 // Speaks plain http or https (TLS 1.2 via mbedTLS, see src/tlsserver.h, with
 // our certificate from ClientIdentity; clients are asked for theirs, see
@@ -141,6 +142,7 @@ private:
     void sendResponse(Connection *c, const HttpResponse &response);
     void remove(Connection *c, bool notifyHandler);
     bool alive(quint32 id) const { return m_byId.contains(id); }
+    bool mayConnect(const QHostAddress &peer);
 
     QTcpServer m_server;
     // Set while listening with https; every connection gets a TlsSession on it.
@@ -151,6 +153,7 @@ private:
     QHash<quint32, Connection *> m_byId;
     quint32 m_nextId;
     QTimer m_idleTimer;
+    bool m_refusing;     // refusals are logged once until a connection is accepted
 };
 
 #endif // HTTPSERVER_H

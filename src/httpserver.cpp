@@ -21,6 +21,10 @@ static const int kIdleTimeoutMs = 10000;
 // The same while a body is streamed: a phone's WLAN can stall for a while.
 static const int kStreamIdleTimeoutMs = 30000;
 static const int kIdleCheckIntervalMs = 2000;
+// Connections served at once, like the official app: in total, and per peer so
+// that one peer can't take every slot. A sender uses a few, a browser up to 6.
+static const int kMaxConnections = 64;
+static const int kMaxConnectionsPerIp = 8;
 
 QString HttpRequest::queryValue(const QString &key, bool *present) const
 {
@@ -59,6 +63,7 @@ struct HttpServer::Connection
 
     quint32 id;
     QTcpSocket *socket;
+    QHostAddress peer;
     TlsSession *tls;         // https only
     QByteArray buffer;       // received, not processed yet
     Phase phase;
@@ -75,7 +80,7 @@ struct HttpServer::Connection
 };
 
 HttpServer::HttpServer(QObject *parent)
-    : QObject(parent), m_requireClientCert(true), m_nextId(1)
+    : QObject(parent), m_requireClientCert(true), m_nextId(1), m_refusing(false)
 {
     connect(&m_server, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
     m_idleTimer.setInterval(kIdleCheckIntervalMs);
@@ -147,14 +152,51 @@ void HttpServer::drop(quint32 requestId)
     }
 }
 
+// Whether another connection from this address may be served. Connections from
+// this device only count towards the total, like in the official app. Answered
+// ones are on their way out: a slow close must not stop the next file of a
+// sender that opens one connection per file.
+bool HttpServer::mayConnect(const QHostAddress &peer)
+{
+    if (m_byId.size() >= kMaxConnections) {
+        if (!m_refusing)
+            qWarning() << "HTTP: refusing connections," << kMaxConnections << "are being served";
+        m_refusing = true;
+        return false;
+    }
+    if (peer != QHostAddress(QHostAddress::LocalHost)) {
+        int count = 0;
+        foreach (const Connection *c, m_byId) {
+            if (c->peer == peer && c->phase != Connection::Answered)
+                ++count;
+        }
+        if (count >= kMaxConnectionsPerIp) {
+            if (!m_refusing)
+                qDebug() << "HTTP: refusing" << peer.toString() << "-" << count
+                         << "of its connections are being served";
+            m_refusing = true;
+            return false;
+        }
+    }
+    m_refusing = false;
+    return true;
+}
+
 void HttpServer::onNewConnection()
 {
     while (QTcpSocket *socket = m_server.nextPendingConnection()) {
+        const QHostAddress peer = socket->peerAddress();
+        if (!mayConnect(peer)) {
+            socket->abort();
+            socket->deleteLater();
+            continue;
+        }
         Connection *c = new Connection;
         c->id = m_nextId++;
         if (m_nextId == 0)
             m_nextId = 1;
         c->socket = socket;
+        c->peer = peer;
         c->lastActivity = QDateTime::currentDateTime();
         if (m_tlsConfig)
             c->tls = new TlsSession(m_tlsConfig);
