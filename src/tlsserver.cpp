@@ -7,8 +7,6 @@
 #include "tlsrandom.h"
 #include "verification.h"
 
-// Included last: on Symbian, mbedtls/build_info.h undefines EXPORT_C and
-// IMPORT_C (MBEDTLS_STATIC) for the rest of the translation unit.
 extern "C" {
 #include "mbedtls/error.h"
 #include "mbedtls/md.h"

@@ -12,20 +12,29 @@
  *  - SHA-256 for the certificate fingerprint.
  *
  * Entropy: on Symbian there is no platform entropy source in mbedTLS, so
- * src/tlsrandom.cpp adds the system CSPRNG (TRandom) itself. Elsewhere
- * mbedTLS reads /dev/urandom or CryptGenRandom.
+ * src/tlsrandom.cpp adds the system CSPRNG (TRandom) itself. Harmattan uses
+ * upstream's /dev/urandom, Windows (test harness only) CryptGenRandom through
+ * platform_glue.c.
  */
 #ifndef SYMBISEND_MBEDTLS_CONFIG_H
 #define SYMBISEND_MBEDTLS_CONFIG_H
 
 /* --- System ------------------------------------------------------------ */
+#if defined(__arm__)
 #define MBEDTLS_HAVE_ASM
+#endif
 #define MBEDTLS_HAVE_TIME
 #define MBEDTLS_HAVE_TIME_DATE
 #define MBEDTLS_PLATFORM_C
 
 #if defined(__SYMBIAN32__)
 #define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_PLATFORM_MS_TIME_ALT    /* platform_glue.c */
+#define MBEDTLS_PLATFORM_ZEROIZE_ALT    /* platform_glue.c */
+#elif defined(_WIN32)
+#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_ENTROPY_HARDWARE_ALT    /* platform_glue.c */
+#define MBEDTLS_PLATFORM_ZEROIZE_ALT    /* platform_glue.c */
 #endif
 
 /* --- Hashes, ciphers, DRBG --------------------------------------------- */

@@ -7,8 +7,6 @@
 #include <QImage>
 #include <QImageReader>
 
-// Included last: on Symbian, mbedtls/build_info.h undefines EXPORT_C and
-// IMPORT_C (MBEDTLS_STATIC) for the rest of the translation unit.
 extern "C" {
 #include "mbedtls/sha256.h"
 }

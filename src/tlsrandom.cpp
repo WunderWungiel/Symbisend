@@ -9,8 +9,6 @@
 #include <random.h>
 #endif
 
-// Included last: on Symbian, mbedtls/build_info.h undefines EXPORT_C and
-// IMPORT_C (MBEDTLS_STATIC) for the rest of the translation unit.
 extern "C" {
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
