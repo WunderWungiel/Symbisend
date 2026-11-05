@@ -373,8 +373,11 @@ every text message as it arrives, unless `settings.saveToHistory` is off. Messag
 - `openPath(string path)` → bool — the same for any file.
 - `openFolder(string folder)` → bool — shows that folder (pass `settings.downloadFolder`)
   in the phone's File manager (Symbian; started with the folder as its document, or the
-  running one switched to it) or the desktop's file browser. Creates the folder if
-  missing. False if nothing could show it.
+  running one switched to it), File Manager from OpenRepos (Harmattan; a running one only
+  comes to the front, in the folder it was showing) or the desktop's file browser. Creates
+  the folder if missing. False if nothing could show it.
+- `canOpenFolder` (bool, constant) — whether `openFolder()` can work. False only on
+  Harmattan without the optional `filemanager` package: hide the button then.
 - `removeEntry(int row)` — forgets that entry. Its file stays on disk.
 - `clear()` — forgets every entry (saved at once). The received files stay on disk.
 - Signal `countChanged()`.

@@ -11,6 +11,11 @@
 #include <QUrl>
 #include <QVariantList>
 #include <QVariantMap>
+#include <qplatformdefs.h> // MEEGO_EDITION_HARMATTAN
+
+#ifdef MEEGO_EDITION_HARMATTAN
+#include <QProcess>
+#endif
 
 #include "json.h"
 #include "selectionmodel.h"
@@ -26,6 +31,11 @@
 // filePath() on the first start of a newer version.
 static const char *kOldEntriesKey = "history/entries";
 static const int kSaveDelayMs = 1000;
+
+#ifdef MEEGO_EDITION_HARMATTAN
+// The File Manager package from OpenRepos ("Suggests" in debian/control).
+static const char *kFileManager = "/opt/filemanager/bin/filemanager";
+#endif
 
 HistoryModel::HistoryModel(QObject *parent)
     : QAbstractListModel(parent), m_locale(QLocale::system())
@@ -141,6 +151,15 @@ static void openInFileManagerL(const QString &folder)
 }
 #endif
 
+bool HistoryModel::canOpenFolder() const
+{
+#ifdef MEEGO_EDITION_HARMATTAN
+    return QFile::exists(QLatin1String(kFileManager));
+#else
+    return true;
+#endif
+}
+
 bool HistoryModel::openFolder(const QString &folder)
 {
     const QString path = QDir::fromNativeSeparators(folder);
@@ -161,6 +180,23 @@ bool HistoryModel::openFolder(const QString &folder)
     }
     qDebug() << "History: opened folder" << native << "in File manager";
     return true;
+#elif defined(MEEGO_EDITION_HARMATTAN)
+    if (!canOpenFolder()) {
+        qWarning() << "History: File Manager is not installed, cannot open" << path;
+        return false;
+    }
+    // File Manager starts in the folder given as its argument. If it is
+    // running already, --single-instance only brings it to the front, in the
+    // folder it was showing: it has no way to be told another one.
+    QStringList args;
+    args << QLatin1String("--single-instance") << QLatin1String("--type=d")
+         << QLatin1String(kFileManager) << QDir(path).absolutePath();
+    const bool ok = QProcess::startDetached(QLatin1String("/usr/bin/invoker"), args);
+    if (ok)
+        qDebug() << "History: opened folder" << path << "in File Manager";
+    else
+        qWarning() << "History: cannot start File Manager for" << path;
+    return ok;
 #else
     bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     if (ok)

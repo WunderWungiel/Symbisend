@@ -30,6 +30,10 @@ class HistoryModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    // Whether openFolder() has something to show a folder with. Only false on
+    // Harmattan, which has no stock file manager, without the optional
+    // File Manager package. Read once at startup.
+    Q_PROPERTY(bool canOpenFolder READ canOpenFolder CONSTANT)
 
 public:
     enum Roles {
@@ -54,6 +58,8 @@ public:
 
     explicit HistoryModel(QObject *parent = 0);
     ~HistoryModel();
+
+    bool canOpenFolder() const;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role) const;
