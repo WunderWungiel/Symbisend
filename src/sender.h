@@ -15,6 +15,7 @@ class QNetworkReply;
 class QSslError;
 class DeviceInfo;
 class Discovery;
+class FavoritesModel;
 class NetworkManager;
 class QFile;
 class Settings;
@@ -38,7 +39,8 @@ class Sha256Hash;
 class Sender : public QObject
 {
     Q_OBJECT
-    // "idle", "connecting" (sendToAddress(): finding out who is there),
+    // "idle", "connecting" (sendToAddress(), sendToFavorite(): finding out who
+    // is there),
     // "hashing" (settings.createChecksums; progress runs over all the files),
     // "waiting" (for the receiver to accept), "pin" (receiver wants a PIN:
     // submitPin()), "sending", "finished", "finishedWithErrors" (some accepted
@@ -71,9 +73,9 @@ public:
     // title, then the first few of lines ("a.jpg: why"), one per line.
     static QString failureText(const QString &title, const QStringList &lines);
 
-    Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
-           NetworkManager *network, Discovery *discovery, Settings *settings,
-           QObject *parent = 0);
+    Sender(DeviceInfo *device, PeerModel *peers, FavoritesModel *favorites,
+           SelectionModel *selection, NetworkManager *network, Discovery *discovery,
+           Settings *settings, QObject *parent = 0);
     ~Sender();
 
     QString state() const { return m_state; }
@@ -97,6 +99,9 @@ public:
     // default port. False as above; a device that isn't there is reported
     // later, as state "failed".
     Q_INVOKABLE bool sendToAddress(const QString &ip);
+    // The same for a favourite, at its stored address and port. Like the
+    // official app this sends to whichever device answers there.
+    Q_INVOKABLE bool sendToFavorite(const QString &fingerprint);
     // State "pin": asks again with this PIN.
     Q_INVOKABLE void submitPin(const QString &pin);
     // Stops the transfer (and tells the receiver, if it accepted already).
@@ -141,6 +146,9 @@ private:
 
     void reset();
     bool start(const QString &fingerprint);
+    // Asks who is at this address (port 0 = default), then start(). name is
+    // peerAlias meanwhile.
+    bool lookUpAndSend(const QString &ip, int port, const QString &name);
     QUrl url(const QString &route) const;
     void postPrepare();
     void startNextUpload();
@@ -159,6 +167,7 @@ private:
 
     DeviceInfo *m_device;
     PeerModel *m_peers;
+    FavoritesModel *m_favorites;
     SelectionModel *m_selection;
     NetworkManager *m_network;
     Discovery *m_discovery;
@@ -167,6 +176,7 @@ private:
 
     QString m_state;
     QString m_errorText;
+    QString m_lookUpIp;    // state "connecting": the address being asked
     Peer m_peer;
     QList<OutFile> m_files;   // everything offered
     QList<OutFile> m_queue;   // the accepted ones

@@ -13,7 +13,8 @@ Page {
     signal deviceInfoRequested(string fingerprint)
     // Edit button on the Selection card; main.qml opens SelectionPage.
     signal editSelectionRequested()
-    // Heart button next to Refresh; main.qml opens FavoritesPage.
+    // Heart button next to Refresh; main.qml opens FavoritesPage, and calls
+    // sendToFavorite() when a favourite is tapped there.
     signal favoritesRequested()
 
     // The Selection card's Add button toggles the send option row below it.
@@ -64,7 +65,7 @@ Page {
         return false
     }
 
-    // After sender.send() or sender.sendToAddress().
+    // After sender.send(), sendToAddress() or sendToFavorite().
     function showSendResult(started) {
         if (started)
             sendDialog.open()
@@ -76,6 +77,11 @@ Page {
     function sendTo(fingerprint) {
         if (checkSelection())
             showSendResult(sender.send(fingerprint))
+    }
+
+    function sendToFavorite(fingerprint) {
+        if (checkSelection())
+            showSendResult(sender.sendToFavorite(fingerprint))
     }
 
     Connections {
@@ -188,7 +194,8 @@ Page {
         model: peerModel
 
         delegate: PeerItem {
-            name: model.alias
+            name: model.displayName
+            favorite: model.favorite
             deviceType: model.deviceType
             protocol: model.protocol
             system: model.deviceModel

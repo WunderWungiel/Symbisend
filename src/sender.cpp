@@ -15,6 +15,7 @@
 #include "clientidentity.h"
 #include "deviceinfo.h"
 #include "discovery.h"
+#include "favoritesmodel.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
@@ -34,11 +35,12 @@ static const int kMaxUploadAttempts = 3;
 // Read and hashed in one go. Small enough not to freeze the UI on the phone.
 static const qint64 kHashChunkBytes = 256 * 1024;
 
-Sender::Sender(DeviceInfo *device, PeerModel *peers, SelectionModel *selection,
-               NetworkManager *network, Discovery *discovery, Settings *settings,
-               QObject *parent)
+Sender::Sender(DeviceInfo *device, PeerModel *peers, FavoritesModel *favorites,
+               SelectionModel *selection, NetworkManager *network, Discovery *discovery,
+               Settings *settings, QObject *parent)
     : QObject(parent),
-      m_device(device), m_peers(peers), m_selection(selection), m_network(network),
+      m_device(device), m_peers(peers), m_favorites(favorites), m_selection(selection),
+      m_network(network),
       m_discovery(discovery), m_settings(settings),
       m_nam(new QNetworkAccessManager(this)),
       m_state(QLatin1String("idle")),
@@ -112,6 +114,21 @@ bool Sender::send(const QString &fingerprint)
 
 bool Sender::sendToAddress(const QString &ip)
 {
+    return lookUpAndSend(ip, 0, ip); // the name until we know better
+}
+
+bool Sender::sendToFavorite(const QString &fingerprint)
+{
+    Favorite favorite;
+    if (!m_favorites->find(fingerprint, &favorite)) {
+        qWarning() << "Sender: not a favourite:" << fingerprint;
+        return false;
+    }
+    return lookUpAndSend(favorite.ip, favorite.port, favorite.alias);
+}
+
+bool Sender::lookUpAndSend(const QString &ip, int port, const QString &name)
+{
     if (isBusy()) {
         qWarning() << "Sender: already sending to" << m_peer.alias;
         return false;
@@ -121,16 +138,17 @@ bool Sender::sendToAddress(const QString &ip)
         finish(QLatin1String("failed"), QLatin1String("Not connected"));
         return false;
     }
-    m_peer.alias = ip; // until we know better
+    m_peer.alias = name;
+    m_lookUpIp = ip;
     setState(QLatin1String("connecting"));
-    m_discovery->lookUp(ip);
+    m_discovery->lookUp(ip, port);
     return true;
 }
 
 void Sender::onLookUpFinished(const QString &ip, const QString &fingerprint, const QString &error)
 {
     // Not ours if the user cancelled meanwhile.
-    if (m_state != QLatin1String("connecting") || ip != m_peer.alias)
+    if (m_state != QLatin1String("connecting") || ip != m_lookUpIp)
         return;
     if (!error.isEmpty())
         finish(QLatin1String("failed"), error);
@@ -160,6 +178,10 @@ bool Sender::start(const QString &fingerprint)
         finish(QLatin1String("failed"), QLatin1String("The device is gone"));
         return false;
     }
+    // Like the official app: a favourite goes by the name given to it.
+    const QString favoriteAlias = m_favorites->alias(fingerprint);
+    if (!favoriteAlias.isEmpty())
+        m_peer.alias = favoriteAlias;
     if (PeerModel::isV1(m_peer.version)) {
         qWarning() << "Sender:" << m_peer.alias << "speaks protocol" << m_peer.version;
         finish(QLatin1String("failed"),

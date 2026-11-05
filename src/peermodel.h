@@ -6,6 +6,8 @@
 #include <QList>
 #include <QVariantMap>
 
+class FavoritesModel;
+
 // One confirmation of a peer (like LocalSend's DeviceLog): the first one
 // discovered it, every later one updated it.
 struct PeerLog
@@ -48,7 +50,9 @@ public:
         DeviceTypeRole,
         FingerprintRole,
         SourceRole,
-        LastSeenRole
+        LastSeenRole,
+        DisplayNameRole,
+        FavoriteRole
     };
 
     explicit PeerModel(QObject *parent = 0);
@@ -65,6 +69,8 @@ public:
 
     void upsert(const Peer &peer);
     Q_INVOKABLE void clear();
+    // The displayName and favorite roles follow these favourites.
+    void watchFavorites(FavoritesModel *favorites);
 
     // All data of one peer for the device details page, or an empty map when
     // the fingerprint is unknown. See docs/qml-api.md.
@@ -77,8 +83,12 @@ signals:
     // A peer was added or re-confirmed (its data or logs changed).
     void peerChanged(const QString &fingerprint);
 
+private slots:
+    void onFavoritesChanged(const QString &fingerprint);
+
 private:
     int indexOf(const QString &fingerprint) const;
+    FavoritesModel *m_favorites;
     QList<Peer> m_peers;
 };
 

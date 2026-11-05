@@ -52,6 +52,10 @@ public:
     Q_INVOKABLE QVariantMap favorite(const QString &fingerprint) const;
 
     const QList<Favorite> &favorites() const { return m_favorites; }
+    // Copies the favourite into *out; false if it isn't one.
+    bool find(const QString &fingerprint, Favorite *out) const;
+    // The name to show for this device: the favourite's, else "".
+    QString alias(const QString &fingerprint) const;
 
     // Automatic names follow the alias of the discovered devices in peers.
     void watchPeers(PeerModel *peers);

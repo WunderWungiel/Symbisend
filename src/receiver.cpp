@@ -305,6 +305,11 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
     // can't be faked; the claimed one only without it (http, browsers).
     m_peerFingerprint = !request.peerFingerprint.isEmpty()
             ? request.peerFingerprint : info.value(QLatin1String("fingerprint")).toString();
+    // Like the official app: a favourite goes by the name given to it, here
+    // and in the history.
+    const QString favoriteAlias = m_favorites ? m_favorites->alias(m_peerFingerprint) : QString();
+    if (!favoriteAlias.isEmpty())
+        m_peerAlias = favoriteAlias;
     m_peerVersion = info.value(QLatin1String("version")).toString();
     m_peerHttps = info.value(QLatin1String("protocol")).toString() == QLatin1String("https");
     m_peerPort = info.value(QLatin1String("port")).toInt();

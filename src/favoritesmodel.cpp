@@ -135,6 +135,21 @@ QVariantMap FavoritesModel::favorite(const QString &fingerprint) const
     return map;
 }
 
+bool FavoritesModel::find(const QString &fingerprint, Favorite *out) const
+{
+    const int row = indexOf(fingerprint);
+    if (row < 0)
+        return false;
+    *out = m_favorites.at(row);
+    return true;
+}
+
+QString FavoritesModel::alias(const QString &fingerprint) const
+{
+    const int row = indexOf(fingerprint);
+    return row >= 0 ? m_favorites.at(row).alias : QString();
+}
+
 void FavoritesModel::watchPeers(PeerModel *peers)
 {
     m_peers = peers;

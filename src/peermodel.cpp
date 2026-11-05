@@ -3,11 +3,13 @@
 #include <QDebug>
 #include <QLocale>
 
+#include "favoritesmodel.h"
+
 // Same cap as LocalSend's discovery store (MAX_LOGS).
 static const int MaxPeerLogs = 100;
 
 PeerModel::PeerModel(QObject *parent)
-    : QAbstractListModel(parent)
+    : QAbstractListModel(parent), m_favorites(0)
 {
     QHash<int, QByteArray> roles;
     roles[AliasRole] = "alias";
@@ -20,6 +22,8 @@ PeerModel::PeerModel(QObject *parent)
     roles[FingerprintRole] = "fingerprint";
     roles[SourceRole] = "source";
     roles[LastSeenRole] = "lastSeen";
+    roles[DisplayNameRole] = "displayName";
+    roles[FavoriteRole] = "favorite";
     setRoleNames(roles);
 }
 
@@ -45,6 +49,12 @@ QVariant PeerModel::data(const QModelIndex &index, int role) const
     case FingerprintRole: return p.fingerprint;
     case SourceRole: return p.source;
     case LastSeenRole: return p.lastSeen;
+    case DisplayNameRole: {
+        // Like the official app: a favourite's name replaces the device's own.
+        const QString favorite = m_favorites ? m_favorites->alias(p.fingerprint) : QString();
+        return favorite.isEmpty() ? p.alias : favorite;
+    }
+    case FavoriteRole: return m_favorites && m_favorites->contains(p.fingerprint);
     }
     return QVariant();
 }
@@ -119,6 +129,19 @@ void PeerModel::upsert(const Peer &peer)
     endInsertRows();
     emit countChanged();
     emit peerChanged(peer.fingerprint);
+}
+
+void PeerModel::watchFavorites(FavoritesModel *favorites)
+{
+    m_favorites = favorites;
+    connect(favorites, SIGNAL(favoritesChanged(QString)), this, SLOT(onFavoritesChanged(QString)));
+}
+
+void PeerModel::onFavoritesChanged(const QString &fingerprint)
+{
+    const int row = indexOf(fingerprint);
+    if (row >= 0)
+        emit dataChanged(index(row), index(row));
 }
 
 bool PeerModel::find(const QString &fingerprint, Peer *out) const

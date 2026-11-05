@@ -10,6 +10,7 @@ ListItem {
     property string deviceType    // LocalSend: mobile, desktop, web, headless, server
     property string protocol      // "http" / "https"
     property string system        // LocalSend deviceModel: "Linux", "Samsung", ...
+    property bool favorite: false // shows a check mark after the name
 
     // Info button on the right; will open the device details page.
     signal infoClicked
@@ -57,14 +58,44 @@ ListItem {
         }
         spacing: platformStyle.paddingSmall
 
-        ListItemText {
+        Item {
             width: parent.width
-            mode: root.mode
-            role: "Title"
-            platformInverted: root.platformInverted
-            onPlatformInvertedChanged: color = root.textColor(false)
-            elide: Text.ElideRight
-            text: root.name
+            height: nameText.height
+
+            // Measures the whole name: nameText's own size is the elided one.
+            Text {
+                id: nameMeasure
+                visible: false
+                font: nameText.font
+                text: root.name
+            }
+            ListItemText {
+                id: nameText
+                // As wide as the name, so that the mark comes right after it.
+                width: Math.min(Math.ceil(nameMeasure.paintedWidth),
+                                parent.width - (root.favorite ? favoriteMark.width + platformStyle.paddingSmall : 0))
+                mode: root.mode
+                role: "Title"
+                platformInverted: root.platformInverted
+                onPlatformInvertedChanged: color = root.textColor(false)
+                elide: Text.ElideRight
+                text: root.name
+            }
+            Image {
+                id: favoriteMark
+                anchors {
+                    left: nameText.right; leftMargin: platformStyle.paddingSmall
+                    verticalCenter: nameText.verticalCenter
+                }
+                visible: root.favorite
+                width: platformStyle.graphicSizeTiny
+                height: platformStyle.graphicSizeTiny
+                sourceSize.width: width
+                sourceSize.height: height
+                smooth: true
+                source: root.platformInverted ? "images/check-circle-inverted.svg"
+                                              : "images/check-circle.svg"
+            }
         }
 
         Row {

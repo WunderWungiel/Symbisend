@@ -19,10 +19,14 @@ Roles (use as `model.<role>` in delegates; `alias` clashes with a QML keyword):
 | `fingerprint` | string   | unique device id                |
 | `source`      | string   | `scan`, `register`, `multicast`, `announce`, `favorite`, `address` (debug info) |
 | `lastSeen`    | datetime |                                 |
+| `displayName` | string   | the name to show: the favourite's name, else `alias` |
+| `favorite`    | bool     | the device is in `favorites`    |
 
 Properties: `count` (int).  Methods: `clear()`.
 
-- `peer(fingerprint)` → object with all the roles above plus `logs`, or `{}` if the
+- `displayName` and `favorite` follow `favorites` as it changes.
+- `peer(fingerprint)` → object with all the roles above (except `displayName` and
+  `favorite`) plus `logs`, or `{}` if the
   fingerprint is unknown. `logs` is a list of `{ time, text }`, oldest first, at most 100:
   one entry for every time the device was confirmed (announcement, `/register`, scan
   answer), like LocalSend's device details page. `time` is the local short time
@@ -55,6 +59,10 @@ Properties: `count` (int).  Methods: `clear()`.
   runs `discover()`. Ignored while `scanning`.
 - `announce()` — just the announcement, `scan()` — just the subnet scan. Going online only
   announces.
+- `lookUp(ip, port)` — asks the device at that address who it is (`/register`, https then
+  http; `port` 0 or left out = the default port). A device that answers joins `peerModel`
+  (`source` = `address`). Signal `lookUpFinished(ip, fingerprint, error)` when done:
+  `fingerprint` is `""` and `error` says why if nothing usable answered.
 - `startServer()`, `stopServer()`, `restartServer()` — the HTTP server and the multicast
   listener together (whether others can find us / send to us); `serverRunning` reflects
   the result. While stopped we don't announce ourselves, but `discover()` and `scan()`
@@ -188,11 +196,17 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
   state `connecting` while it asks who is there (`/register`, https then http; the device
   also joins `peerModel`, `source` = `address`), then as after `send()`. Returns false only
   when already busy or offline; no device at that address ends in state `failed`.
+- `sendToFavorite(fingerprint)` → bool — the same for a favourite, at its stored address
+  and port. Like the official app it sends to whichever device answers there, so if
+  another device has taken the address, the files go to that one. `peerAlias` is the
+  favourite's name meanwhile, then the name of the device that answered. Also false for a
+  fingerprint that isn't a favourite (`errorText` stays as it was).
 - `cancel()` — stops a running transfer and tells the receiver.
 - `submitPin(pin)` — in state `pin`: asks again with that PIN.
 - `state` (string):
   - `idle` — nothing sent yet
-  - `connecting` — `sendToAddress()` is finding the device; `peerAlias` is the IP until then
+  - `connecting` — `sendToAddress()` or `sendToFavorite()` is finding the device;
+    `peerAlias` is the IP or the favourite's name until then
   - `hashing` — `settings.createChecksums`: calculating the files' checksums before the
     offer; `progress`, `bytesSent` and `bytesTotal` run over all the files, `cancel()` works
   - `waiting` — the receiver's user hasn't accepted yet (no timeout; with quick save this
@@ -210,7 +224,8 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
     before sending began, no progress for 60 s, ...)
   - `cancelled` — by us, or by the receiver (`errorText` says so)
 - `busy` (bool) — `connecting`, `hashing`, `waiting`, `pin` or `sending`
-- `peerAlias`, `errorText` (string)
+- `peerAlias` (string) — the target; a favourite goes by the name given to it
+- `errorText` (string)
 - `fileCount` (int, accepted files), `filesDone` (int, of those sent),
   `fileIndex` (int, 1-based, the file being uploaded),
   `fileName` (string, its relative path; `Text` for a text message)
@@ -220,7 +235,8 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
 - Signals `stateChanged()`, `progressChanged()`.
 
 The Send page calls `send()` when a device is tapped, `sendToAddress()` after
-`AddressDialog.qml`, and opens `SendDialog.qml`.
+`AddressDialog.qml`, `sendToFavorite()` when a favourite is tapped on `FavoritesPage.qml`,
+and opens `SendDialog.qml`.
 
 ## `receiver` — receiving from other devices
 Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port
@@ -246,7 +262,8 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
   - `cancelled` — by the sender (`errorText` says so) or by `cancel()`
 - `busy` (bool) — `request` or `receiving`
 - `errorText` (string)
-- The sender: `peerAlias`, `peerDeviceModel` (system, e.g. `Windows`), `peerDeviceType`
+- The sender: `peerAlias` (a favourite goes by the name given to it, in `history` too),
+  `peerDeviceModel` (system, e.g. `Windows`), `peerDeviceType`
   (`mobile`, `desktop`, ...), `peerFingerprint` (over https the SHA-256 of the sender's
   client certificate, which TLS has proven; the fingerprint it claims only over http or
   from a browser), `peerIp`, `peerVersion` (strings),
@@ -356,7 +373,8 @@ every text message as it arrives, unless `settings.saveToHistory` is off. Messag
 
 ## `favorites` — favourite devices (ListView model)
 Like the official app's favourites, keyed by fingerprint, persisted in `QSettings`
-(`favorites` array). Used by `settings.quickSaveFromFavorites`.
+(`favorites` array). Used by `settings.quickSaveFromFavorites`, and its names replace the
+device's own in `peerModel` (`displayName`), `sender`, `receiver` and `history`.
 
 | role          | type   | example                                        |
 |---------------|--------|------------------------------------------------|
@@ -376,11 +394,15 @@ Like the official app's favourites, keyed by fingerprint, persisted in `QSetting
 - `remove(fingerprint)`
 - Signal `favoritesChanged(fingerprint)` — after `add`, `remove` or an automatic rename;
   call `contains()` / `favorite()` again (they don't notify by themselves).
-- `FavoriteDialog.qml` is the "Add to favourites" dialog (`openFor(peerModel.peer(...))`)
-  and the "Edit favourite" one (`openEdit(favorites.favorite(...))`). An edit with an
-  empty name while the device's own alias is unknown keeps the stored name (automatic,
+- `FavoriteDialog.qml` is the "Add to favourites" dialog (`openFor(peerModel.peer(...))`,
+  or `openNew()` to type in an address: Confirm then runs `discovery.lookUp()`, `lookingUp`
+  is true meanwhile, and a device that can't be reached shows the error and reopens the
+  dialog) and the "Edit favourite" one (`openEdit(favorites.favorite(...))`). An edit with
+  an empty name while the device's own alias is unknown keeps the stored name (automatic,
   updated when the device is discovered again).
-- `FavoritesPage.qml` lists them (heart button next to Refresh on the Send page).
+- `FavoritesPage.qml` lists them (heart button next to Refresh on the Send page). Tapping
+  a row closes the page and sends the selection there (signal `sendRequested(fingerprint)`,
+  passed on by `main.qml` to `SendPage.sendToFavorite()`), or says that nothing is selected.
 
 ## `webShare` — "Receive via link" (browsers send files to us)
 Like the official app: while active, opening `url` in any browser on the network shows

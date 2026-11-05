@@ -59,8 +59,8 @@ public:
 
     // Asks the device at this address who it is (POST /register, like the
     // official app's "Enter address"; https, then http), which also adds it
-    // to the peer list. Ends with lookUpFinished().
-    void lookUp(const QString &ip);
+    // to the peer list. Ends with lookUpFinished(). Port 0 = the default port.
+    Q_INVOKABLE void lookUp(const QString &ip, int port = 0);
 
     // Our HTTP server + multicast listener, i.e. whether others can find us
     // and send to us. Stopping is not persisted: the server runs again after

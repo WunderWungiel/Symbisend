@@ -3,8 +3,10 @@ import com.nokia.symbian 1.1
 
 // LocalSend's favourite dialog: name, IP address and port of a device, saved
 // to `favorites` on Confirm. Open with openFor(device), device being a
-// peerModel.peer() map, or openEdit(favorites.favorite(...)) for an existing
-// one. An empty name = "(auto)": the device's own alias.
+// peerModel.peer() map, openEdit(favorites.favorite(...)) for an existing one,
+// or openNew() to type in an address: Confirm then asks the device who it is
+// first (lookingUp), since a favourite is kept by its fingerprint. An empty
+// name = "(auto)": the device's own alias.
 CommonDialog {
     id: root
 
@@ -13,6 +15,9 @@ CommonDialog {
     // favourite of a device that isn't discovered right now).
     property string deviceAlias
     property bool editing: false
+    // openNew(): the address being asked, after Confirm.
+    property string lookUpIp
+    property bool lookingUp: lookUpIp != ""
 
     platformInverted: settings.theme == "light"
     titleText: editing ? "Edit favourite" : "Add to favourites"
@@ -28,6 +33,16 @@ CommonDialog {
         nameField.text = deviceAlias
         ipField.text = device.ip || ""
         portField.text = device.port ? String(device.port) : ""
+        open()
+    }
+
+    function openNew() {
+        editing = false
+        fingerprint = ""
+        deviceAlias = ""
+        nameField.text = ""
+        ipField.text = ""
+        portField.text = String(myDevice.port)
         open()
     }
 
@@ -52,6 +67,28 @@ CommonDialog {
                 return false
         }
         return true
+    }
+
+    function save(fp, ip, port) {
+        if (!favorites.add(fp, nameField.text, deviceAlias, ip, port))
+            picker.showInfo(editing ? "Could not save the favourite" : "Could not add to favourites")
+    }
+
+    function lookUpFinished(fp, error) {
+        var ip = lookUpIp
+        lookUpIp = ""
+        if (error != "") {
+            picker.showInfo(error)
+            reopenTimer.start()
+            return
+        }
+        deviceAlias = peerModel.peer(fp).alias || ""
+        save(fp, ip, parseInt(portField.text, 10))
+    }
+
+    Connections {
+        target: discovery
+        onLookUpFinished: if (ip == root.lookUpIp) root.lookUpFinished(fingerprint, error)
     }
 
     // The dialog closes on every button; after a mistake it opens again with
@@ -140,7 +177,11 @@ CommonDialog {
             reopenTimer.start()
             return
         }
-        if (!favorites.add(fingerprint, nameField.text, deviceAlias, ip, port))
-            picker.showInfo(editing ? "Could not save the favourite" : "Could not add to favourites")
+        if (fingerprint != "") {
+            save(fingerprint, ip, port)
+        } else {
+            lookUpIp = ip
+            discovery.lookUp(ip, port)
+        }
     }
 }

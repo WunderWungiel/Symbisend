@@ -515,10 +515,12 @@ void Discovery::scanSubnet()
     pumpScanQueue();
 }
 
-void Discovery::lookUp(const QString &ip)
+void Discovery::lookUp(const QString &ip, int port)
 {
-    qDebug() << "Discovery: looking up" << ip;
-    startJob(LookUpJob, ip, m_device->port(), QLatin1String("https"));
+    if (port == 0)
+        port = m_device->port();
+    qDebug() << "Discovery: looking up" << ip << "port" << port;
+    startJob(LookUpJob, ip, port, QLatin1String("https"));
 }
 
 void Discovery::pumpScanQueue()

@@ -46,10 +46,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     HistoryModel history;
     FavoritesModel favorites;
     favorites.watchPeers(&peers);
+    peers.watchFavorites(&favorites);
     NetworkManager network;
     // Also picks http/https for the server (settings.encryption, webShare.encrypted).
     Discovery discovery(&device, &peers, &favorites, &network, &settings);
-    Sender sender(&device, &peers, &selection, &network, &discovery, &settings);
+    Sender sender(&device, &peers, &favorites, &selection, &network, &discovery, &settings);
     // Serves / and /i18n.json (the browser pages) on discovery's HTTP server.
     WebShare webShare(&discovery, &settings, &network, device.port());
     // Serves prepare-upload/upload/cancel on discovery's HTTP server.
