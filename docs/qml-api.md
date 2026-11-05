@@ -341,7 +341,7 @@ Methods:
   `receiver.saveToGallery` stay
 
 ## `history` — received files and messages (ListView model)
-Newest first, at most 200 entries (older ones are dropped), persisted as JSON in its own
+Newest first, at most 30 entries (older ones are dropped), persisted as JSON in its own
 file (`history.json` in the app's data folder; older versions' `QSettings` key
 `history/entries` is moved there once). `receiver` adds every file once it is saved and
 every text message as it arrives, unless `settings.saveToHistory` is off. Messages longer than

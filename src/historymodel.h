@@ -45,9 +45,9 @@ public:
         PreviewRole
     };
 
-    // Older entries are dropped (the official app keeps 200 too).
-    static const int MaxEntries = 200;
-    // Longer messages are kept shortened, so 200 of them stay small in memory.
+    // Older entries are dropped (the official app keeps 30 too).
+    static const int MaxEntries = 30;
+    // Longer messages are kept shortened, so the history stays small in memory.
     static const int MaxTextLength = 10000;
     // The list's one-line preview of a message.
     static const int MaxPreviewLength = 150;
