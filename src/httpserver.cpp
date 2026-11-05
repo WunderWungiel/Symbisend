@@ -16,7 +16,9 @@ static const int kMaxHeaderSize = 16 * 1024;
 // (HttpHandler::streamsBody()) and never held here.
 static const int kMaxBodySize = 1024 * 1024;
 // A client that sends nothing for this long is dropped (while it sends its
-// request, and after the answer until it closes the connection).
+// request, between requests, and after a last answer until it closes the
+// connection). The files of a transfer follow each other at once, so this is
+// ample for reusing a connection, and an idle TLS session holds about 20 KB.
 static const int kIdleTimeoutMs = 10000;
 // The same while a body is streamed: a phone's WLAN can stall for a while.
 static const int kStreamIdleTimeoutMs = 30000;
@@ -56,12 +58,15 @@ HttpResponse HttpResponse::message(int status, const QString &text)
 
 struct HttpServer::Connection
 {
-    enum Phase { Headers, Body, Waiting, Answered };
+    // Idle: answered, kept alive for the client's next request.
+    // Answered: closing, the client gets nothing more.
+    enum Phase { Headers, Body, Waiting, Idle, Answered };
     enum ChunkState { ChunkSize, ChunkData, ChunkDataEnd, Trailer };
 
     Connection()
         : id(0), socket(0), tls(0), phase(Headers), handler(0), streaming(false),
-          chunked(false), chunkState(ChunkSize), remaining(0), bodyBytes(0) {}
+          chunked(false), chunkState(ChunkSize), remaining(0), bodyBytes(0),
+          keepAlive(false) {}
     ~Connection() { delete tls; }
 
     quint32 id;
@@ -80,6 +85,7 @@ struct HttpServer::Connection
     // Streamed bodies: size and duration, for the throughput in the log.
     qint64 bodyBytes;
     QElapsedTimer bodyTimer;
+    bool keepAlive;          // may serve another request after this one
 };
 
 HttpServer::HttpServer(QObject *parent)
@@ -134,11 +140,9 @@ void HttpServer::close()
     endProbe();
     m_server.close();
     m_idleTimer.stop();
-    // A handler's requestAborted() may drop other requests: look each one up again.
-    foreach (quint32 id, m_byId.keys()) {
-        if (Connection *c = m_byId.value(id))
-            remove(c, true);
-    }
+    // A handler's requestAborted() may drop or answer other requests.
+    while (!m_byId.isEmpty())
+        remove(m_byId.begin().value(), true);
     m_tlsConfig.clear();
 }
 
@@ -208,8 +212,8 @@ void HttpServer::drop(quint32 requestId)
 
 // Whether another connection from this address may be served. Connections from
 // this device only count towards the total, like in the official app. Answered
-// ones are on their way out: a slow close must not stop the next file of a
-// sender that opens one connection per file.
+// ones don't count towards a peer's limit, nor do idle ones, which go after a
+// few seconds: a slow close must not stop the next file of a sender.
 bool HttpServer::mayConnect(const QHostAddress &peer)
 {
     if (m_byId.size() >= kMaxConnections) {
@@ -221,7 +225,7 @@ bool HttpServer::mayConnect(const QHostAddress &peer)
     if (peer != QHostAddress(QHostAddress::LocalHost)) {
         int count = 0;
         foreach (const Connection *c, m_byId) {
-            if (c->peer == peer && c->phase != Connection::Answered)
+            if (c->peer == peer && c->phase != Connection::Answered && c->phase != Connection::Idle)
                 ++count;
         }
         if (count >= kMaxConnectionsPerIp) {
@@ -245,10 +249,10 @@ void HttpServer::onNewConnection()
             socket->deleteLater();
             continue;
         }
+        // Like the official app: Nagle delays small writes on a reused connection.
+        socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
         Connection *c = new Connection;
-        c->id = m_nextId++;
-        if (m_nextId == 0)
-            m_nextId = 1;
+        c->id = newId();
         c->socket = socket;
         c->peer = peer;
         c->lastActivity = QDateTime::currentDateTime();
@@ -268,6 +272,14 @@ void HttpServer::onDisconnected()
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
     if (Connection *c = m_bySocket.value(socket))
         remove(c, true);
+}
+
+quint32 HttpServer::newId()
+{
+    const quint32 id = m_nextId++;
+    if (m_nextId == 0)
+        m_nextId = 1;
+    return id;
 }
 
 // Forgets a connection; tells its handler if the request is still open.
@@ -290,8 +302,9 @@ void HttpServer::remove(Connection *c, bool notifyHandler)
 }
 
 // Drops clients that stop sending in the middle of a request or never close
-// the connection, so they cannot pile up. Requests waiting for our answer
-// (e.g. prepare-upload until the user accepts) never time out here.
+// the connection, and closes connections nobody reuses, so they cannot pile
+// up. Requests waiting for our answer (e.g. prepare-upload until the user
+// accepts) never time out here.
 void HttpServer::onIdleCheck()
 {
     const QDateTime now = QDateTime::currentDateTime();
@@ -306,6 +319,10 @@ void HttpServer::onIdleCheck()
     }
     foreach (quint32 id, stale) {
         if (Connection *c = m_byId.value(id)) {
+            if (c->phase == Connection::Idle) {
+                closeGracefully(c);
+                continue;
+            }
             qDebug() << "HTTP: dropping idle connection from" << c->socket->peerAddress().toString()
                      << c->request.path;
             remove(c, true);
@@ -342,10 +359,16 @@ void HttpServer::onReadyRead()
                      << (c->tls->peerFingerprint().isEmpty() ? QString::fromLatin1("none")
                                                              : c->tls->peerFingerprint().left(16) + "...");
     }
-    if (c->phase == Connection::Waiting || c->phase == Connection::Answered)
-        return; // nothing more is expected from this client
-    if (data.isEmpty())
+    if (c->phase == Connection::Answered || data.isEmpty())
         return;
+    if (c->phase == Connection::Waiting) {
+        // Pipelining, which no LocalSend client does: closing after the answer
+        // tells a client to send the rest again.
+        c->keepAlive = false;
+        return;
+    }
+    if (c->phase == Connection::Idle)
+        c->phase = Connection::Headers;
     if (c->buffer.isEmpty())
         c->buffer = data; // no copy
     else
@@ -396,6 +419,7 @@ bool HttpServer::parseHeaders(Connection *c)
     const int q = target.indexOf(QLatin1Char('?'));
     req.path = q >= 0 ? target.left(q) : target;
     req.query = q >= 0 ? target.mid(q + 1) : QString();
+    const bool http11 = requestLine.size() >= 3 && requestLine.at(2) == "HTTP/1.1";
 
     foreach (const QByteArray &line, lines) {
         const int colon = line.indexOf(':');
@@ -403,6 +427,7 @@ bool HttpServer::parseHeaders(Connection *c)
             continue;
         req.headers.insert(line.left(colon).trimmed().toLower(), line.mid(colon + 1).trimmed());
     }
+    c->keepAlive = http11 && !req.headers.value("connection").toLower().contains("close");
 
     qDebug() << "HTTP:" << req.method << req.path << "from" << req.remoteAddress.toString();
 
@@ -492,6 +517,9 @@ bool HttpServer::readBody(Connection *c)
         qDebug() << "HTTP: received" << c->bodyBytes / 1024 << "KB in" << ms << "ms ="
                  << int(c->bodyBytes * 1000 / 1024 / ms) << "KB/s" << (c->tls ? "(https)" : "(http)");
     }
+    // More than the body: a pipelined request, see onReadyRead().
+    if (!c->buffer.isEmpty())
+        c->keepAlive = false;
     c->phase = Connection::Waiting;
     c->buffer.clear();
     const HttpResponse r = c->handler->handleRequest(c->request);
@@ -517,7 +545,7 @@ bool HttpServer::takeBodyPiece(Connection *c, QByteArray *piece, bool *complete)
                 c->buffer.clear();
             } else {
                 *piece = c->buffer.left(int(c->remaining));
-                c->buffer.clear(); // one request per connection: the rest is junk
+                c->buffer.remove(0, piece->size());
             }
             c->remaining -= piece->size();
         }
@@ -611,14 +639,45 @@ void HttpServer::sendResponse(Connection *c, const HttpResponse &response)
     if (response.status != 200)
         qDebug() << "HTTP: answering" << response.status << "to" << c->request.method
                  << c->request.path;
+    // An answer before the whole body was read leaves the rest of the body in
+    // the way of the next request.
+    const bool keepAlive = c->keepAlive && c->phase == Connection::Waiting;
     QByteArray out;
     out.append("HTTP/1.1 " + QByteArray::number(response.status) + " " + reasonPhrase(response.status) + "\r\n");
     if (!response.body.isEmpty())
         out.append("Content-Type: " + response.contentType + "\r\n");
     out.append("Content-Length: " + QByteArray::number(response.body.size()) + "\r\n");
-    out.append("Connection: close\r\n\r\n");
+    out.append(keepAlive ? "Connection: keep-alive\r\n\r\n" : "Connection: close\r\n\r\n");
     out.append(response.body);
     write(c, out);
+    if (keepAlive)
+        awaitNextRequest(c);
+    else
+        closeGracefully(c);
+}
+
+// Readies an answered connection for the client's next request, which gets a
+// new id: respond() or drop() for the old one must not reach it.
+void HttpServer::awaitNextRequest(Connection *c)
+{
+    m_byId.remove(c->id);
+    c->id = newId();
+    m_byId.insert(c->id, c);
+    c->phase = Connection::Idle;
+    c->request = HttpRequest();
+    c->handler = 0;
+    c->streaming = false;
+    c->chunked = false;
+    c->chunkState = Connection::ChunkSize;
+    c->remaining = 0;
+    c->bodyBytes = 0;
+    c->keepAlive = false;
+    c->buffer.clear();
+    c->lastActivity = QDateTime::currentDateTime();
+}
+
+void HttpServer::closeGracefully(Connection *c)
+{
     if (c->tls)
         c->socket->write(c->tls->closeNotify());
     // Ignore anything else this client sends; the connection is forgotten

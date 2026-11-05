@@ -16,7 +16,8 @@ class TlsServerConfig;
 struct HttpRequest
 {
     HttpRequest() : id(0) {}
-    // Identifies the request (= its connection) for HttpServer::respond()/drop().
+    // Identifies the request for HttpServer::respond()/drop(). Not the
+    // connection: the next request on a kept-alive one has a new id.
     quint32 id;
     QString method;
     QString path;      // without query string
@@ -80,10 +81,11 @@ public:
     virtual void requestAborted(const HttpRequest &request) { Q_UNUSED(request); }
 };
 
-// Very small HTTP/1.1 server: one request per connection, Content-Length
-// or chunked bodies. Headers up to 16 KB; buffered bodies up to 1 MB,
-// streamed ones (see HttpHandler::streamsBody()) of any size. Serves 64
-// connections at once, 8 per IP; further ones are closed right away.
+// Very small HTTP/1.1 server: keep-alive without pipelining, so that a sender
+// needs one TLS handshake for all its files; Content-Length or chunked bodies.
+// Headers up to 16 KB; buffered bodies up to 1 MB, streamed ones (see
+// HttpHandler::streamsBody()) of any size. Serves 64 connections at once, 8 per
+// IP; further ones are closed right away.
 //
 // Speaks plain http or https (TLS 1.2 via mbedTLS, see src/tlsserver.h, with
 // our certificate from ClientIdentity; clients are asked for theirs, see
@@ -150,8 +152,13 @@ private:
     bool readBody(Connection *c);
     bool takeBodyPiece(Connection *c, QByteArray *piece, bool *complete);
     void sendResponse(Connection *c, const HttpResponse &response);
+    void awaitNextRequest(Connection *c);
+    void closeGracefully(Connection *c);
     void remove(Connection *c, bool notifyHandler);
+    // Whether this request is still around: also false once it was answered
+    // on a connection that stays open.
     bool alive(quint32 id) const { return m_byId.contains(id); }
+    quint32 newId();
     bool mayConnect(const QHostAddress &peer);
     void endProbe();
 

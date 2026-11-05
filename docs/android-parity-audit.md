@@ -124,9 +124,12 @@ This is the biggest logic change, and it should also save battery and CPU on the
 
 ### Connections
 
-- [ ] Done
+- [x] Done
 
-We send `Connection: close` on every response (`src/httpserver.cpp:517`), and mbedTLS has no session tickets. Every file therefore costs a full RSA handshake on the phone. Official keeps connections alive, which matters most for folders of small files.
+- **Ours:** connections stay open after an answer, so a transfer needs one TLS handshake and not one per file. `TCP_NODELAY` is on.
+- **Official:** the same. Its server (hyper) keeps connections alive, and its sender uses one pinned client per transfer so that the connection is reused.
+- **Note:** session tickets are still off in mbedTLS. Keep-alive already removes the handshake per file, and a resumed session would have to carry the client's certificate identity.
+- **Official source:** `packages/core/src/http/server/mod.rs` (`serve_http`, `set_nodelay`), `upload_isolate.dart` (`pinnedTo`).
 
 ## Missing features
 
@@ -169,7 +172,10 @@ These differences are deliberate or better for the phone:
 - The Open file dialog always has Folder. Official hides "Show in folder" for files saved to the gallery, but our gallery is an ordinary folder.
 - Symbian files have only a modification time, so `accessed` isn't applied there.
 - Renaming a file from a sent folder changes only its name, and it stays in its folder. Official's dialog refuses the `/` on Android and Windows, so there the file can only leave its folder.
-- An answered connection doesn't count towards the 8 per IP. We close after every answer, so a sender opens one connection per file, and a slow close must not fail the next file.
+- A connection that is closing or idle between requests doesn't count towards the 8 per IP, so a slow close or a few leftover connections can't fail the next file. Official counts every open connection.
+- An idle connection is closed after 10 s (official has no limit), because a TLS session holds about 20 KB on the phone. The files of a transfer follow each other at once, so this doesn't cost a handshake.
+- Pipelined requests aren't served: the first is answered and the connection closes, which tells a client to send the rest again. Official's server serves them, but no LocalSend client or browser pipelines.
+- Only answers sent after the whole request body was read keep the connection, so a refused upload or a 404 closes it.
 - A server or multicast listener that won't start or dies is tried again after 5 s, doubling up to 5 min, while online. Official tries a dead server once and doesn't restart multicast after failed reads.
 - The foreground check connects to the WLAN address (official: loopback), because a Symbian socket belongs to its access point. It waits 3 s (official: 1 s) and is skipped while clients are connected, because it shares a thread with the rest of the app. Qt 4 has no signal for a dead listener, so this is the only way to notice one.
 
