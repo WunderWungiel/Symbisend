@@ -22,6 +22,7 @@
 #include "src/webshare.h"
 #include "src/tlsrandom.h"
 #include "src/verification.h"
+#include "src/stallwatch.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -84,6 +85,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     viewer.showExpanded();
 
     network.connectNetwork();
+
+    StallWatch stallWatch;
 
     return app->exec();
 }
