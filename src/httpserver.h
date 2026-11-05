@@ -141,10 +141,14 @@ private slots:
     void onProbeConnected();
     void onProbeError();
     void onProbeTimeout();
+    void onHandshakeTimer();
 
 private:
     struct Connection;
 
+    // Bytes from the client: decrypted on https connections, then processed.
+    void handleIncoming(Connection *c, const QByteArray &received);
+    void queueHandshake(Connection *c);
     // Writes to the client, through TLS on https connections.
     void write(Connection *c, const QByteArray &data);
     void process(Connection *c);
@@ -174,6 +178,11 @@ private:
     bool m_refusing;     // refusals are logged once until a connection is accepted
     QTcpSocket *m_probe; // while probe() runs
     QTimer m_probeTimer;
+    // Connections with a TLS handshake step to run, one per timeout: a step
+    // can take long enough to be felt, and a peer may connect many times at
+    // once. By id: a connection may go away while it waits.
+    QList<quint32> m_handshakes;
+    QTimer m_handshakeTimer;
 };
 
 #endif // HTTPSERVER_H

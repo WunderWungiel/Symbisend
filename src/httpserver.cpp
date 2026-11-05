@@ -30,6 +30,9 @@ static const int kMaxConnectionsPerIp = 8;
 // probe(): the official app allows 1 s, but our socket shares its thread with
 // everything else in the app, so a busy moment must not look like a dead server.
 static const int kProbeTimeoutMs = 3000;
+// Between two TLS handshake steps: time for the UI, and for noticing clients
+// that gave up. The official app's register request does so after 500 ms.
+static const int kHandshakeGapMs = 20;
 
 QString HttpRequest::queryValue(const QString &key, bool *present) const
 {
@@ -64,15 +67,18 @@ struct HttpServer::Connection
     enum ChunkState { ChunkSize, ChunkData, ChunkDataEnd, Trailer };
 
     Connection()
-        : id(0), socket(0), tls(0), phase(Headers), handler(0), streaming(false),
-          chunked(false), chunkState(ChunkSize), remaining(0), bodyBytes(0),
-          keepAlive(false) {}
+        : id(0), socket(0), tls(0), tlsQueued(false), tlsStarted(false), phase(Headers),
+          handler(0), streaming(false), chunked(false), chunkState(ChunkSize), remaining(0),
+          bodyBytes(0), keepAlive(false) {}
     ~Connection() { delete tls; }
 
     quint32 id;
     QTcpSocket *socket;
     QHostAddress peer;
     TlsSession *tls;         // https only
+    QByteArray tlsPending;   // received during the handshake, for its next step
+    bool tlsQueued;          // in m_handshakes
+    bool tlsStarted;         // a handshake step has run
     QByteArray buffer;       // received, not processed yet
     Phase phase;
     HttpRequest request;
@@ -98,6 +104,9 @@ HttpServer::HttpServer(QObject *parent)
     m_probeTimer.setSingleShot(true);
     m_probeTimer.setInterval(kProbeTimeoutMs);
     connect(&m_probeTimer, SIGNAL(timeout()), this, SLOT(onProbeTimeout()));
+    m_handshakeTimer.setSingleShot(true);
+    m_handshakeTimer.setInterval(kHandshakeGapMs);
+    connect(&m_handshakeTimer, SIGNAL(timeout()), this, SLOT(onHandshakeTimer()));
 }
 
 HttpServer::~HttpServer()
@@ -143,6 +152,8 @@ void HttpServer::close()
     // A handler's requestAborted() may drop or answer other requests.
     while (!m_byId.isEmpty())
         remove(m_byId.begin().value(), true);
+    m_handshakeTimer.stop();
+    m_handshakes.clear();
     m_tlsConfig.clear();
 }
 
@@ -286,7 +297,8 @@ quint32 HttpServer::newId()
 void HttpServer::remove(Connection *c, bool notifyHandler)
 {
     if (c->tls && !c->tls->handshakeDone())
-        qDebug() << "HTTP: connection from" << c->peer.toString() << "gone before its TLS handshake finished";
+        qDebug() << "HTTP: connection from" << c->peer.toString() << "gone before its TLS handshake"
+                 << (c->tlsStarted ? "finished" : "started");
     m_bySocket.remove(c->socket);
     m_byId.remove(c->id);
     c->socket->disconnect(this);
@@ -339,7 +351,52 @@ void HttpServer::onReadyRead()
     if (!c)
         return;
     c->lastActivity = QDateTime::currentDateTime();
-    QByteArray data = socket->readAll();
+    const QByteArray data = socket->readAll();
+    if (c->tls && !c->tls->handshakeDone()) {
+        c->tlsPending.append(data);
+        queueHandshake(c);
+        return;
+    }
+    handleIncoming(c, data);
+}
+
+// A connection that has begun goes first: its client is waiting for the next
+// step, and finishing one handshake beats starting another that then runs out
+// of time as well.
+void HttpServer::queueHandshake(Connection *c)
+{
+    if (!c->tlsQueued) {
+        c->tlsQueued = true;
+        if (c->tlsStarted)
+            m_handshakes.prepend(c->id);
+        else
+            m_handshakes.append(c->id);
+    }
+    if (!m_handshakeTimer.isActive())
+        m_handshakeTimer.start();
+}
+
+void HttpServer::onHandshakeTimer()
+{
+    while (!m_handshakes.isEmpty()) {
+        Connection *c = m_byId.value(m_handshakes.takeFirst());
+        if (!c)
+            continue; // gone while it waited: no work wasted on it
+        const QByteArray data = c->tlsPending;
+        c->tlsPending.clear();
+        c->tlsQueued = false;
+        c->tlsStarted = true;
+        handleIncoming(c, data);
+        break;
+    }
+    if (!m_handshakes.isEmpty())
+        m_handshakeTimer.start();
+}
+
+void HttpServer::handleIncoming(Connection *c, const QByteArray &received)
+{
+    QTcpSocket *socket = c->socket;
+    QByteArray data = received;
     if (c->tls) {
         const bool wasDone = c->tls->handshakeDone();
         // Also after our answer: the client's close_notify goes through here.
