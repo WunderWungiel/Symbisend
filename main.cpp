@@ -18,6 +18,7 @@
 #include "src/favoritesmodel.h"
 #include "src/sender.h"
 #include "src/receiver.h"
+#include "src/receivefilesmodel.h"
 #include "src/webshare.h"
 #include "src/tlsrandom.h"
 #include "src/verification.h"
@@ -70,6 +71,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("selection"), &selection);
     ctx->setContextProperty(QLatin1String("sender"), &sender);
     ctx->setContextProperty(QLatin1String("receiver"), &receiver);
+    ctx->setContextProperty(QLatin1String("receiveFiles"), receiver.offeredFiles());
     ctx->setContextProperty(QLatin1String("webShare"), &webShare);
     ctx->setContextProperty(QLatin1String("history"), &history);
     ctx->setContextProperty(QLatin1String("favorites"), &favorites);

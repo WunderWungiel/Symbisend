@@ -19,6 +19,7 @@
 #include "historymodel.h"
 #include "json.h"
 #include "networkmanager.h"
+#include "receivefilesmodel.h"
 #include "sender.h"
 #include "settings.h"
 #include "sha256hash.h"
@@ -55,6 +56,7 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
     : QObject(parent),
       m_server(server), m_settings(settings), m_network(network), m_webShare(webShare),
       m_history(history), m_favorites(favorites),
+      m_offeredFiles(new ReceiveFilesModel(this)),
       m_nam(new QNetworkAccessManager(this)),
       m_state(QLatin1String("idle")),
       m_peerHttps(false),
@@ -63,9 +65,11 @@ Receiver::Receiver(HttpServer *server, Settings *settings, NetworkManager *netwo
       m_isMessage(false),
       m_pendingRequest(0),
       m_toGallery(false),
+      m_hasFolders(false),
       m_remainingSeconds(-1)
 {
     m_server->addHandler(this);
+    connect(this, SIGNAL(stateChanged()), this, SIGNAL(optionsChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
     m_tick.setInterval(kTickMs);
     connect(&m_tick, SIGNAL(timeout()), this, SLOT(onTick()));
@@ -97,17 +101,13 @@ bool Receiver::isBusy() const
     return m_state == QLatin1String("request") || m_state == QLatin1String("receiving");
 }
 
-QVariantList Receiver::files() const
+void Receiver::setSaveToGallery(bool on)
 {
-    QVariantList list;
-    foreach (const InFile &f, m_files) {
-        QVariantMap m;
-        m.insert(QLatin1String("fileName"), f.fileName);
-        m.insert(QLatin1String("size"), qreal(f.size));
-        m.insert(QLatin1String("fileType"), f.fileType);
-        list.append(m);
-    }
-    return list;
+    if (m_state != QLatin1String("request") || on == m_toGallery)
+        return;
+    m_toGallery = on;
+    qDebug() << "Receiver: media to the gallery for this session:" << on;
+    emit optionsChanged();
 }
 
 QString Receiver::message() const
@@ -340,6 +340,20 @@ HttpResponse Receiver::prepareUpload(const HttpRequest &request)
             && m_files.first().fileType.startsWith(QLatin1String("text/"))
             && !m_files.first().preview.isEmpty();
 
+    QStringList names;
+    QList<qint64> sizes;
+    foreach (const InFile &f, m_files) {
+        names.append(f.fileName);
+        sizes.append(f.size);
+        if (f.fileName.contains(QLatin1Char('/')) || f.fileName.contains(QLatin1Char('\\')))
+            m_hasFolders = true;
+    }
+    m_offeredFiles->setFiles(names, sizes);
+    m_folder = m_settings->downloadFolder();
+    // Like the official app: media go to the gallery unless the files come
+    // with folders (a sent folder stays together in the download folder).
+    m_toGallery = m_settings->saveMediaToGallery() && !m_hasFolders;
+
     qDebug() << "Receiver:" << alias << ip << m_peerDeviceModel << m_peerDeviceType
              << "v" + m_peerVersion << "offers"
              << (m_isMessage ? QString::fromLatin1("a message")
@@ -375,10 +389,55 @@ void Receiver::accept()
 {
     if (m_state != QLatin1String("request") || !m_pendingRequest)
         return;
+    if (!m_isMessage) {
+        if (m_offeredFiles->selectedCount() == 0)
+            return;
+        applySelection();
+    }
     qDebug() << "Receiver: accepted by the user";
     const quint32 id = m_pendingRequest;
     m_pendingRequest = 0;
     m_server->respond(id, startSession());
+}
+
+// Keeps only the files selected on the Options page, under their new names.
+void Receiver::applySelection()
+{
+    QList<InFile> kept;
+    m_fileIndex.clear();
+    m_totalSize = 0;
+    for (int i = 0; i < m_files.size(); ++i) {
+        InFile f = m_files.at(i);
+        if (!m_offeredFiles->isSelected(i)) {
+            qDebug() << "Receiver: skipping" << f.fileName;
+            continue;
+        }
+        f.fileName = m_offeredFiles->name(i);
+        m_fileIndex.insert(f.id, kept.size());
+        kept.append(f);
+        m_totalSize += f.size;
+    }
+    m_files = kept;
+}
+
+void Receiver::pickFolder()
+{
+    if (m_state != QLatin1String("request"))
+        return;
+    // The native dialog runs a nested event loop; don't start it from inside
+    // the QML click handler.
+    QTimer::singleShot(0, this, SLOT(runFolderPicker()));
+}
+
+void Receiver::runFolderPicker()
+{
+    const QString picked = Settings::chooseFolder(m_folder, QLatin1String("Save to folder"));
+    // The sender may have given up while the picker was open.
+    if (picked.isEmpty() || m_state != QLatin1String("request"))
+        return;
+    m_folder = picked;
+    qDebug() << "Receiver: saving to" << m_folder << "for this session";
+    emit optionsChanged();
 }
 
 void Receiver::decline()
@@ -401,24 +460,11 @@ HttpResponse Receiver::startSession()
         finish(QLatin1String("finished"));
         return HttpResponse(204);
     }
-    m_folder = m_settings->downloadFolder();
     if (!QDir().mkpath(m_folder)) {
         qWarning() << "Receiver: cannot create" << m_folder;
         finish(QLatin1String("failed"),
                QString::fromLatin1("Can't create the folder %1").arg(QDir::toNativeSeparators(m_folder)));
         return HttpResponse::message(500, QLatin1String("Cannot save files"));
-    }
-    // Like the official app: media go to the gallery unless the files come
-    // with folders (a sent folder stays together in the download folder).
-    m_toGallery = m_settings->saveMediaToGallery();
-    if (m_toGallery) {
-        foreach (const InFile &f, m_files) {
-            if (f.fileName.contains(QLatin1Char('/')) || f.fileName.contains(QLatin1Char('\\'))) {
-                qDebug() << "Receiver: files come with folders - not saving media to the gallery";
-                m_toGallery = false;
-                break;
-            }
-        }
     }
     m_usedFolders.clear();
     m_sessionId = randomToken();
@@ -504,7 +550,7 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
     }
     if (!m_usedFolders.contains(base))
         m_usedFolders.append(base);
-    const QString path = uniquePath(base + QLatin1Char('/') + safeRelativePath(f.fileName));
+    const QString path = uniquePath(QDir::cleanPath(base + QLatin1Char('/') + safeRelativePath(f.fileName)));
     QDir().mkpath(QFileInfo(path).absolutePath());
     QFile *out = new QFile(path);
     if (!out->open(QIODevice::WriteOnly)) {
@@ -824,6 +870,7 @@ void Receiver::reset()
     m_sessionId.clear();
     m_folder.clear();
     m_toGallery = false;
+    m_hasFolders = false;
     m_usedFolders.clear();
     m_currentName.clear();
     m_remainingSeconds = -1;

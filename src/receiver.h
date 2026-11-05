@@ -20,6 +20,7 @@ class Sha256Hash;
 class FavoritesModel;
 class HistoryModel;
 class NetworkManager;
+class ReceiveFilesModel;
 class Settings;
 class WebShare;
 
@@ -30,6 +31,9 @@ class WebShare;
 //     busy (409), quick save.
 //     A lone text message goes to the history at once and is answered with
 //     204 when the user closes it. It is never saved as a file.
+//     Before accepting, the user may skip or rename files (offeredFiles()) and
+//     change the folder and the gallery option for this session. Only the
+//     files kept get a token, so the sender leaves out the others.
 //  2. POST /upload?sessionId&fileId&token for each file, streamed into the
 //     download folder. A file with a sha256 in the offer is checked while it
 //     streams in: on a mismatch it is deleted and answered with 422, and the
@@ -68,19 +72,23 @@ class Receiver : public QObject, public HttpHandler
     // The offer.
     Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
     Q_PROPERTY(qreal totalSize READ totalSize NOTIFY stateChanged)
-    // [{ fileName, size, fileType }], in the sender's order
-    Q_PROPERTY(QVariantList files READ files NOTIFY stateChanged)
     // A lone text message (shown, not saved): isMessage, its text, and
     // whether that text is a link.
     Q_PROPERTY(bool isMessage READ isMessage NOTIFY stateChanged)
     Q_PROPERTY(QString message READ message NOTIFY stateChanged)
     Q_PROPERTY(bool messageIsLink READ messageIsLink NOTIFY stateChanged)
 
+    // This session's options, from settings when the offer arrives; state
+    // "request" can change them. hasFolders: the files come with folders, which
+    // turns saveToGallery off at first, as in the official app.
+    Q_PROPERTY(bool saveToGallery READ saveToGallery WRITE setSaveToGallery NOTIFY optionsChanged)
+    Q_PROPERTY(bool hasFolders READ hasFolders NOTIFY stateChanged)
+
     // Receiving.
-    // Where the files go: settings.downloadFolder, or the gallery folder if
+    // Where the files go: this session's folder, or the gallery folder if
     // every file saved so far went there. folders: every folder used (the
-    // download folder and/or settings' media folders), final once finished.
-    Q_PROPERTY(QString folder READ folder NOTIFY stateChanged)
+    // session's folder and/or settings' media folders), final once finished.
+    Q_PROPERTY(QString folder READ folder NOTIFY optionsChanged)
     Q_PROPERTY(QStringList folders READ folders NOTIFY stateChanged)
     Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
     Q_PROPERTY(int filesFailed READ filesFailed NOTIFY progressChanged)
@@ -110,7 +118,11 @@ public:
     bool peerHttps() const { return m_peerHttps; }
     int fileCount() const { return m_files.size(); }
     qreal totalSize() const { return qreal(m_totalSize); }
-    QVariantList files() const;
+    // For the Options page, a QML context property: what to take of this offer.
+    ReceiveFilesModel *offeredFiles() const { return m_offeredFiles; }
+    bool saveToGallery() const { return m_toGallery; }
+    void setSaveToGallery(bool on);
+    bool hasFolders() const { return m_hasFolders; }
     bool isMessage() const { return m_isMessage; }
     QString message() const;
     bool messageIsLink() const;
@@ -123,9 +135,13 @@ public:
     qreal progress() const;
     int remainingSeconds() const { return m_remainingSeconds; }
 
-    // State "request": take everything offered / refuse it.
+    // State "request": take the files selected in offeredFiles(), at least
+    // one, under their names there / refuse it.
     Q_INVOKABLE void accept();
     Q_INVOKABLE void decline();
+    // State "request": the native folder picker, for this session's folder
+    // (returns at once, `folder` changes when the user confirms one).
+    Q_INVOKABLE void pickFolder();
     // Stops receiving (files not complete yet are deleted).
     Q_INVOKABLE void cancel();
 
@@ -139,6 +155,8 @@ public:
 signals:
     void stateChanged();
     void progressChanged();
+    // Also on every stateChanged().
+    void optionsChanged();
     // A /cancel for a session that isn't ours to receive: the device we are
     // sending to may be cancelling (see Sender::onCancelReceived()).
     void cancelReceived(const QString &ip, const QString &sessionId);
@@ -150,12 +168,13 @@ private slots:
     void onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
     void dropDraining();
     void clearPinAttempts();
+    void runFolderPicker();
 
 private:
     enum FileStatus { Pending, Receiving, Done, Failed };
     struct InFile {
         QString id;
-        QString fileName;   // as sent; may contain folders ("Trip/a.jpg")
+        QString fileName;   // as sent or as renamed; may contain folders ("Trip/a.jpg")
         QString fileType;
         QString preview;
         QString sha256;     // from the offer, may be empty
@@ -179,6 +198,7 @@ private:
     HttpResponse writeUpload(const HttpRequest &request, const QByteArray &data);
     HttpResponse finishUpload(const HttpRequest &request);
     HttpResponse startSession();
+    void applySelection();
     void closeUpload(quint32 requestId, bool keepFile, const QString &error = QString());
     void dropUploads();
     bool notifySender();
@@ -197,6 +217,7 @@ private:
     WebShare *m_webShare;
     HistoryModel *m_history;
     FavoritesModel *m_favorites;
+    ReceiveFilesModel *m_offeredFiles;
     QNetworkAccessManager *m_nam;     // only for the /cancel to the sender
 
     QString m_state;
@@ -215,8 +236,9 @@ private:
     bool m_isMessage;
     quint32 m_pendingRequest;         // the prepare-upload waiting for the user, 0 if none
     QString m_sessionId;
-    QString m_folder;                 // Qt separators, set when accepted
+    QString m_folder;                 // Qt separators, set when the offer arrives
     bool m_toGallery;                 // images/videos go to settings' media folders
+    bool m_hasFolders;                // some file name contains a folder
     QStringList m_usedFolders;        // base folders files were saved to, Qt separators
     QHash<quint32, Upload> m_uploads; // running uploads by request id
     // Uploads we cancelled: their data is thrown away and their connections

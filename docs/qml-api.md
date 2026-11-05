@@ -225,8 +225,8 @@ The Send page calls `send()` when a device is tapped, `sendToAddress()` after
 ## `receiver` — receiving from other devices
 Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port
 53317, while `discovery.serverRunning`). One session at a time; while busy, other senders
-are told we're busy. Files go to `settings.downloadFolder` (images/videos to the media
-folders with `settings.saveMediaToGallery`), folders inside it are created
+are told we're busy. Files go to the session's `folder`, at first `settings.downloadFolder`
+(images/videos to the media folders with `saveToGallery`), folders inside it are created
 as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one becomes
 `a (1).jpg`. Unfinished files are deleted.
 - `state` (string):
@@ -251,8 +251,8 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
   client certificate, which TLS has proven; the fingerprint it claims only over http or
   from a browser), `peerIp`, `peerVersion` (strings),
   `peerHttps` (bool: the sender announced https; the official app offers Verify only then)
-- The offer: `fileCount` (int), `totalSize` (number, bytes), `files` (list of
-  `{ fileName, size, fileType }`; `fileName` may contain folders)
+- The offer: `fileCount` (int), `totalSize` (number, bytes). Once accepted they count only
+  the files taken. For the single files, see `receiveFiles`.
 - `isMessage` (bool), `message` (string) — the offer is a single text message (like the
   official app: one `text/*` file with a preview). It is never saved as a file. It goes to
   `history` when it arrives, in state `request`; `accept()` then only tells the sender it
@@ -260,15 +260,23 @@ as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one be
   message can stay on screen when the sender withdraws it.
 - `messageIsLink` (bool) — the message is one word that is an absolute URI, like the
   official app's check: offer to open it
-- `folder` (string, native separators) — where the files go / went: the download folder,
+- `folder` (string, native separators) — where the files go / went: the session's folder,
   or the media folder if every saved file went to the same one
+- `saveToGallery` (bool, writable in `request`) — images and videos of this session go to
+  the media folders. Starts as `settings.saveMediaToGallery`, but off if `hasFolders`.
+  Doesn't change the setting.
+- `hasFolders` (bool) — the offer has files in folders
 - `folders` (string list, native separators) — every folder files were saved to (e.g.
   `F:\Images\Symbisend` and `F:\Symbisend` for photos plus a PDF); final once `finished`
 - `filesDone` (int, files saved), `filesFailed` (int), `fileName` (string, the file coming
   in now)
 - `bytesReceived`, `bytesTotal` (number), `progress` (0–1), `remainingSeconds` (int, -1
   while unknown). Progress properties update every 0.5 s.
-- `accept()`, `decline()` — in state `request`
+- `accept()`, `decline()` — in state `request`. `accept()` takes the files selected in
+  `receiveFiles` under their names there, and does nothing if none is selected. The others
+  get no token, so the sender leaves them out.
+- `pickFolder()` — in state `request`: the native folder picker. Returns at once; `folder`
+  changes on confirm. For this session only, `settings.downloadFolder` stays as it is.
 - `cancel()` — stops receiving and tells the sender (in `request`: same as `decline()`)
 - Signals `stateChanged()`, `progressChanged()`.
 
@@ -284,7 +292,36 @@ Network:
 
 `main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`, `receiving`,
 `failed` or `finishedWithErrors`. All but the first cover offers accepted without asking
-(quick save, link auto accept), and bring the dialog back if it was closed.
+(quick save, link auto accept), and bring the dialog back if it was closed. The dialog's
+Options button closes it and pushes `ReceiveOptionsPage.qml`, which brings it back when
+the user leaves or the offer ends.
+
+## `receiveFiles` — the files of the current offer (ListView model)
+Set when an offer arrives, for `ReceiveOptionsPage.qml`. Every file starts selected under
+its own name, and only the selected ones are taken by `receiver.accept()`.
+
+| role           | type   | example                                         |
+|----------------|--------|-------------------------------------------------|
+| `originalName` | string | as sent: `a.jpg`, `Trip/day1/a.jpg`             |
+| `name`         | string | what it will be saved as: `Trip/day1/b.jpg`     |
+| `editName`     | string | `name` without its folders: `b.jpg`             |
+| `kind`         | string | `file`, `image` or `video` (by extension)       |
+| `size`         | number | bytes                                           |
+| `sizeText`     | string | `1.2 MB`                                        |
+| `selected`     | bool   |                                                 |
+| `renamed`      | bool   | `name` differs from `originalName`              |
+
+Properties: `count` (int), `selectedCount` (int).
+Methods:
+- `setSelected(row, selected)` — selecting a file again gives it its own name back, as in
+  the official app
+- `nameError(input)` → string — why this can't be a file name (`Filename cannot be empty`,
+  `Filename contains invalid characters`), or `""`. Spaces around the input don't count.
+- `rename(row, input)` → bool — sets the name without touching its folders, so a file in a
+  sent folder stays in it. An input without an extension gets the original one. False, and
+  no change, if `nameError()` objects.
+- `reset()` — every file selected under its own name again; `receiver.folder` and
+  `receiver.saveToGallery` stay
 
 ## `history` — received files and messages (ListView model)
 Newest first, at most 200 entries (older ones are dropped), persisted as JSON in its own

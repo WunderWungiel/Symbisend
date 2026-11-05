@@ -4,9 +4,12 @@ import com.nokia.symbian 1.1
 // An incoming transfer (receiver): the offer with Decline / Accept, then the
 // progress and the result. main.qml opens it when an offer arrives (receiver.state
 // "request"), or at "receiving" / "failed" when an offer was accepted without
-// asking (quick save, link auto accept). Bare functional layout, meant to be polished.
+// asking (quick save, link auto accept). Options leaves for ReceiveOptionsPage and
+// comes back. Bare functional layout, meant to be polished.
 Dialog {
     id: root
+
+    signal optionsRequested()
 
     platformInverted: settings.theme == "light"
 
@@ -23,11 +26,11 @@ Dialog {
                                 && (recvState == "request" || recvState == "finished"
                                     || recvState == "cancelled")
     property bool showsOffer: recvState == "request" || showsMessage
-    // Verify, Copy and maybe Open share a line. A ToolButton's own width is too
-    // wide for that on a 360 px screen.
-    property int messageActions: receiver.messageIsLink ? 3 : 2
-    property real messageActionWidth: Math.floor((platformContentMaximumWidth - 2 * platformStyle.paddingLarge
-                                                  - (messageActions - 1) * platformStyle.paddingSmall) / messageActions)
+    // Verify shares a line with Options, or with Copy and maybe Open. A
+    // ToolButton's own width is too wide for that on a 360 px screen.
+    property int offerActions: showsMessage && receiver.messageIsLink ? 3 : 2
+    property real offerActionWidth: Math.floor((platformContentMaximumWidth - 2 * platformStyle.paddingLarge
+                                                - (offerActions - 1) * platformStyle.paddingSmall) / offerActions)
 
     // 75 -> "1:15"
     function formatTime(s) {
@@ -206,7 +209,7 @@ Dialog {
             // Like the official app: only for senders on https, whose
             // fingerprint is their certificate's hash.
             ToolButton {
-                width: root.showsMessage ? root.messageActionWidth : implicitWidth
+                width: root.offerActionWidth
                 platformInverted: root.platformInverted
                 iconSource: root.showsMessage ? ""
                             : root.platformInverted ? "images/verified-user-inverted.svg"
@@ -216,8 +219,19 @@ Dialog {
                 onClicked: verifyDialog.openFor(receiver.peerFingerprint)
             }
             ToolButton {
+                visible: !root.showsMessage
+                width: root.offerActionWidth
+                platformInverted: root.platformInverted
+                iconSource: "toolbar-settings"
+                text: "Options"
+                onClicked: {
+                    root.close()
+                    root.optionsRequested()
+                }
+            }
+            ToolButton {
                 visible: root.showsMessage
-                width: root.messageActionWidth
+                width: root.offerActionWidth
                 platformInverted: root.platformInverted
                 text: "Copy"
                 onClicked: {
@@ -227,7 +241,7 @@ Dialog {
             }
             ToolButton {
                 visible: root.showsMessage && receiver.messageIsLink
-                width: root.messageActionWidth
+                width: root.offerActionWidth
                 platformInverted: root.platformInverted
                 text: "Open"
                 onClicked: {
@@ -313,6 +327,7 @@ Dialog {
                 platformInverted: root.platformInverted
                 iconSource: root.platformInverted ? "images/check-inverted.svg" : "images/check.svg"
                 text: "Accept"
+                enabled: receiveFiles.selectedCount > 0
                 onClicked: receiver.accept()
             }
             ToolButton {

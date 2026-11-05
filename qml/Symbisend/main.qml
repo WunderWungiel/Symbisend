@@ -60,7 +60,17 @@ PageStackWindow {
     }
 
     // Incoming transfers, wherever the user is in the app.
-    ReceiveDialog { id: receiveDialog }
+    ReceiveDialog {
+        id: receiveDialog
+        onOptionsRequested: {
+            var options = pageStack.push(Qt.resolvedUrl("ReceiveOptionsPage.qml"))
+            options.finished.connect(window.showReceiveDialog)
+        }
+    }
+
+    function showReceiveDialog() {
+        receiveDialog.open()
+    }
 
     Connections {
         target: receiver

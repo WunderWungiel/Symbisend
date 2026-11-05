@@ -5,11 +5,13 @@
         <file>qml/Symbisend/DeviceDetailsPage.qml</file>
         <file>qml/Symbisend/FavoriteDialog.qml</file>
         <file>qml/Symbisend/FavoritesPage.qml</file>
+        <file>qml/Symbisend/FileNameDialog.qml</file>
         <file>qml/Symbisend/HistoryPage.qml</file>
         <file>qml/Symbisend/LogPage.qml</file>
         <file>qml/Symbisend/PeerItem.qml</file>
         <file>qml/Symbisend/ReceiveDialog.qml</file>
         <file>qml/Symbisend/ReceiveLinkPage.qml</file>
+        <file>qml/Symbisend/ReceiveOptionsPage.qml</file>
         <file>qml/Symbisend/ReceivePage.qml</file>
         <file>qml/Symbisend/SelectionCard.qml</file>
         <file>qml/Symbisend/SelectionPage.qml</file>
@@ -64,6 +66,8 @@
         <file>qml/Symbisend/images/send-video-inverted.svg</file>
         <file>qml/Symbisend/images/send-video.svg</file>
         <file>qml/Symbisend/images/symbisend.svg</file>
+        <file>qml/Symbisend/images/undo-inverted.svg</file>
+        <file>qml/Symbisend/images/undo.svg</file>
         <file>qml/Symbisend/images/verified-user-inverted.svg</file>
         <file>qml/Symbisend/images/verified-user.svg</file>
         <file>qml/Symbisend/main.qml</file>

@@ -247,14 +247,8 @@ void Settings::updateDownloadFolder()
 
 void Settings::setCustomDownloadFolder(const QString &path)
 {
-    // Store as a clean Qt path without trailing slash ("F:/Music"), but keep
-    // a bare drive root as "F:/".
-    QString p = QDir::cleanPath(QDir::fromNativeSeparators(path));
-    if (p.length() == 2 && p.at(1) == QLatin1Char(':'))
-        p += QLatin1Char('/');
-
     bool wasDefault = m_custom.isEmpty();
-    m_custom = p;
+    m_custom = path;
     QSettings().setValue(QLatin1String(kDownloadFolderKey), m_custom);
     updateDownloadFolder();
     if (wasDefault)
@@ -281,16 +275,22 @@ void Settings::pickDownloadFolder()
 
 void Settings::runFolderPicker()
 {
-    qDebug() << "Settings: opening folder picker at" << m_downloadFolder;
+    const QString picked = chooseFolder(m_downloadFolder, QLatin1String("Download folder"));
+    if (!picked.isEmpty())
+        setCustomDownloadFolder(picked);
+}
+
+QString Settings::chooseFolder(const QString &startFolder, const QString &title)
+{
+    qDebug() << "Settings: opening folder picker at" << startFolder;
     QString picked;
 
 #ifdef Q_OS_SYMBIAN
-    QString start = QDir::toNativeSeparators(m_downloadFolder);
+    QString start = QDir::toNativeSeparators(startFolder);
     if (!start.endsWith(QLatin1Char('\\')))
         start += QLatin1Char('\\');
     TPtrC startPtr(reinterpret_cast<const TUint16 *>(start.utf16()), start.length());
 
-    QString title = QLatin1String("Download folder");
     TPtrC titlePtr(reinterpret_cast<const TUint16 *>(title.utf16()), title.length());
 
     TInt medias = AknCommonDialogsDynMem::EMemoryTypePhone
@@ -304,19 +304,21 @@ void Settings::runFolderPicker()
                 medias, folder, startPtr, 0, 0, titlePtr));
     if (err != KErrNone) {
         qWarning() << "Settings: folder picker failed, error" << err;
-        return;
+        return QString();
     }
     if (ok)
         picked = QString::fromUtf16(folder.Ptr(), folder.Length());
 #else
-    picked = QFileDialog::getExistingDirectory(0, QLatin1String("Download folder"),
-                                               m_downloadFolder);
+    picked = QFileDialog::getExistingDirectory(0, title, startFolder);
 #endif
 
     if (picked.isEmpty()) {
         qDebug() << "Settings: folder picker cancelled";
-        return;
+        return QString();
     }
     qDebug() << "Settings: picked folder" << picked;
-    setCustomDownloadFolder(picked);
+    QString result = QDir::cleanPath(QDir::fromNativeSeparators(picked));
+    if (result.length() == 2 && result.at(1) == QLatin1Char(':'))
+        result += QLatin1Char('/');
+    return result;
 }

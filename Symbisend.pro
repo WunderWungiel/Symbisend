@@ -73,6 +73,7 @@ SOURCES += main.cpp \
     src/favoritesmodel.cpp \
     src/sender.cpp \
     src/receiver.cpp \
+    src/receivefilesmodel.cpp \
     src/webshare.cpp \
     src/clientidentity.cpp \
     src/tlsrandom.cpp \
@@ -96,6 +97,7 @@ HEADERS += \
     src/favoritesmodel.h \
     src/sender.h \
     src/receiver.h \
+    src/receivefilesmodel.h \
     src/webshare.h \
     src/clientidentity.h \
     src/tlsrandom.h \
