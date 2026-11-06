@@ -1,4 +1,5 @@
 #include <QtGui/QApplication>
+#include <QtDeclarative/QDeclarativeComponent>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QDateTime>
@@ -25,6 +26,12 @@
 #include "src/verification.h"
 #include "src/stallwatch.h"
 
+// Temporary: where the wait for the first frame goes.
+static void logStartupStep(QElapsedTimer &timer, const char *step)
+{
+    qDebug() << "Startup:" << step << "took" << timer.restart() << "ms";
+}
+
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     QScopedPointer<QApplication> app(createApplication(argc, argv));
@@ -35,6 +42,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     Logger::install();
     qDebug() << "Symbisend starting, Qt runtime" << qVersion() << "(built with" << QT_VERSION_STR << ")";
     qDebug() << "Log file:" << Logger::instance()->logFilePath();
+    QElapsedTimer startupTimer;
+    startupTimer.start();
     TlsRandom::init();
 
     Settings settings;
@@ -62,10 +71,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
                      &sender, SLOT(onCancelReceived(QString,QString)));
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
-    QElapsedTimer startup;
-    startup.start();
+    logStartupStep(startupTimer, "C++ objects");
+
     QmlApplicationViewer viewer;
-    qDebug() << "Startup: viewer created after" << startup.elapsed() << "ms";
+    logStartupStep(startupTimer, "viewer");
     QDeclarativeContext *ctx = viewer.rootContext();
     ctx->setContextProperty(QLatin1String("logger"), Logger::instance());
     ctx->setContextProperty(QLatin1String("myDevice"), &device);
@@ -85,11 +94,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
-    qDebug() << "Startup: context ready after" << startup.elapsed() << "ms";
+    logStartupStep(startupTimer, "context properties");
+    // Compiled here first (the engine keeps the result), so that setSource()
+    // below only creates the objects, and the log tells the two apart.
+    QDeclarativeComponent compiled(viewer.engine(), QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));
+    logStartupStep(startupTimer, "QML compile");
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));
-    qDebug() << "Startup: QML loaded after" << startup.elapsed() << "ms";
+    logStartupStep(startupTimer, "QML objects");
     viewer.showExpanded();
-    qDebug() << "Startup: window shown after" << startup.elapsed() << "ms";
+    logStartupStep(startupTimer, "show");
 
     network.connectNetwork();
 
