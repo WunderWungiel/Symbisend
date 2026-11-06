@@ -597,7 +597,7 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
     Upload u;
     u.file = index;
     u.out = out;
-    u.hash = f.sha256.isEmpty() ? 0 : new Sha256Hash;
+    u.hash = f.sha256.isEmpty() || !m_settings->verifyChecksums() ? 0 : new Sha256Hash;
     m_uploads.insert(request.id, u);
     m_currentName = f.fileName;
     m_lastActivity = QDateTime::currentDateTime();

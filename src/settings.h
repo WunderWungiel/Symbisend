@@ -38,6 +38,9 @@ class Settings : public QObject
     Q_PROPERTY(bool saveToHistory READ saveToHistory WRITE setSaveToHistory NOTIFY saveToHistoryChanged)
     // While "Receive via link" is on, accept every request at once.
     Q_PROPERTY(bool receiveViaLinkAutoAccept READ receiveViaLinkAutoAccept WRITE setReceiveViaLinkAutoAccept NOTIFY receiveViaLinkAutoAcceptChanged)
+    // Check a received file against the sha256 of the offer. Read when an
+    // upload starts, so a change needs no server restart.
+    Q_PROPERTY(bool verifyChecksums READ verifyChecksums WRITE setVerifyChecksums NOTIFY verifyChecksumsChanged)
 
     // Send
     // Hash every file before offering it, so that the receiver can check it
@@ -81,6 +84,8 @@ public:
     void setSaveToHistory(bool on);
     bool receiveViaLinkAutoAccept() const { return m_receiveViaLinkAutoAccept; }
     void setReceiveViaLinkAutoAccept(bool on);
+    bool verifyChecksums() const { return m_verifyChecksums; }
+    void setVerifyChecksums(bool on);
     bool createChecksums() const { return m_createChecksums; }
     void setCreateChecksums(bool on);
     bool encryption() const { return m_encryption; }
@@ -122,6 +127,7 @@ signals:
     void autoFinishChanged();
     void saveToHistoryChanged();
     void receiveViaLinkAutoAcceptChanged();
+    void verifyChecksumsChanged();
     void createChecksumsChanged();
     void encryptionChanged();
 
@@ -147,6 +153,7 @@ private:
     bool m_autoFinish;
     bool m_saveToHistory;
     bool m_receiveViaLinkAutoAccept;
+    bool m_verifyChecksums;
     bool m_createChecksums;
     bool m_encryption;
 

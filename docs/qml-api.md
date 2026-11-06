@@ -308,6 +308,10 @@ times the sender gave, like the official app (Symbian files only have the first)
 - `cancel()` — stops receiving and tells the sender (in `request`: same as `decline()`)
 - Signals `stateChanged()`, `progressChanged()`.
 
+- `verifyChecksums` (bool, default true) — a received file with a `sha256` in the offer is
+  checked, and a mismatch answered 422 (see `receiver`). Off: the offer's `sha256` is
+  ignored. Read when an upload starts, so a change needs no server restart.
+
 Send:
 - `createChecksums` (bool, default false) — `sender` hashes every file first (state
   `hashing`) and offers it with its `sha256`. The official app has this on by default; it

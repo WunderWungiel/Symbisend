@@ -98,6 +98,12 @@ Page {
                 checked: settings.saveToHistory
                 onToggled: settings.saveToHistory = value
             }
+            SettingsSwitch {
+                visible: settings.advancedSettings
+                title: "Verify checksums"
+                checked: settings.verifyChecksums
+                onToggled: settings.verifyChecksums = value
+            }
 
             // ------------------------------------------------ Send
             SettingsHeading { text: "Send"; visible: settings.advancedSettings }
