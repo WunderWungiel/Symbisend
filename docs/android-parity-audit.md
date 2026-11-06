@@ -4,7 +4,7 @@ Goal: Symbisend's behaviour (logic) should be nearly identical to the official A
 
 Audit of 2026-11-04: Symbisend `fd4ea6f` against official `main@92e133a` (app 1.18.2+64, protocol 2.2). Both codebases were read; nothing was run, so the scenarios below come from the code, not from tests. Line numbers are from `fd4ea6f` and will drift. Before fixing an item, check that it still applies.
 
-Checked again on 2026-11-06: Symbisend `a2a986c` against the same official commit, which was still upstream's latest. Also by reading only. The results are under "Open differences", "Missing features" and "Keep as is", and line numbers there are from `a2a986c`.
+Checked again on 2026-11-06: Symbisend `a2a986c` against the same official commit, which was still upstream's latest. Also by reading only. The results are under "Open differences", "Missing features" and "Keep as is", and line numbers there are from `a2a986c`. The settings were compared the same day, with the same official commit.
 
 The official source isn't in this repo:
 
@@ -177,7 +177,8 @@ This is the biggest logic change, and it should also save battery and CPU on the
 - [ ] **Multiple send mode:** several parallel sessions
 - [ ] **Per-file progress:** file list, speed, retrying failed files
 - [ ] **Address dialog:** `#123` suffix mode and recent devices
-- [ ] **Settings:** port, multicast group, discovery timeout, device type and model, turning off checksum verification
+- [x] **Settings:** Advanced settings switch, port, multicast address, discovery timeout, device type and model, turning off checksum verification, the notices after turning on quick save (`settings_tab.dart`, `settings_tab_controller.dart`)
+- [ ] **Settings left out:** "Network" (an address filter, `networkWhitelist`/`networkBlacklist`), "Use system name", "Animations", "Color", a "System" theme. "Automatically accept requests in Share via link mode" comes with Share via link.
 - [ ] **Translations:** the language setting is stored but does nothing
 - [x] **Receive via link page:** copying the URL and showing it as a QR code (`web_share_page.dart`, `qr_dialog.dart`)
 
@@ -192,7 +193,7 @@ This is the biggest logic change, and it should also save battery and CPU on the
 These differences are deliberate or better for the phone:
 
 - Trying https and then falling back to http.
-- 3 s scan timeout and 24 parallel requests (official uses 500 ms and 50), because TLS is slower on the phone.
+- 3 s scan timeout and 24 parallel requests (official uses 500 ms and 50), because TLS is slower on the phone. The timeout is the default of the Discovery timeout setting.
 - Uploading one file at a time (official does 2).
 - Deleting incomplete files.
 - Stall and sender-gone timeouts.
@@ -200,7 +201,7 @@ These differences are deliberate or better for the phone:
 - The encryption toggle applying immediately.
 - Announcing every time we go online. Official announces once, when discovery starts at app launch, and again only after a server restart, but a phone can drop off the network and come back, and other devices wouldn't notice. It's only UDP; going online doesn't scan.
 - No automatic discovery during a transfer, and the Send tab's check also runs when the connection comes up, since a phone can be offline when the tab opens.
-- Creating checksums when sending is a setting that's off by default (official has it on), because hashing large files first is slow on a phone. Verifying on receive is always on.
+- Creating checksums when sending is a setting that's off by default (official has it on), because hashing large files first is slow on a phone. Verifying on receive is on by default, as in official.
 - A file with a checksum mismatch is deleted and the retry saves it again under the same name. Official overwrites the same target.
 - Favourites are probed with https, then http, like the subnet scan (official uses only the protocol from its own settings). Each probe has our 3 s scan timeout, so the 1 s grace can start up to 3 s later (6 s with the http retry) when a favourite is away.
 
@@ -232,6 +233,15 @@ Found on 2026-11-06, and proposed here rather than chosen one by one:
 - IPv4 only. Official also joins an IPv6 multicast group, which only matters on a network without IPv4.
 - A device keeps only the address it was last confirmed at. Official keeps every address and ranks them, preferring reachable ones, then IPv6, then the most recent.
 - A file offered with size 0 that can't be read when its turn comes reaches the receiver as an empty file, because an empty upload passes the size check there. It still counts as failed on our side. Official's upload breaks off, so no file is saved.
+
+Found while adding the settings, on 2026-11-06:
+
+- Discovery timeout covers the scan and the favourites. Answering an announcement (5 s) and looking up an address (8 s) keep their times unless it is longer. Official uses the one value for every register. It applies from the next request, and is checked every 500 ms. Official needs a discovery restart. It takes 1 to 60000 ms.
+- Verify checksums applies from the next upload. Official restarts its server for it, which would cost a TLS handshake and drop transfers.
+- The multicast address must be a multicast address, and a change shows the restart note. Official takes any text and then runs without multicast, and shows no note, though it also needs a restart.
+- Port 0 is refused. Official lets the system pick a port.
+- An empty device model goes back to the default. Official sends it empty.
+- A device type or model change reaches others with our next message, as in official, unlike a changed alias, which is announced at once.
 
 The UDP reply is a harmless extra that official no longer has, and can be removed whenever convenient.
 
