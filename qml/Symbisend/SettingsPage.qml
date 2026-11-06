@@ -230,6 +230,10 @@ Page {
                 title: "Log"
                 onClicked: page.logRequested()
             }
+            SettingsItem {
+                title: "Restore defaults"
+                onClicked: restoreDialog.open()
+            }
             SettingsSwitch {
                 title: "Advanced settings"
                 checked: settings.advancedSettings
@@ -345,6 +349,20 @@ Page {
                 return // keeps the old state / PIN
             settings.pin = pinField.text
             settings.requirePin = true
+        }
+    }
+
+    QueryDialog {
+        id: restoreDialog
+        platformInverted: page.platformInverted
+        titleText: "Restore defaults"
+        message: "All settings go back to their defaults, and the PIN is removed. "
+                 + "Your device name, favourites and history stay."
+        acceptButtonText: "Restore"
+        rejectButtonText: "Cancel"
+        onAccepted: {
+            settings.restoreDefaults()
+            myDevice.restoreDefaults()
         }
     }
 

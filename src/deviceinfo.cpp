@@ -141,6 +141,12 @@ void DeviceInfo::setDeviceType(const QString &type)
     emit deviceTypeChanged();
 }
 
+void DeviceInfo::restoreDefaults()
+{
+    setDeviceType(QLatin1String("mobile"));
+    setDeviceModel(QString());
+}
+
 void DeviceInfo::randomizeAlias()
 {
     QString a;

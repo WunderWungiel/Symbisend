@@ -241,6 +241,7 @@ Found while adding the settings, on 2026-11-06:
 - The multicast address must be a multicast address, and a change shows the restart note. Official takes any text and then runs without multicast, and shows no note, though it also needs a restart.
 - Port 0 is refused. Official lets the system pick a port.
 - An empty device model goes back to the default. Official sends it empty.
+- Restore defaults, on the Settings page, is our own. Official has no such option. It keeps the device name, the certificate, favourites and history.
 - A device type or model change reaches others with our next message, as in official, unlike a changed alias, which is announced at once.
 
 The UDP reply is a harmless extra that official no longer has, and can be removed whenever convenient.

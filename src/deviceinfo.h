@@ -27,6 +27,9 @@ public:
     void setAlias(const QString &alias);
     // Picks a new random "Adjective Fruit" alias (different from the current one).
     Q_INVOKABLE void randomizeAlias();
+    // Device type and model back to their defaults; the alias and the
+    // fingerprint stay, they are who we are to other devices.
+    Q_INVOKABLE void restoreDefaults();
     // LocalSend's Verify page for a peer: { text, icons } (see verification.h).
     // Empty text and icons if either fingerprint is unknown.
     Q_INVOKABLE QVariantMap verification(const QString &peerFingerprint) const;

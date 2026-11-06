@@ -128,6 +128,8 @@ public:
     Q_INVOKABLE void pickDownloadFolder();
     // Forgets the user's choice and goes back to the automatic default.
     Q_INVOKABLE void resetDownloadFolder();
+    // Every setting back to its default. A new setting must be added here.
+    Q_INVOKABLE void restoreDefaults();
 
     // The native folder picker, starting at `start` (Qt separators). Blocks in
     // a nested event loop, so never call it from a QML click handler. Returns

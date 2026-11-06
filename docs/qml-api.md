@@ -91,6 +91,8 @@ Properties: `count` (int).  Methods: `clear()`.
   `"headless"` or `"server"`; other values are ignored. Other devices learn it from our
   next announcement or request, as in the official app.
 - `randomizeAlias()` — picks a new random "Adjective Fruit" name
+- `restoreDefaults()` — `deviceType` and `deviceModel` back to their defaults. `alias` and
+  `fingerprint` stay.
 - `verification(peerFingerprint)` → `{ text, icons }` — LocalSend's Verify page: `text` is
   both fingerprints sorted and joined, `icons` 16 icon names (SHA-256 of `text`, first 128
   bits in base 260). Show each as `image://verify/<name>/<rrggbb>` (the icon in that colour,
@@ -131,6 +133,9 @@ Receive:
 - `pickDownloadFolder()` — opens the native folder picker; returns immediately,
   `downloadFolder` changes when the user confirms (nothing happens on cancel)
 - `resetDownloadFolder()` — back to the default
+- `restoreDefaults()` — every setting here back to its default, which also removes the PIN.
+  Each change takes effect as if made by hand, so turning `encryption` back on restarts a
+  running server, and `port` and `multicastGroup` wait for `discovery.needRestart`.
 - `saveMediaToGallery` (bool, default true) — received images and videos go to the
   phone's media folders instead of `downloadFolder`, like the official app: images to
   `Images\Symbisend`, videos to `Videos\Symbisend` on the download folder's drive

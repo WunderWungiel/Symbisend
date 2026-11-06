@@ -121,6 +121,29 @@ bool Settings::store(const char *key, QString *member, const QString &value)
     return true;
 }
 
+void Settings::restoreDefaults()
+{
+    qDebug() << "Settings: restoring the defaults";
+    setAdvancedSettings(false);
+    setTheme(QLatin1String("dark"));
+    setLanguage(QLatin1String("system"));
+    setQuickSave(false);
+    setQuickSaveFromFavorites(false);
+    setRequirePin(false);
+    setPin(QString());
+    resetDownloadFolder();
+    setSaveMediaToGallery(true);
+    setAutoFinish(false);
+    setSaveToHistory(true);
+    setReceiveViaLinkAutoAccept(false);
+    setVerifyChecksums(true);
+    setCreateChecksums(false);
+    setPort(DefaultPort);
+    setMulticastGroup(defaultMulticastGroup());
+    setDiscoveryTimeout(kDefaultDiscoveryTimeoutMs);
+    setEncryption(true);
+}
+
 void Settings::setAdvancedSettings(bool on)
 {
     if (store(kAdvancedSettingsKey, &m_advancedSettings, on))
