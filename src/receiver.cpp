@@ -1000,21 +1000,25 @@ QString Receiver::safeRelativePath(const QString &fileName)
     return parts.isEmpty() ? QString::fromLatin1("file") : parts.join(QLatin1String("/"));
 }
 
-// path, or "name (1).ext", "name (2).ext", ... if it exists already.
+// path or, if it exists already, "name (2).ext", "name (3).ext", ... A number the name ends in
+// is replaced, not added to, and the extension of a numbered name is lowercased, like the
+// official app.
 QString Receiver::uniquePath(const QString &path)
 {
     if (!QFileInfo(path).exists())
         return path;
     const QFileInfo fi(path);
     const QString dir = fi.absolutePath() + QLatin1Char('/');
-    const QString base = fi.completeBaseName();
-    const QString suffix = fi.suffix().isEmpty() ? QString() : QLatin1Char('.') + fi.suffix();
-    for (int i = 1; i < 10000; ++i) {
-        const QString candidate = dir + QString::fromLatin1("%1 (%2)%3").arg(base).arg(i).arg(suffix);
+    QString base = fi.completeBaseName();
+    QRegExp numbered(QLatin1String("(.*)\\s\\([0-9]+\\)"));
+    if (numbered.exactMatch(base))
+        base = numbered.cap(1);
+    const QString suffix = fi.suffix().isEmpty() ? QString() : QLatin1Char('.') + fi.suffix().toLower();
+    for (int i = 2; ; ++i) {
+        const QString candidate = dir + base + QString::fromLatin1(" (%1)").arg(i) + suffix;
         if (!QFileInfo(candidate).exists())
             return candidate;
     }
-    return path;
 }
 
 QString Receiver::randomToken()

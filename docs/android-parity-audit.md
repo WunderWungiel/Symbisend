@@ -90,10 +90,10 @@ Found on 2026-11-06.
 
 ### 9. Numbering of files with the same name
 
-- [ ] Fixed
+- [x] Fixed
 
-- **Ours:** `Receiver::uniquePath()` starts at `photo (1).jpg`, and a file already named `photo (1).jpg` becomes `photo (1) (1).jpg`.
-- **Official:** starts at `photo (2).jpg`, replaces an existing ` (n)` instead of adding another, and lowercases the extension of a numbered name.
+- **Ours:** `Receiver::uniquePath()` started at `photo (1).jpg`, and a file already named `photo (1).jpg` became `photo (1) (1).jpg`. After 9,999 numbered copies it overwrote the original.
+- **Official:** starts at `photo (2).jpg`, replaces an existing ` (n)` instead of adding another, lowercases the extension of a numbered name, and has no upper limit.
 - **Official source:** `packages/localsend_isolates/lib/src/task/server/file_saver.dart` (`digestFilePathAndPrepareDirectory`), `packages/localsend_isolates/lib/util/file_path_helper.dart` (`withCount`).
 
 ## Logic differences
