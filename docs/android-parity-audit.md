@@ -179,7 +179,7 @@ This is the biggest logic change, and it should also save battery and CPU on the
 - [ ] **Address dialog:** `#123` suffix mode and recent devices
 - [ ] **Settings:** port, multicast group, discovery timeout, device type and model, turning off checksum verification
 - [ ] **Translations:** the language setting is stored but does nothing
-- [ ] **Receive via link page:** copying the URL and showing it as a QR code (`web_share_page.dart`)
+- [x] **Receive via link page:** copying the URL and showing it as a QR code (`web_share_page.dart`, `qr_dialog.dart`)
 
 ## Robustness
 

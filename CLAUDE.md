@@ -48,4 +48,6 @@ Flow:
 
 Use the stock Symbian theme icons whenever one fits: pass the name as `iconSource` (`toolbar-back`, `toolbar-refresh`, `toolbar-settings`, `toolbar-share`, `toolbar-home`, `toolbar-add`, `toolbar-delete`, `toolbar-search`, `toolbar-menu`, `toolbar-list`, `toolbar-next`, `toolbar-previous`, `toolbar-dialer`, `toolbar-mediacontrol-{play,pause,stop,forward,backwards}`). These follow `platformInverted` automatically. Only add your own SVG in `qml/Symbisend/images/` when no stock icon fits (e.g. device types, info). Use Material Design icons, as LocalSend does, in a white `name.svg` and a black `name-inverted.svg` (SVG Tiny 1.2), and pick between them with `platformInverted`.
 
+QR codes come from `external/qrcodegen/` (Project Nayuki's C library, unmodified, copied in; see its README) through `image://qrcode` (`src/qrcode.h`).
+
 `qmlapplicationviewer/` is Qt Creator–generated boilerplate; don't modify it or the `qtcAddDeployment()` lines in the `.pro`.

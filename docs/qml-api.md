@@ -425,6 +425,11 @@ they arrive through `receiver` as a sender with `peerAlias` `Web Browser`,
 - `receiveActive` (bool, read-only)
 - `url` (string) — `http://<our IP>:53317` (`https://` while `discovery.serverHttps`), or
   `""` while offline.
+  Copy it with `picker.copyText()`. Show it as a QR code with `QrCodeDialog`, or any
+  `Image` with source `"image://qrcode/" + encodeURIComponent(text)` (`src/qrcode.h`): black
+  on white in every theme, with a border of at least 4 modules. Set `sourceSize` to the
+  size shown and `smooth: false`. The official app adds `/?pin=<PIN>` to the text while
+  there is a PIN, and `upload.html` reads it from there.
 - `encrypted` (bool, read/write) — while active, the server speaks https instead of
   following `settings.encryption` (the server restarts, `url` changes). Like the official
   app it is not persisted: `startReceive()` and `stop()` set it to false. Browsers warn

@@ -22,6 +22,7 @@
 #include "src/webshare.h"
 #include "src/tlsrandom.h"
 #include "src/verification.h"
+#include "src/qrcode.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -78,6 +79,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("favorites"), &favorites);
     // image://verify/<name>/<rrggbb>, the Verify dialog's icons
     viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
+    viewer.engine()->addImageProvider(QLatin1String("qrcode"), new QrCodeProvider);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));

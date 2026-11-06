@@ -65,6 +65,23 @@ Page {
                         font.pixelSize: platformStyle.fontSizeLarge
                         text: webShare.url
                     }
+                    Row {
+                        visible: webShare.url != "" && discovery.serverRunning
+                        spacing: platformStyle.paddingMedium
+
+                        ToolButton {
+                            platformInverted: page.platformInverted
+                            iconSource: page.platformInverted ? "images/content-copy-inverted.svg"
+                                                              : "images/content-copy.svg"
+                            onClicked: picker.copyText(webShare.url)
+                        }
+                        ToolButton {
+                            platformInverted: page.platformInverted
+                            iconSource: page.platformInverted ? "images/qr-code-inverted.svg"
+                                                              : "images/qr-code.svg"
+                            onClicked: qrDialog.open()
+                        }
+                    }
                     Button {
                         platformInverted: page.platformInverted
                         visible: webShare.url == "" || !discovery.serverRunning
@@ -128,6 +145,15 @@ Page {
     }
 
     ScrollDecorator { flickableItem: flick; platformInverted: page.platformInverted }
+
+    // Like the official app, the code carries the PIN, so that a browser
+    // opened from it doesn't ask; upload.html reads it from the query.
+    QrCodeDialog {
+        id: qrDialog
+        address: webShare.url
+        qrText: webShare.pin != "" ? webShare.url + "/?pin=" + encodeURIComponent(webShare.pin)
+                                   : webShare.url
+    }
 
     CommonDialog {
         id: pinDialog

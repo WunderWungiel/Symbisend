@@ -58,7 +58,7 @@ CONFIG += qdeclarative-boostable
 # Qt Quick Components for Symbian
 symbian:CONFIG += qt-components
 
-INCLUDEPATH += src
+INCLUDEPATH += src external/qrcodegen
 
 # mbedTLS, compiled in (no system-wide TLS library needed)
 include(external/mbedtls/mbedtls.pri)
@@ -85,7 +85,9 @@ SOURCES += main.cpp \
     src/tlsrandom.cpp \
     src/tlsserver.cpp \
     src/sha256hash.cpp \
-    src/verification.cpp
+    src/verification.cpp \
+    src/qrcode.cpp \
+    external/qrcodegen/qrcodegen.c
 
 HEADERS += \
     src/logger.h \
@@ -109,7 +111,9 @@ HEADERS += \
     src/tlsrandom.h \
     src/tlsserver.h \
     src/sha256hash.h \
-    src/verification.h
+    src/verification.h \
+    src/qrcode.h \
+    external/qrcodegen/qrcodegen.h
 
 # Pages served to web browsers (official LocalSend assets, see web/README.md)
 RESOURCES += web.qrc
