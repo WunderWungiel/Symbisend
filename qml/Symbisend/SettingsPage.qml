@@ -100,9 +100,10 @@ Page {
             }
 
             // ------------------------------------------------ Send
-            SettingsHeading { text: "Send" }
+            SettingsHeading { text: "Send"; visible: settings.advancedSettings }
 
             SettingsSwitch {
+                visible: settings.advancedSettings
                 title: "Create checksums"
                 subTitle: "Slower start with large files"
                 checked: settings.createChecksums
@@ -133,6 +134,7 @@ Page {
             }
             // Applied at once: a running server restarts as https / http.
             SettingsSwitch {
+                visible: settings.advancedSettings
                 title: "Encryption"
                 checked: settings.encryption
                 onToggled: {
@@ -163,6 +165,11 @@ Page {
             SettingsItem {
                 title: "Log"
                 onClicked: page.logRequested()
+            }
+            SettingsSwitch {
+                title: "Advanced settings"
+                checked: settings.advancedSettings
+                onToggled: settings.advancedSettings = value
             }
         }
     }

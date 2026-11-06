@@ -16,6 +16,9 @@
 class Settings : public QObject
 {
     Q_OBJECT
+    // Shows the rarely needed settings on the Settings page, as in the official app.
+    Q_PROPERTY(bool advancedSettings READ advancedSettings WRITE setAdvancedSettings NOTIFY advancedSettingsChanged)
+
     // General
     Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged)
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
@@ -49,6 +52,9 @@ class Settings : public QObject
 
 public:
     explicit Settings(QObject *parent = 0);
+
+    bool advancedSettings() const { return m_advancedSettings; }
+    void setAdvancedSettings(bool on);
 
     // "dark" (default) or "light".
     QString theme() const { return m_theme; }
@@ -104,6 +110,7 @@ public:
     static QString chooseFolder(const QString &start, const QString &title);
 
 signals:
+    void advancedSettingsChanged();
     void themeChanged();
     void languageChanged();
     void quickSaveChanged();
@@ -129,6 +136,7 @@ private:
     static bool store(const char *key, bool *member, bool value);
     static bool store(const char *key, QString *member, const QString &value);
 
+    bool m_advancedSettings;
     QString m_theme;
     QString m_language;
     bool m_quickSave;

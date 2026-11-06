@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #endif
 
+static const char *kAdvancedSettingsKey = "general/advancedSettings";
 static const char *kThemeKey = "general/theme";
 static const char *kLanguageKey = "general/language";
 static const char *kQuickSaveKey = "receive/quickSave";
@@ -30,6 +31,7 @@ Settings::Settings(QObject *parent)
     : QObject(parent)
 {
     QSettings s;
+    m_advancedSettings = s.value(QLatin1String(kAdvancedSettingsKey), false).toBool();
     m_theme = s.value(QLatin1String(kThemeKey), QLatin1String("dark")).toString();
     if (m_theme != QLatin1String("dark") && m_theme != QLatin1String("light"))
         m_theme = QLatin1String("dark");
@@ -51,7 +53,8 @@ Settings::Settings(QObject *parent)
     m_receiveViaLinkAutoAccept = s.value(QLatin1String(kReceiveViaLinkAutoAcceptKey), false).toBool();
     m_createChecksums = s.value(QLatin1String(kCreateChecksumsKey), false).toBool();
     m_encryption = s.value(QLatin1String(kEncryptionKey), true).toBool();
-    qDebug() << "Settings: theme" << m_theme << "language" << m_language
+    qDebug() << "Settings: advanced" << m_advancedSettings
+             << "theme" << m_theme << "language" << m_language
              << "quickSave" << m_quickSave
              << "quickSaveFromFavorites" << m_quickSaveFromFavorites << "requirePin" << m_requirePin
              << "saveMediaToGallery" << m_saveMediaToGallery
@@ -82,6 +85,12 @@ bool Settings::store(const char *key, QString *member, const QString &value)
     QSettings().setValue(QLatin1String(key), value);
     qDebug() << "Settings:" << key << "=" << value;
     return true;
+}
+
+void Settings::setAdvancedSettings(bool on)
+{
+    if (store(kAdvancedSettingsKey, &m_advancedSettings, on))
+        emit advancedSettingsChanged();
 }
 
 void Settings::setTheme(const QString &theme)

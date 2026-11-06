@@ -91,6 +91,9 @@ Properties: `count` (int).  Methods: `clear()`.
 ## `settings` — app settings (persisted)
 All read/write unless noted. Settings marked *(stored only)* are not acted on yet.
 
+- `advancedSettings` (bool, default false) — the Settings page shows the same rows as the
+  official app's "Advanced settings". Changes nothing else: hidden settings stay in force.
+
 General:
 - `theme` (string) — `"dark"` (default) or `"light"`; other values are ignored.
   Applied in QML: light = `platformInverted` on the window and every component
