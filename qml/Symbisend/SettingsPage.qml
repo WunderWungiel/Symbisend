@@ -158,6 +158,12 @@ Page {
                 subTitle: page.nameOf(page.deviceTypeValues, page.deviceTypeNames, myDevice.deviceType)
                 onClicked: deviceTypeDialog.open()
             }
+            SettingsItem {
+                visible: settings.advancedSettings
+                title: "Device model"
+                subTitle: myDevice.deviceModel
+                onClicked: deviceModelDialog.openWith(myDevice.deviceModel)
+            }
             // Applied at once: a running server restarts as https / http.
             SettingsSwitch {
                 visible: settings.advancedSettings
@@ -215,6 +221,12 @@ Page {
         titleText: "Device type"
         model: page.deviceTypeNames
         onAccepted: myDevice.deviceType = page.deviceTypeValues[selectedIndex]
+    }
+
+    ValueDialog {
+        id: deviceModelDialog
+        titleText: "Device model"
+        onEntered: myDevice.deviceModel = value
     }
 
     ContextMenu {

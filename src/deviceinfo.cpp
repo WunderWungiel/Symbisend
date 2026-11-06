@@ -12,6 +12,18 @@
 const char *DeviceInfo::ProtocolVersion = "2.2";
 
 static const char *kDeviceTypeKey = "identity/deviceType";
+static const char *kDeviceModelKey = "identity/deviceModel";
+
+// Like the official app: the manufacturer on phones ("Samsung", ...), the OS
+// on desktops ("Windows", ...).
+static QString defaultDeviceModel()
+{
+#if defined(Q_OS_SYMBIAN) || defined(MEEGO_EDITION_HARMATTAN)
+    return QLatin1String("Nokia");
+#else
+    return QLatin1String("Qt");
+#endif
+}
 
 static bool isDeviceType(const QString &type)
 {
@@ -76,13 +88,9 @@ DeviceInfo::DeviceInfo(QObject *parent)
     m_deviceType = settings.value(QLatin1String(kDeviceTypeKey)).toString();
     if (!isDeviceType(m_deviceType))
         m_deviceType = QLatin1String("mobile");
-    // Like the official app: the manufacturer on phones ("Samsung", ...),
-    // the OS on desktops ("Windows", ...).
-#if defined(Q_OS_SYMBIAN) || defined(MEEGO_EDITION_HARMATTAN)
-    m_deviceModel = QLatin1String("Nokia");
-#else
-    m_deviceModel = QLatin1String("Qt");
-#endif
+    m_deviceModel = settings.value(QLatin1String(kDeviceModelKey)).toString();
+    if (m_deviceModel.isEmpty())
+        m_deviceModel = defaultDeviceModel();
 }
 
 void DeviceInfo::setAlias(const QString &alias)
@@ -94,6 +102,21 @@ void DeviceInfo::setAlias(const QString &alias)
     qDebug() << "DeviceInfo: alias set to" << m_alias;
     QSettings().setValue(QLatin1String("identity/alias"), m_alias);
     emit aliasChanged();
+}
+
+void DeviceInfo::setDeviceModel(const QString &model)
+{
+    const QString chosen = model.trimmed();
+    const QString effective = chosen.isEmpty() ? defaultDeviceModel() : chosen;
+    if (chosen.isEmpty())
+        QSettings().remove(QLatin1String(kDeviceModelKey));
+    else
+        QSettings().setValue(QLatin1String(kDeviceModelKey), chosen);
+    if (effective == m_deviceModel)
+        return;
+    m_deviceModel = effective;
+    qDebug() << "DeviceInfo: device model set to" << m_deviceModel;
+    emit deviceModelChanged();
 }
 
 void DeviceInfo::setDeviceType(const QString &type)

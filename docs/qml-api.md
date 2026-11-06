@@ -79,7 +79,9 @@ Properties: `count` (int).  Methods: `clear()`.
   themselves once online again.
 
 ## `myDevice` — our identity as other devices see it
-- `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`
+- `alias` (string, read/write, persisted), `fingerprint`, `port`
+- `deviceModel` (string, read/write, persisted) — shown by other devices below our name.
+  Default `"Nokia"`; `""` goes back to it.
 - `deviceType` (string, read/write, persisted) — `"mobile"` (default), `"desktop"`, `"web"`,
   `"headless"` or `"server"`; other values are ignored. Other devices learn it from our
   next announcement or request, as in the official app.
