@@ -75,6 +75,8 @@
         <file>qml/Symbisend/images/send-video-inverted.svg</file>
         <file>qml/Symbisend/images/send-video.svg</file>
         <file>qml/Symbisend/images/symbisend.svg</file>
+        <file>qml/Symbisend/images/vpn-key-inverted.svg</file>
+        <file>qml/Symbisend/images/vpn-key.svg</file>
         <file>qml/Symbisend/images/undo-inverted.svg</file>
         <file>qml/Symbisend/images/undo.svg</file>
         <file>qml/Symbisend/images/verified-user-inverted.svg</file>

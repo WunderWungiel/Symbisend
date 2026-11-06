@@ -153,6 +153,7 @@ Page {
         address: webShare.url
         qrText: webShare.pin != "" ? webShare.url + "/?pin=" + encodeURIComponent(webShare.pin)
                                    : webShare.url
+        pin: webShare.pin
     }
 
     CommonDialog {
