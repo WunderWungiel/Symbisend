@@ -1,10 +1,8 @@
 #include <QtGui/QApplication>
-#include <QtDeclarative/QDeclarativeComponent>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QDateTime>
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QUrl>
 
 #include "qmlapplicationviewer.h"
@@ -24,13 +22,6 @@
 #include "src/webshare.h"
 #include "src/tlsrandom.h"
 #include "src/verification.h"
-#include "src/stallwatch.h"
-
-// Temporary: where the wait for the first frame goes.
-static void logStartupStep(QElapsedTimer &timer, const char *step)
-{
-    qDebug() << "Startup:" << step << "took" << timer.restart() << "ms";
-}
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -42,8 +33,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     Logger::install();
     qDebug() << "Symbisend starting, Qt runtime" << qVersion() << "(built with" << QT_VERSION_STR << ")";
     qDebug() << "Log file:" << Logger::instance()->logFilePath();
-    QElapsedTimer startupTimer;
-    startupTimer.start();
     TlsRandom::init();
 
     Settings settings;
@@ -71,10 +60,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
                      &sender, SLOT(onCancelReceived(QString,QString)));
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
-    logStartupStep(startupTimer, "C++ objects");
-
     QmlApplicationViewer viewer;
-    logStartupStep(startupTimer, "viewer");
     QDeclarativeContext *ctx = viewer.rootContext();
     ctx->setContextProperty(QLatin1String("logger"), Logger::instance());
     ctx->setContextProperty(QLatin1String("myDevice"), &device);
@@ -94,19 +80,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
-    logStartupStep(startupTimer, "context properties");
-    // Compiled here first (the engine keeps the result), so that setSource()
-    // below only creates the objects, and the log tells the two apart.
-    QDeclarativeComponent compiled(viewer.engine(), QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));
-    logStartupStep(startupTimer, "QML compile");
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));
-    logStartupStep(startupTimer, "QML objects");
     viewer.showExpanded();
-    logStartupStep(startupTimer, "show");
 
     network.connectNetwork();
-
-    StallWatch stallWatch;
 
     return app->exec();
 }
