@@ -17,6 +17,9 @@ Page {
     property variant languageValues: ["system", "en"]
     property variant languageNames: ["System", "English"]
 
+    property variant deviceTypeValues: ["mobile", "desktop", "web", "headless", "server"]
+    property variant deviceTypeNames: ["Mobile", "Desktop", "Web", "Headless", "Server"]
+
     function nameOf(values, names, value) {
         for (var i = 0; i < values.length; ++i) {
             if (values[i] == value)
@@ -138,17 +141,6 @@ Page {
                     onClicked: discovery.stopServer()
                 }
             }
-            // Applied at once: a running server restarts as https / http.
-            SettingsSwitch {
-                visible: settings.advancedSettings
-                title: "Encryption"
-                checked: settings.encryption
-                onToggled: {
-                    settings.encryption = value
-                    if (!value)
-                        encryptionOffDialog.open()
-                }
-            }
             SettingsItem {
                 title: "Device name"
                 subTitle: myDevice.alias
@@ -158,6 +150,23 @@ Page {
                     platformInverted: page.platformInverted
                     text: "Random"
                     onClicked: myDevice.randomizeAlias()
+                }
+            }
+            SettingsItem {
+                visible: settings.advancedSettings
+                title: "Device type"
+                subTitle: page.nameOf(page.deviceTypeValues, page.deviceTypeNames, myDevice.deviceType)
+                onClicked: deviceTypeDialog.open()
+            }
+            // Applied at once: a running server restarts as https / http.
+            SettingsSwitch {
+                visible: settings.advancedSettings
+                title: "Encryption"
+                checked: settings.encryption
+                onToggled: {
+                    settings.encryption = value
+                    if (!value)
+                        encryptionOffDialog.open()
                 }
             }
 
@@ -198,6 +207,14 @@ Page {
         titleText: "Language"
         model: page.languageNames
         onAccepted: settings.language = page.languageValues[selectedIndex]
+    }
+
+    SelectionDialog {
+        id: deviceTypeDialog
+        platformInverted: page.platformInverted
+        titleText: "Device type"
+        model: page.deviceTypeNames
+        onAccepted: myDevice.deviceType = page.deviceTypeValues[selectedIndex]
     }
 
     ContextMenu {

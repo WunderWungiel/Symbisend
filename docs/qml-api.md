@@ -80,6 +80,9 @@ Properties: `count` (int).  Methods: `clear()`.
 
 ## `myDevice` — our identity as other devices see it
 - `alias` (string, read/write, persisted), `fingerprint`, `deviceModel`, `port`
+- `deviceType` (string, read/write, persisted) — `"mobile"` (default), `"desktop"`, `"web"`,
+  `"headless"` or `"server"`; other values are ignored. Other devices learn it from our
+  next announcement or request, as in the official app.
 - `randomizeAlias()` — picks a new random "Adjective Fruit" name
 - `verification(peerFingerprint)` → `{ text, icons }` — LocalSend's Verify page: `text` is
   both fingerprints sorted and joined, `icons` 16 icon names (SHA-256 of `text`, first 128

@@ -11,6 +11,15 @@
 
 const char *DeviceInfo::ProtocolVersion = "2.2";
 
+static const char *kDeviceTypeKey = "identity/deviceType";
+
+static bool isDeviceType(const QString &type)
+{
+    return type == QLatin1String("mobile") || type == QLatin1String("desktop")
+            || type == QLatin1String("web") || type == QLatin1String("headless")
+            || type == QLatin1String("server");
+}
+
 static QString randomAlias()
 {
     static const char *adjectives[] = {
@@ -64,6 +73,9 @@ DeviceInfo::DeviceInfo(QObject *parent)
         m_fingerprint = randomFingerprint();
         settings.setValue(QLatin1String("identity/fingerprint"), m_fingerprint);
     }
+    m_deviceType = settings.value(QLatin1String(kDeviceTypeKey)).toString();
+    if (!isDeviceType(m_deviceType))
+        m_deviceType = QLatin1String("mobile");
     // Like the official app: the manufacturer on phones ("Samsung", ...),
     // the OS on desktops ("Windows", ...).
 #if defined(Q_OS_SYMBIAN) || defined(MEEGO_EDITION_HARMATTAN)
@@ -82,6 +94,20 @@ void DeviceInfo::setAlias(const QString &alias)
     qDebug() << "DeviceInfo: alias set to" << m_alias;
     QSettings().setValue(QLatin1String("identity/alias"), m_alias);
     emit aliasChanged();
+}
+
+void DeviceInfo::setDeviceType(const QString &type)
+{
+    if (!isDeviceType(type)) {
+        qWarning() << "DeviceInfo: unknown device type" << type;
+        return;
+    }
+    if (type == m_deviceType)
+        return;
+    m_deviceType = type;
+    qDebug() << "DeviceInfo: device type set to" << m_deviceType;
+    QSettings().setValue(QLatin1String(kDeviceTypeKey), m_deviceType);
+    emit deviceTypeChanged();
 }
 
 void DeviceInfo::randomizeAlias()

@@ -11,6 +11,8 @@ class DeviceInfo : public QObject
     Q_PROPERTY(QString alias READ alias WRITE setAlias NOTIFY aliasChanged)
     Q_PROPERTY(QString fingerprint READ fingerprint CONSTANT)
     Q_PROPERTY(QString deviceModel READ deviceModel CONSTANT)
+    // "mobile" (default), "desktop", "web", "headless" or "server".
+    Q_PROPERTY(QString deviceType READ deviceType WRITE setDeviceType NOTIFY deviceTypeChanged)
     Q_PROPERTY(int port READ port CONSTANT)
 
 public:
@@ -28,7 +30,8 @@ public:
     Q_INVOKABLE QVariantMap verification(const QString &peerFingerprint) const;
     QString fingerprint() const { return m_fingerprint; }
     QString deviceModel() const { return m_deviceModel; }
-    QString deviceType() const { return QLatin1String("mobile"); }
+    QString deviceType() const { return m_deviceType; }
+    void setDeviceType(const QString &type);
     int port() const { return DefaultPort; }
     // What our server speaks right now (Discovery sets it on every start).
     QString protocol() const { return QLatin1String(m_https ? "https" : "http"); }
@@ -41,11 +44,13 @@ public:
 
 signals:
     void aliasChanged();
+    void deviceTypeChanged();
 
 private:
     QString m_alias;
     QString m_fingerprint;
     QString m_deviceModel;
+    QString m_deviceType;
     bool m_https;
 };
 
