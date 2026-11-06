@@ -26,6 +26,7 @@ static const char *kSaveToHistoryKey = "receive/saveToHistory";
 static const char *kReceiveViaLinkAutoAcceptKey = "receive/viaLinkAutoAccept";
 static const char *kVerifyChecksumsKey = "receive/verifyChecksums";
 static const char *kCreateChecksumsKey = "send/createChecksums";
+static const char *kPortKey = "network/port";
 static const char *kDiscoveryTimeoutKey = "network/discoveryTimeout";
 static const char *kEncryptionKey = "network/encryption";
 
@@ -58,6 +59,9 @@ Settings::Settings(QObject *parent)
     m_receiveViaLinkAutoAccept = s.value(QLatin1String(kReceiveViaLinkAutoAcceptKey), false).toBool();
     m_verifyChecksums = s.value(QLatin1String(kVerifyChecksumsKey), true).toBool();
     m_createChecksums = s.value(QLatin1String(kCreateChecksumsKey), false).toBool();
+    m_port = s.value(QLatin1String(kPortKey), int(DefaultPort)).toInt();
+    if (m_port < 1 || m_port > 65535)
+        m_port = DefaultPort;
     m_discoveryTimeout = s.value(QLatin1String(kDiscoveryTimeoutKey), kDefaultDiscoveryTimeoutMs).toInt();
     if (m_discoveryTimeout < 1 || m_discoveryTimeout > kMaxDiscoveryTimeoutMs)
         m_discoveryTimeout = kDefaultDiscoveryTimeoutMs;
@@ -71,7 +75,7 @@ Settings::Settings(QObject *parent)
              << "receiveViaLinkAutoAccept" << m_receiveViaLinkAutoAccept
              << "verifyChecksums" << m_verifyChecksums
              << "createChecksums" << m_createChecksums
-             << "discoveryTimeout" << m_discoveryTimeout
+             << "port" << m_port << "discoveryTimeout" << m_discoveryTimeout
              << "encryption" << m_encryption;
 
     m_custom = s.value(QLatin1String(kDownloadFolderKey)).toString();
@@ -200,6 +204,20 @@ void Settings::setCreateChecksums(bool on)
 {
     if (store(kCreateChecksumsKey, &m_createChecksums, on))
         emit createChecksumsChanged();
+}
+
+void Settings::setPort(int port)
+{
+    if (port < 1 || port > 65535) {
+        qWarning() << "Settings: port" << port << "is out of range, ignored";
+        return;
+    }
+    if (port == m_port)
+        return;
+    m_port = port;
+    QSettings().setValue(QLatin1String(kPortKey), port);
+    qDebug() << "Settings: port" << port;
+    emit portChanged();
 }
 
 void Settings::setDiscoveryTimeout(int ms)

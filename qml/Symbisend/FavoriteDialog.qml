@@ -42,7 +42,7 @@ CommonDialog {
         deviceAlias = ""
         nameField.text = ""
         ipField.text = ""
-        portField.text = String(myDevice.port)
+        portField.text = String(settings.port)
         open()
     }
 

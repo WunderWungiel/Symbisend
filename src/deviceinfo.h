@@ -14,10 +14,11 @@ class DeviceInfo : public QObject
     Q_PROPERTY(QString deviceModel READ deviceModel WRITE setDeviceModel NOTIFY deviceModelChanged)
     // "mobile" (default), "desktop", "web", "headless" or "server".
     Q_PROPERTY(QString deviceType READ deviceType WRITE setDeviceType NOTIFY deviceTypeChanged)
-    Q_PROPERTY(int port READ port CONSTANT)
+    // The port of our server, which Discovery sets on every start. May differ
+    // from settings.port until the server restarts (discovery.needRestart).
+    Q_PROPERTY(int port READ port NOTIFY portChanged)
 
 public:
-    static const int DefaultPort = 53317;
     static const char *ProtocolVersion;
 
     explicit DeviceInfo(QObject *parent = 0);
@@ -34,7 +35,8 @@ public:
     void setDeviceModel(const QString &model);
     QString deviceType() const { return m_deviceType; }
     void setDeviceType(const QString &type);
-    int port() const { return DefaultPort; }
+    int port() const { return m_port; }
+    void setPort(int port);
     // What our server speaks right now (Discovery sets it on every start).
     QString protocol() const { return QLatin1String(m_https ? "https" : "http"); }
     void setHttps(bool on) { m_https = on; }
@@ -46,6 +48,7 @@ public:
 
 signals:
     void aliasChanged();
+    void portChanged();
     void deviceModelChanged();
     void deviceTypeChanged();
 
@@ -54,6 +57,7 @@ private:
     QString m_fingerprint;
     QString m_deviceModel;
     QString m_deviceType;
+    int m_port;
     bool m_https;
 };
 

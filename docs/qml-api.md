@@ -41,7 +41,10 @@ Properties: `count` (int).  Methods: `clear()`.
 ## `discovery`
 - `scanning` (bool) — `discover()`, `refresh()` or `scan()` is running, in any stage
 - `scanProgress` (0–100) — of the subnet scan; stays 0 when none was needed
-- `serverRunning` (bool) — our HTTP server on port 53317 is up
+- `serverRunning` (bool) — our HTTP server on `myDevice.port` is up
+- `needRestart` (bool) — the running server doesn't use `settings.port` yet, until
+  `restartServer()` or anything else that restarts it. Show the official app's "Restart the
+  server to apply the settings!".
 - `serverHttps` (bool) — the running server speaks https (false while stopped). It
   follows `settings.encryption`, or `webShare.encrypted` while `webShare.receiveActive`;
   a change restarts a running server at once (requests in progress are aborted) and
@@ -79,7 +82,8 @@ Properties: `count` (int).  Methods: `clear()`.
   themselves once online again.
 
 ## `myDevice` — our identity as other devices see it
-- `alias` (string, read/write, persisted), `fingerprint`, `port`
+- `alias` (string, read/write, persisted), `fingerprint`
+- `port` (int) — of our server. Follows `settings.port` when the server starts.
 - `deviceModel` (string, read/write, persisted) — shown by other devices below our name.
   Default `"Nokia"`; `""` goes back to it.
 - `deviceType` (string, read/write, persisted) — `"mobile"` (default), `"desktop"`, `"web"`,
@@ -249,7 +253,7 @@ and opens `SendDialog.qml`.
 
 ## `receiver` — receiving from other devices
 Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port
-53317, while `discovery.serverRunning`). One session at a time; while busy, other senders
+`myDevice.port`, while `discovery.serverRunning`). One session at a time; while busy, other senders
 are told we're busy. Files go to the session's `folder`, at first `settings.downloadFolder`
 (images/videos to the media folders with `saveToGallery`), folders inside it are created
 as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one becomes
@@ -323,6 +327,11 @@ Send:
   is off here because hashing large files first is slow on a phone.
 
 Network:
+- `port` (int, default 53317, also `defaultPort`) — 1 to 65535; other values are ignored.
+  Like the official app it applies to the scan, looking up addresses and new favourites at
+  once, and to our server and multicast when the server restarts (`discovery.needRestart`).
+  Devices on another port find us only through an announcement on theirs, so changing this
+  usually hides us.
 - `discoveryTimeout` (int, default 3000) — milliseconds a device gets to answer the subnet
   scan and the favourites' probes, 1 to 60000; other values are ignored. Used from the next
   request on. Answering an announcement and `lookUp()` keep their 5 s
@@ -439,7 +448,7 @@ which sends the chosen files through the normal `prepare-upload`/`upload` endpoi
 they arrive through `receiver` as a sender with `peerAlias` `Web Browser`,
 `peerDeviceType` `web`. While inactive, `/` answers with LocalSend's 403 page.
 - `receiveActive` (bool, read-only)
-- `url` (string) — `http://<our IP>:53317` (`https://` while `discovery.serverHttps`), or
+- `url` (string) — `http://<our IP>:<myDevice.port>` (`https://` while `discovery.serverHttps`), or
   `""` while offline.
   Copy it with `picker.copyText()`. Show it as a QR code with `QrCodeDialog`, or any
   `Image` with source `"image://qrcode/<rrggbb>/" + encodeURIComponent(text)`

@@ -122,6 +122,12 @@ Page {
             // ------------------------------------------------ Network
             SettingsHeading { text: "Network" }
 
+            SettingsNote {
+                visible: discovery.needRestart
+                warning: true
+                text: "Restart the server to apply the settings!"
+            }
+
             SettingsItem {
                 title: "Server"
                 subTitle: discovery.serverRunning ? "Running" : "Stopped"
@@ -166,6 +172,12 @@ Page {
             }
             SettingsItem {
                 visible: settings.advancedSettings
+                title: "Port"
+                subTitle: String(settings.port)
+                onClicked: portDialog.openWith(settings.port)
+            }
+            SettingsItem {
+                visible: settings.advancedSettings
                 title: "Discovery timeout"
                 subTitle: settings.discoveryTimeout + " ms"
                 onClicked: discoveryTimeoutDialog.openWith(settings.discoveryTimeout)
@@ -180,6 +192,11 @@ Page {
                     if (!value)
                         encryptionOffDialog.open()
                 }
+            }
+            SettingsNote {
+                visible: settings.port != settings.defaultPort
+                text: "You might not be detected by other devices because you are using "
+                      + "a custom port. (default: " + settings.defaultPort + ")"
             }
 
             // ------------------------------------------------ Other
@@ -233,6 +250,13 @@ Page {
         id: deviceModelDialog
         titleText: "Device model"
         onEntered: myDevice.deviceModel = value
+    }
+
+    ValueDialog {
+        id: portDialog
+        titleText: "Port"
+        digitsOnly: true
+        onEntered: settings.port = parseInt(value, 10) // ignored if invalid
     }
 
     ValueDialog {

@@ -60,7 +60,9 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
       m_linkActive(false), m_linkEncrypted(false), m_healDelayMs(kHealMinDelayMs)
 {
     m_device->setHttps(wantHttps()); // until the server actually starts
+    m_device->setPort(m_settings->port());
     connect(m_settings, SIGNAL(encryptionChanged()), this, SLOT(applyEncryption()));
+    connect(m_settings, SIGNAL(portChanged()), this, SIGNAL(statusChanged()));
     m_server->addHandler(this);
     connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
@@ -97,6 +99,13 @@ int Discovery::scanProgress() const
 bool Discovery::isServerRunning() const
 {
     return m_server->isListening();
+}
+
+// Like the official app: a port takes effect when the server restarts. The
+// encryption and the alias apply at once here, so they never need this.
+bool Discovery::needRestart() const
+{
+    return isServerRunning() && m_device->port() != m_settings->port();
 }
 
 bool Discovery::isServerHttps() const
@@ -179,6 +188,7 @@ void Discovery::onOnlineChanged()
 void Discovery::startListening()
 {
     m_server->close();
+    m_device->setPort(m_settings->port());
     const bool https = wantHttps();
     if (m_server->listen(m_device->port(), https, !m_linkActive))
         m_device->setHttps(m_server->isHttps());
@@ -612,7 +622,7 @@ void Discovery::scanSubnet()
 void Discovery::lookUp(const QString &ip, int port)
 {
     if (port == 0)
-        port = m_device->port();
+        port = m_settings->port();
     qDebug() << "Discovery: looking up" << ip << "port" << port;
     startJob(LookUpJob, ip, port, QLatin1String("https"));
 }
@@ -620,7 +630,7 @@ void Discovery::lookUp(const QString &ip, int port)
 void Discovery::pumpScanQueue()
 {
     while (m_activeScanJobs < kMaxConcurrentScanJobs && !m_scanQueue.isEmpty())
-        startJob(ScanJob, m_scanQueue.takeFirst(), m_device->port(), QLatin1String("https"));
+        startJob(ScanJob, m_scanQueue.takeFirst(), m_settings->port(), QLatin1String("https"));
     finishScanIfDone();
 }
 
@@ -951,7 +961,7 @@ HttpResponse Discovery::handleRequest(const HttpRequest &request)
                        << "- claimed fingerprint does not match the client certificate";
         } else if (claimed != m_device->fingerprint()) {
             m_peers->upsert(PeerModel::peerFromMap(map, request.remoteAddress.toString(),
-                                                   m_device->port(), QLatin1String("https"),
+                                                   m_settings->port(), QLatin1String("https"),
                                                    QLatin1String("register")));
         }
         response.body = Json::serialize(m_device->toRegisterMap());

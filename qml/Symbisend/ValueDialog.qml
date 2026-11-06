@@ -21,7 +21,7 @@ CommonDialog {
     signal entered(string value)
 
     function openWith(value) {
-        field.text = value
+        field.text = String(value)
         open()
     }
 

@@ -64,7 +64,7 @@ static QString randomFingerprint()
 }
 
 DeviceInfo::DeviceInfo(QObject *parent)
-    : QObject(parent), m_https(false)
+    : QObject(parent), m_port(0), m_https(false)
 {
     QSettings settings;
     m_alias = settings.value(QLatin1String("identity/alias")).toString();
@@ -102,6 +102,14 @@ void DeviceInfo::setAlias(const QString &alias)
     qDebug() << "DeviceInfo: alias set to" << m_alias;
     QSettings().setValue(QLatin1String("identity/alias"), m_alias);
     emit aliasChanged();
+}
+
+void DeviceInfo::setPort(int port)
+{
+    if (port == m_port)
+        return;
+    m_port = port;
+    emit portChanged();
 }
 
 void DeviceInfo::setDeviceModel(const QString &model)

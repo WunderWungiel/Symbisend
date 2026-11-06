@@ -24,6 +24,7 @@
         <file>qml/Symbisend/SendTextDialog.qml</file>
         <file>qml/Symbisend/SettingsHeading.qml</file>
         <file>qml/Symbisend/SettingsItem.qml</file>
+        <file>qml/Symbisend/SettingsNote.qml</file>
         <file>qml/Symbisend/SettingsPage.qml</file>
         <file>qml/Symbisend/SettingsSwitch.qml</file>
         <file>qml/Symbisend/VerifyDialog.qml</file>

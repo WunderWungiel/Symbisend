@@ -6,6 +6,7 @@
 
 #include "httpserver.h"
 
+class DeviceInfo;
 class Discovery;
 class NetworkManager;
 class Settings;
@@ -42,7 +43,7 @@ class WebShare : public QObject, public HttpHandler
 
 public:
     WebShare(Discovery *discovery, Settings *settings, NetworkManager *network,
-             int port, QObject *parent = 0);
+             DeviceInfo *device, QObject *parent = 0);
 
     bool isReceiveActive() const { return m_receiveActive; }
     QString url() const;
@@ -71,7 +72,7 @@ private:
     Discovery *m_discovery;
     Settings *m_settings;
     NetworkManager *m_network;
-    int m_port;
+    DeviceInfo *m_device;
     bool m_receiveActive;
     QString m_pin;
     bool m_encrypted;

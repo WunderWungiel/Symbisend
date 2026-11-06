@@ -48,6 +48,10 @@ class Settings : public QObject
     Q_PROPERTY(bool createChecksums READ createChecksums WRITE setCreateChecksums NOTIFY createChecksumsChanged)
 
     // Network
+    // The port we want, 1 to 65535. The server moves to it on its next start
+    // (see discovery.needRestart); myDevice.port is the one in use.
+    Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
+    Q_PROPERTY(int defaultPort READ defaultPort CONSTANT)
     // Milliseconds a device gets to answer during discovery, 1 to 60000.
     // Official default: 500 ms; 3 s here, TLS is slow on a phone.
     Q_PROPERTY(int discoveryTimeout READ discoveryTimeout WRITE setDiscoveryTimeout NOTIFY discoveryTimeoutChanged)
@@ -57,6 +61,8 @@ class Settings : public QObject
     Q_PROPERTY(bool encryption READ encryption WRITE setEncryption NOTIFY encryptionChanged)
 
 public:
+    static const int DefaultPort = 53317;
+
     explicit Settings(QObject *parent = 0);
 
     bool advancedSettings() const { return m_advancedSettings; }
@@ -91,6 +97,9 @@ public:
     void setVerifyChecksums(bool on);
     bool createChecksums() const { return m_createChecksums; }
     void setCreateChecksums(bool on);
+    int port() const { return m_port; }
+    void setPort(int port);
+    int defaultPort() const { return DefaultPort; }
     int discoveryTimeout() const { return m_discoveryTimeout; }
     void setDiscoveryTimeout(int ms);
     bool encryption() const { return m_encryption; }
@@ -134,6 +143,7 @@ signals:
     void receiveViaLinkAutoAcceptChanged();
     void verifyChecksumsChanged();
     void createChecksumsChanged();
+    void portChanged();
     void discoveryTimeoutChanged();
     void encryptionChanged();
 
@@ -161,6 +171,7 @@ private:
     bool m_receiveViaLinkAutoAccept;
     bool m_verifyChecksums;
     bool m_createChecksums;
+    int m_port;
     int m_discoveryTimeout;
     bool m_encryption;
 

@@ -4,15 +4,16 @@
 #include <QFile>
 #include <QVariantMap>
 
+#include "deviceinfo.h"
 #include "discovery.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
 
 WebShare::WebShare(Discovery *discovery, Settings *settings, NetworkManager *network,
-                   int port, QObject *parent)
+                   DeviceInfo *device, QObject *parent)
     : QObject(parent),
-      m_discovery(discovery), m_settings(settings), m_network(network), m_port(port),
+      m_discovery(discovery), m_settings(settings), m_network(network), m_device(device),
       m_receiveActive(false), m_encrypted(false)
 {
     m_discovery->httpServer()->addHandler(this);
@@ -27,7 +28,7 @@ QString WebShare::url() const
         return QString();
     return QString::fromLatin1("%1://%2:%3")
             .arg(QLatin1String(m_discovery->isServerHttps() ? "https" : "http"))
-            .arg(m_network->localAddressString()).arg(m_port);
+            .arg(m_network->localAddressString()).arg(m_device->port());
 }
 
 void WebShare::setEncrypted(bool on)

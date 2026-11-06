@@ -33,6 +33,8 @@ class Discovery : public QObject, public HttpHandler
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(int scanProgress READ scanProgress NOTIFY scanProgressChanged)
     Q_PROPERTY(bool serverRunning READ isServerRunning NOTIFY statusChanged)
+    // The running server doesn't match the settings yet: restartServer().
+    Q_PROPERTY(bool needRestart READ needRestart NOTIFY statusChanged)
     // Whether the running server speaks https (see settings.encryption,
     // webShare.encrypted).
     Q_PROPERTY(bool serverHttps READ isServerHttps NOTIFY statusChanged)
@@ -45,6 +47,7 @@ public:
     bool isScanning() const { return m_scanning; }
     int scanProgress() const;
     bool isServerRunning() const;
+    bool needRestart() const;
     bool isServerHttps() const;
     bool isMulticastListening() const;
 
