@@ -82,7 +82,7 @@ Found on 2026-11-06.
 
 ### 8. Announcements are answered with no server running
 
-- [ ] Fixed
+- [x] Fixed
 
 - **Ours:** if the server failed to start or died and multicast is up, `Discovery::onDatagram()` still registers with the peer, giving a port nobody listens on.
 - **Official:** announcements are answered only while the server runs.

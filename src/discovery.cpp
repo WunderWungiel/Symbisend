@@ -492,6 +492,13 @@ void Discovery::resetUdpSocket(bool create)
 
 void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, quint16)
 {
+    // An answer would give a port nobody listens on. Multicast can outlive the
+    // server, which may have failed to start or died (see scheduleHeal()).
+    if (!isServerRunning()) {
+        qDebug() << "Discovery: multicast from" << sender.toString() << "not answered, no server";
+        return;
+    }
+
     bool ok = false;
     QVariantMap map = Json::parseObject(data, &ok);
     if (!ok) {
