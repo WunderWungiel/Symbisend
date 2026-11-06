@@ -515,14 +515,17 @@ HttpResponse Receiver::startSession()
 
 HttpResponse Receiver::cancelRequest(const HttpRequest &request)
 {
-    const QString sessionId = request.queryValue(QLatin1String("sessionId"));
+    bool hasSessionId = false;
+    const QString sessionId = request.queryValue(QLatin1String("sessionId"), &hasSessionId);
     const bool fromPeer = request.remoteAddress == m_peerIp;
     if (m_state == QLatin1String("receiving") && sessionId == m_sessionId && fromPeer) {
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the session";
         finish(QLatin1String("cancelled"),
                QString::fromLatin1("%1 cancelled the transfer").arg(m_peerAlias));
-    } else if (m_state == QLatin1String("request") && fromPeer) {
-        // No session yet: the sender gave up waiting for our answer.
+    } else if (m_state == QLatin1String("request") && fromPeer && !hasSessionId) {
+        // No session yet: the sender gave up waiting for our answer. Like the
+        // official app, a /cancel that names a session is about something else:
+        // this device may be cancelling what we are sending to it.
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the request";
         finish(QLatin1String("cancelled"),
                QString::fromLatin1("%1 cancelled the transfer").arg(m_peerAlias));

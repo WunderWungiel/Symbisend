@@ -73,10 +73,11 @@ Found on 2026-11-06.
 
 ### 7. A cancel can end the wrong transfer
 
-- [ ] Fixed
+- [x] Fixed
 
 - **Ours:** while an offer from a device is waiting for an answer, any `/cancel` from that device ends the offer, whatever its session ID (`src/receiver.cpp:524`). If we are also sending to that device, its cancel of our upload ends its offer instead, and the upload keeps running.
 - **Official:** a pending offer is cancelled only by a `/cancel` with no session ID or the pending one. Any other ID goes on to the send session.
+- **Note:** official gives a pending offer a session ID, but the sender only learns it from the answer. Ours has none until the offer is accepted, so here only a `/cancel` with no ID ends the offer. An empty `sessionId=` counts as an ID, as in official.
 - **Official source:** `packages/core/src/http/server/v2.rs` (`cancel`).
 
 ### 8. Announcements are answered with no server running
