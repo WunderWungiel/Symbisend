@@ -59,12 +59,20 @@ Page {
             SettingsSwitch {
                 title: "Quick save"
                 checked: settings.quickSave
-                onToggled: settings.quickSave = value
+                onToggled: {
+                    settings.quickSave = value
+                    if (value)
+                        quickSaveDialog.open()
+                }
             }
             SettingsSwitch {
                 title: "Quick save for favourites"
                 checked: settings.quickSaveFromFavorites
-                onToggled: settings.quickSaveFromFavorites = value
+                onToggled: {
+                    settings.quickSaveFromFavorites = value
+                    if (value)
+                        quickSaveFavouritesDialog.open()
+                }
             }
             // Turning it on asks for the PIN first (stays off on Cancel or
             // an empty PIN); tapping the row while on changes the PIN.
@@ -338,6 +346,25 @@ Page {
             settings.pin = pinField.text
             settings.requirePin = true
         }
+    }
+
+    // The official app's notices after turning quick save on.
+    QueryDialog {
+        id: quickSaveDialog
+        platformInverted: page.platformInverted
+        titleText: "Quick save"
+        message: "File requests are now accepted automatically. Be aware that everyone "
+                 + "on the local network can send you files."
+        acceptButtonText: "Close"
+    }
+
+    QueryDialog {
+        id: quickSaveFavouritesDialog
+        platformInverted: page.platformInverted
+        titleText: "Quick save for favourites"
+        message: "File requests are now accepted automatically from devices in your "
+                 + "favourites list."
+        acceptButtonText: "Close"
     }
 
     // The official app's notice after turning encryption off.
