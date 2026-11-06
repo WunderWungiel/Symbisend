@@ -502,6 +502,15 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
     if (fingerprint == m_device->fingerprint())
         return; // our own announcement looped back
 
+    // The official app requires all three. Protocol v1 devices, which we can't
+    // exchange files with, send none of them, so they aren't answered or listed.
+    if (!map.contains(QLatin1String("version")) || !map.contains(QLatin1String("port"))
+            || !map.contains(QLatin1String("protocol"))) {
+        qDebug() << "Discovery: ignoring multicast without version, port or protocol from"
+                 << sender.toString();
+        return;
+    }
+
     // The announcement carries no IP. If the socket couldn't tell us the
     // sender, use the address we already know for this device, if any.
     QString ip = sender.isNull() ? QString() : sender.toString();
@@ -518,8 +527,7 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
     const Peer peer = PeerModel::peerFromMap(map, ip, m_device->port(),
                                              QLatin1String("https"), QLatin1String("multicast"));
 
-    const bool isAnnounce = map.value(QLatin1String("announce")).toBool()
-            || map.value(QLatin1String("announcement")).toBool();
+    const bool isAnnounce = map.value(QLatin1String("announce")).toBool();
     const QDateTime now = QDateTime::currentDateTime();
     // Forget old entries, then skip the repeated messages of one burst.
     QMutableHashIterator<QString, QDateTime> it(m_recentReplies);
@@ -543,13 +551,12 @@ void Discovery::onDatagram(const QByteArray &data, const QHostAddress &sender, q
         }
         return;
     }
-    const bool v1 = PeerModel::isV1(peer.version);
     const bool https = peer.protocol == QLatin1String("https");
     qDebug() << "Discovery:" << (isAnnounce ? "announcement" : "multicast answer") << "from"
              << peer.alias << peer.ip << "v" + peer.version << "- registering";
     // A UDP answer (not an announcement) is checked the same way, but a
     // failure isn't answered by multicast again.
-    startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol, v1,
+    startJob(AnnounceReplyJob, peer.ip, peer.port, peer.protocol,
              https ? peer.fingerprint : QString(), isAnnounce, peer.fingerprint);
 }
 
@@ -609,7 +616,7 @@ void Discovery::pumpScanQueue()
     finishScanIfDone();
 }
 
-void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol, bool v1,
+void Discovery::startJob(JobKind kind, const QString &ip, int port, const QString &protocol,
                          const QString &expectedFingerprint, bool udpFallback,
                          const QString &announcer)
 {
@@ -617,9 +624,7 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     url.setScheme(protocol);
     url.setHost(ip);
     url.setPort(port);
-    // v1 answers its announcements via /v1/register (extra v2 fields are ignored).
-    url.setPath(v1 ? QLatin1String("/api/localsend/v1/register")
-                   : QLatin1String("/api/localsend/v2/register"));
+    url.setPath(QLatin1String("/api/localsend/v2/register"));
 
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, QLatin1String("application/json"));
@@ -630,7 +635,6 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.ip = ip;
     job.port = port;
     job.protocol = protocol;
-    job.v1 = v1;
     job.deadline = QDateTime::currentDateTime().addMSecs(
                 kind == LookUpJob ? kLookUpTimeoutMs
                                   : kind == AnnounceReplyJob ? kAnnounceReplyTimeoutMs
@@ -845,7 +849,7 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
         // with encryption disabled. Retry over HTTP.
         qDebug() << "Discovery:" << job.ip << "https failed (" << int(error) << reply->errorString()
                  << ") - trying http";
-        startJob(job.kind, job.ip, job.port, QLatin1String("http"), job.v1);
+        startJob(job.kind, job.ip, job.port, QLatin1String("http"));
         return;
     } else if (!isNothingThere(error, job.timedOut) || job.kind != ScanJob) {
         qDebug() << "Discovery:" << job.ip << job.protocol << "failed:" << int(error)
@@ -902,12 +906,12 @@ void Discovery::finishScanIfDone()
 
 static bool isRegisterPath(const QString &path)
 {
-    return path == QLatin1String("/api/localsend/v2/register")
-            || path == QLatin1String("/api/localsend/v1/register");
+    return path == QLatin1String("/api/localsend/v2/register");
 }
 
 static bool isInfoPath(const QString &path)
 {
+    // Like the official app: its versions up to 1.17 speak v2 but probe /v1/info.
     return path == QLatin1String("/api/localsend/v2/info")
             || path == QLatin1String("/api/localsend/v1/info");
 }

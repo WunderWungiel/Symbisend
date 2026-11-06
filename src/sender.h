@@ -93,7 +93,7 @@ public:
 
     // Starts sending the current selection to the peer. Returns false (with
     // errorText set and state "failed") if that is not possible right now:
-    // already busy, nothing selected, offline, unknown or v1 peer.
+    // already busy, nothing selected, offline or unknown peer.
     Q_INVOKABLE bool send(const QString &fingerprint);
     // The same for a device that was not found, by its IP address on the
     // default port. False as above; a device that isn't there is reported

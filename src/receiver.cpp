@@ -963,8 +963,6 @@ QDateTime Receiver::parseTime(const QString &text)
 int Receiver::mediaKind(const InFile &f)
 {
     QString type = f.fileType.trimmed().toLower();
-    if (type == QLatin1String("image") || type == QLatin1String("video")) // protocol v1
-        type += QLatin1Char('/');
     if (type.isEmpty() || type == QLatin1String("application/octet-stream"))
         type = Sender::mimeType(f.fileName);
     if (type.startsWith(QLatin1String("image/")))

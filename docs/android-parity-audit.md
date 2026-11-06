@@ -157,7 +157,6 @@ These differences are deliberate or better for the phone:
 - Stall and sender-gone timeouts.
 - Skipping repeats of an announce burst while a register is running or after it succeeded (official answers every message), to save TLS handshakes.
 - The encryption toggle applying immediately.
-- The `/v1/info` route, which official keeps for old clients.
 - Announcing when we go online. Official announces nothing until its Send tab opens, but a phone can drop off the network and come back, and other devices wouldn't notice. It's only UDP; going online doesn't scan.
 - No automatic discovery during a transfer, and the Send tab's check also runs when the connection comes up, since a phone can be offline when the tab opens.
 - Creating checksums when sending is a setting that's off by default (official has it on), because hashing large files first is slow on a phone. Verifying on receive is always on.
@@ -179,7 +178,9 @@ These differences are deliberate or better for the phone:
 - A server or multicast listener that won't start or dies is tried again after 5 s, doubling up to 5 min, while online. Official tries a dead server once and doesn't restart multicast after failed reads.
 - The foreground check connects to the WLAN address (official: loopback), because a Symbian socket belongs to its access point. It waits 3 s (official: 1 s) and is skipped while clients are connected, because it shares a thread with the rest of the app. Qt 4 has no signal for a dead listener, so this is the only way to notice one.
 
-`/v1/register` and the UDP reply are harmless extras that official no longer has, and can be removed whenever convenient.
+The UDP reply is a harmless extra that official no longer has, and can be removed whenever convenient.
+
+Protocol v1 isn't supported, as in official. Multicasts without `version`, `port` and `protocol` are ignored, and only `/v1/info` is left, as in official, because its versions up to 1.17 speak v2 but probe that route.
 
 ## Suggested order
 

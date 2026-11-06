@@ -124,6 +124,5 @@ QVariantMap DeviceInfo::toAnnounceMap(bool announce) const
 {
     QVariantMap m = toRegisterMap();
     m.insert(QLatin1String("announce"), announce);
-    m.insert(QLatin1String("announcement"), announce); // v1 compatibility
     return m;
 }

@@ -182,13 +182,6 @@ bool Sender::start(const QString &fingerprint)
     const QString favoriteAlias = m_favorites->alias(fingerprint);
     if (!favoriteAlias.isEmpty())
         m_peer.alias = favoriteAlias;
-    if (PeerModel::isV1(m_peer.version)) {
-        qWarning() << "Sender:" << m_peer.alias << "speaks protocol" << m_peer.version;
-        finish(QLatin1String("failed"),
-               QString::fromLatin1("%1 runs an old LocalSend version (protocol v1), "
-                                   "which Symbisend can't send to yet").arg(m_peer.alias));
-        return false;
-    }
     if (!m_network->isOnline()) {
         finish(QLatin1String("failed"), QLatin1String("Not connected"));
         return false;

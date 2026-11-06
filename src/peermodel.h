@@ -64,8 +64,6 @@ public:
     static Peer peerFromMap(const QVariantMap &map, const QString &ip,
                             int fallbackPort, const QString &fallbackProtocol,
                             const QString &source);
-    // Protocol v1 peers (no "version" field) use the /api/localsend/v1/ routes over http.
-    static bool isV1(const QString &version) { return version.startsWith(QLatin1String("1.")); }
 
     void upsert(const Peer &peer);
     Q_INVOKABLE void clear();

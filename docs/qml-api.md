@@ -13,7 +13,7 @@ Roles (use as `model.<role>` in delegates; `alias` clashes with a QML keyword):
 | `ip`          | string   | `192.168.1.20`                  |
 | `port`        | int      | `53317`                         |
 | `protocol`    | string   | `https` / `http`                |
-| `version`     | string   | `2.1`                           |
+| `version`     | string   | `2.2`                           |
 | `deviceModel` | string   | `Windows`, `Samsung`, ...       |
 | `deviceType`  | string   | `mobile`, `desktop`, `web`, `headless`, `server` |
 | `fingerprint` | string   | unique device id                |
@@ -191,7 +191,7 @@ doesn't stop the others, as in the official app. A file the receiver refuses wit
 checksum mismatch (422) is sent again first, 3 uploads in all.
 - `send(fingerprint)` → bool — starts sending `selection` to that peer. Returns false
   (state `failed`, `errorText` says why) when already busy, nothing is selected, offline,
-  the peer is unknown, or it speaks protocol v1 (not supported yet).
+  or the peer is unknown.
 - `sendToAddress(ip)` → bool — the same for a device typed in by hand, on the default port:
   state `connecting` while it asks who is there (`/register`, https then http; the device
   also joins `peerModel`, `source` = `address`), then as after `send()`. Returns false only
