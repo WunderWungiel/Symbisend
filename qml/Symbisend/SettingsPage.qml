@@ -164,6 +164,12 @@ Page {
                 subTitle: myDevice.deviceModel
                 onClicked: deviceModelDialog.openWith(myDevice.deviceModel)
             }
+            SettingsItem {
+                visible: settings.advancedSettings
+                title: "Discovery timeout"
+                subTitle: settings.discoveryTimeout + " ms"
+                onClicked: discoveryTimeoutDialog.openWith(settings.discoveryTimeout)
+            }
             // Applied at once: a running server restarts as https / http.
             SettingsSwitch {
                 visible: settings.advancedSettings
@@ -227,6 +233,13 @@ Page {
         id: deviceModelDialog
         titleText: "Device model"
         onEntered: myDevice.deviceModel = value
+    }
+
+    ValueDialog {
+        id: discoveryTimeoutDialog
+        titleText: "Discovery timeout (ms)"
+        digitsOnly: true
+        onEntered: settings.discoveryTimeout = parseInt(value, 10) // ignored if invalid
     }
 
     ContextMenu {

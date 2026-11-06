@@ -26,7 +26,11 @@ static const char *kSaveToHistoryKey = "receive/saveToHistory";
 static const char *kReceiveViaLinkAutoAcceptKey = "receive/viaLinkAutoAccept";
 static const char *kVerifyChecksumsKey = "receive/verifyChecksums";
 static const char *kCreateChecksumsKey = "send/createChecksums";
+static const char *kDiscoveryTimeoutKey = "network/discoveryTimeout";
 static const char *kEncryptionKey = "network/encryption";
+
+static const int kDefaultDiscoveryTimeoutMs = 3000;
+static const int kMaxDiscoveryTimeoutMs = 60000;
 
 Settings::Settings(QObject *parent)
     : QObject(parent)
@@ -54,6 +58,9 @@ Settings::Settings(QObject *parent)
     m_receiveViaLinkAutoAccept = s.value(QLatin1String(kReceiveViaLinkAutoAcceptKey), false).toBool();
     m_verifyChecksums = s.value(QLatin1String(kVerifyChecksumsKey), true).toBool();
     m_createChecksums = s.value(QLatin1String(kCreateChecksumsKey), false).toBool();
+    m_discoveryTimeout = s.value(QLatin1String(kDiscoveryTimeoutKey), kDefaultDiscoveryTimeoutMs).toInt();
+    if (m_discoveryTimeout < 1 || m_discoveryTimeout > kMaxDiscoveryTimeoutMs)
+        m_discoveryTimeout = kDefaultDiscoveryTimeoutMs;
     m_encryption = s.value(QLatin1String(kEncryptionKey), true).toBool();
     qDebug() << "Settings: advanced" << m_advancedSettings
              << "theme" << m_theme << "language" << m_language
@@ -64,6 +71,7 @@ Settings::Settings(QObject *parent)
              << "receiveViaLinkAutoAccept" << m_receiveViaLinkAutoAccept
              << "verifyChecksums" << m_verifyChecksums
              << "createChecksums" << m_createChecksums
+             << "discoveryTimeout" << m_discoveryTimeout
              << "encryption" << m_encryption;
 
     m_custom = s.value(QLatin1String(kDownloadFolderKey)).toString();
@@ -192,6 +200,20 @@ void Settings::setCreateChecksums(bool on)
 {
     if (store(kCreateChecksumsKey, &m_createChecksums, on))
         emit createChecksumsChanged();
+}
+
+void Settings::setDiscoveryTimeout(int ms)
+{
+    if (ms < 1 || ms > kMaxDiscoveryTimeoutMs) {
+        qWarning() << "Settings: discovery timeout" << ms << "is out of range, ignored";
+        return;
+    }
+    if (ms == m_discoveryTimeout)
+        return;
+    m_discoveryTimeout = ms;
+    QSettings().setValue(QLatin1String(kDiscoveryTimeoutKey), ms);
+    qDebug() << "Settings: discovery timeout" << ms << "ms";
+    emit discoveryTimeoutChanged();
 }
 
 void Settings::setEncryption(bool on)

@@ -23,9 +23,10 @@
 
 static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
-static const int kScanTimeoutMs = 3000;
+// settings.discoveryTimeout is for the scan and the favourites. Answering an
+// announcement and lookUp() (the user is waiting) need a phone's TLS handshake
+// to go through, so for these it can only make the time longer.
 static const int kAnnounceReplyTimeoutMs = 5000;
-// lookUp(): the user is waiting, but a phone needs time for the handshake.
 static const int kLookUpTimeoutMs = 8000;
 // discover(): how long after the favourites were probed something must have
 // confirmed a device, or the subnet is scanned. Same as the official app.
@@ -642,10 +643,11 @@ void Discovery::startJob(JobKind kind, const QString &ip, int port, const QStrin
     job.ip = ip;
     job.port = port;
     job.protocol = protocol;
+    const int timeoutMs = m_settings->discoveryTimeout();
     job.deadline = QDateTime::currentDateTime().addMSecs(
-                kind == LookUpJob ? kLookUpTimeoutMs
-                                  : kind == AnnounceReplyJob ? kAnnounceReplyTimeoutMs
-                                                             : kScanTimeoutMs);
+                kind == LookUpJob ? qMax(timeoutMs, kLookUpTimeoutMs)
+                                  : kind == AnnounceReplyJob ? qMax(timeoutMs, kAnnounceReplyTimeoutMs)
+                                                             : timeoutMs);
     job.timedOut = false;
     job.expectedFingerprint = expectedFingerprint;
     job.udpFallback = udpFallback;

@@ -323,6 +323,10 @@ Send:
   is off here because hashing large files first is slow on a phone.
 
 Network:
+- `discoveryTimeout` (int, default 3000) — milliseconds a device gets to answer the subnet
+  scan and the favourites' probes, 1 to 60000; other values are ignored. Used from the next
+  request on. Answering an announcement and `lookUp()` keep their 5 s
+  and 8 s, unless this is longer. The official app has 500 ms.
 - `encryption` (bool, default true) — our server speaks https (LocalSend's "Encryption").
   Applied at once, see `discovery.serverHttps`. Sending to others always uses the protocol
   each peer announced, whatever this says.

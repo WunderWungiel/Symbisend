@@ -48,6 +48,9 @@ class Settings : public QObject
     Q_PROPERTY(bool createChecksums READ createChecksums WRITE setCreateChecksums NOTIFY createChecksumsChanged)
 
     // Network
+    // Milliseconds a device gets to answer during discovery, 1 to 60000.
+    // Official default: 500 ms; 3 s here, TLS is slow on a phone.
+    Q_PROPERTY(int discoveryTimeout READ discoveryTimeout WRITE setDiscoveryTimeout NOTIFY discoveryTimeoutChanged)
     // Our server speaks https (default) instead of http. Discovery restarts
     // the server when it changes (except while "Receive via link" is on,
     // which has its own toggle, webShare.encrypted).
@@ -88,6 +91,8 @@ public:
     void setVerifyChecksums(bool on);
     bool createChecksums() const { return m_createChecksums; }
     void setCreateChecksums(bool on);
+    int discoveryTimeout() const { return m_discoveryTimeout; }
+    void setDiscoveryTimeout(int ms);
     bool encryption() const { return m_encryption; }
     void setEncryption(bool on);
 
@@ -129,6 +134,7 @@ signals:
     void receiveViaLinkAutoAcceptChanged();
     void verifyChecksumsChanged();
     void createChecksumsChanged();
+    void discoveryTimeoutChanged();
     void encryptionChanged();
 
 private slots:
@@ -155,6 +161,7 @@ private:
     bool m_receiveViaLinkAutoAccept;
     bool m_verifyChecksums;
     bool m_createChecksums;
+    int m_discoveryTimeout;
     bool m_encryption;
 
     QString m_custom;          // user's choice, "" = use default
