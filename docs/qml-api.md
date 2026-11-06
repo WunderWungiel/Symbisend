@@ -215,8 +215,9 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
   - `sending` — uploading
   - `finished` — everything accepted was sent (also: a text message was shown, or the
     receiver accepted nothing)
-  - `finishedWithErrors` — some accepted files were not sent: they failed one by one, or
-    the connection was lost or the receiver's certificate changed while sending, which
+  - `finishedWithErrors` — some accepted files were not sent: they failed one by one (a
+    selected file that no longer exists is offered and fails here, even if it is the only
+    one), or the connection was lost or the receiver's certificate changed while sending, which
     fails the rest. `errorText` starts with `Not sent:` and has a line `name: why` for the
     first few
   - `declined` — the receiver said no

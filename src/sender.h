@@ -141,6 +141,7 @@ private:
         QString token;      // from prepare-upload
         FileStatus status;  // only used in m_queue
         int attempts;       // uploads started, only used in m_queue
+        bool unreadable;    // couldn't be opened: failed, whatever the answer
         QString error;      // why it failed
     };
 
@@ -152,7 +153,7 @@ private:
     QUrl url(const QString &route) const;
     void postPrepare();
     void startNextUpload();
-    bool postUpload(const OutFile &f);
+    void postUpload(OutFile &f);
     void startHashing();
     void nextHash();
     void stopHashing();

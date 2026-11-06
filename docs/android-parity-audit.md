@@ -4,6 +4,8 @@ Goal: Symbisend's behaviour (logic) should be nearly identical to the official A
 
 Audit of 2026-11-04: Symbisend `fd4ea6f` against official `main@92e133a` (app 1.18.2+64, protocol 2.2). Both codebases were read; nothing was run, so the scenarios below come from the code, not from tests. Line numbers are from `fd4ea6f` and will drift. Before fixing an item, check that it still applies.
 
+Checked again on 2026-11-06: Symbisend `a2a986c` against the same official commit, which was still upstream's latest. Also by reading only. The results are under "Open differences", "Missing features" and "Keep as is", and line numbers there are from `a2a986c`.
+
 The official source isn't in this repo:
 
 ```bat
@@ -55,6 +57,43 @@ git clone --depth 1 https://github.com/localsend/protocol.git
 - **Ours:** `m_recentReplies` drops the later messages even if the first register failed (`src/discovery.cpp:405`). The burst exists to cover peers that aren't ready yet.
 - **Official:** every message is answered.
 - **Fix:** remove the entry on failure, or skip only while a request is in flight or after success.
+
+## Open differences
+
+Found on 2026-11-06.
+
+### 6. A deleted file can still report "Sent"
+
+- [x] Fixed
+
+- **Ours:** `Sender::start()` skipped a selected file that no longer exists and only logged it. The transfer ended as `finished` and cleared the selection.
+- **Official:** the file is offered, fails, and the session ends as `finishedWithErrors`.
+- **Note:** the official sender's upload request breaks off when the file can't be opened, so the receiver fails that file and can finish. Ours sent no request at all. It now sends an empty upload, which both receivers refuse on size.
+- **Official source:** `send_provider.dart` (`startSession`, `_finish`), `upload_isolate.dart`, `packages/core/src/model/transfer.rs` (`into_stream`), `common/save.rs` (`write_file_from_receiver`).
+
+### 7. A cancel can end the wrong transfer
+
+- [ ] Fixed
+
+- **Ours:** while an offer from a device is waiting for an answer, any `/cancel` from that device ends the offer, whatever its session ID (`src/receiver.cpp:524`). If we are also sending to that device, its cancel of our upload ends its offer instead, and the upload keeps running.
+- **Official:** a pending offer is cancelled only by a `/cancel` with no session ID or the pending one. Any other ID goes on to the send session.
+- **Official source:** `packages/core/src/http/server/v2.rs` (`cancel`).
+
+### 8. Announcements are answered with no server running
+
+- [ ] Fixed
+
+- **Ours:** if the server failed to start or died and multicast is up, `Discovery::onDatagram()` still registers with the peer, giving a port nobody listens on.
+- **Official:** announcements are answered only while the server runs.
+- **Official source:** `packages/localsend_isolates/lib/src/task/discovery/discovery.dart` (`setAnswerAnnouncements`), `packages/core/src/discovery/mod.rs` (`set_answer_announcements`).
+
+### 9. Numbering of files with the same name
+
+- [ ] Fixed
+
+- **Ours:** `Receiver::uniquePath()` starts at `photo (1).jpg`, and a file already named `photo (1).jpg` becomes `photo (1) (1).jpg`.
+- **Official:** starts at `photo (2).jpg`, replaces an existing ` (n)` instead of adding another, and lowercases the extension of a numbered name.
+- **Official source:** `packages/localsend_isolates/lib/src/task/server/file_saver.dart` (`digestFilePathAndPrepareDirectory`), `packages/localsend_isolates/lib/util/file_path_helper.dart` (`withCount`).
 
 ## Logic differences
 
@@ -139,6 +178,7 @@ This is the biggest logic change, and it should also save battery and CPU on the
 - [ ] **Address dialog:** `#123` suffix mode and recent devices
 - [ ] **Settings:** port, multicast group, discovery timeout, device type and model, turning off checksum verification
 - [ ] **Translations:** the language setting is stored but does nothing
+- [ ] **Receive via link page:** copying the URL and showing it as a QR code (`web_share_page.dart`)
 
 ## Robustness
 
@@ -157,7 +197,7 @@ These differences are deliberate or better for the phone:
 - Stall and sender-gone timeouts.
 - Skipping repeats of an announce burst while a register is running or after it succeeded (official answers every message), to save TLS handshakes.
 - The encryption toggle applying immediately.
-- Announcing when we go online. Official announces nothing until its Send tab opens, but a phone can drop off the network and come back, and other devices wouldn't notice. It's only UDP; going online doesn't scan.
+- Announcing every time we go online. Official announces once, when discovery starts at app launch, and again only after a server restart, but a phone can drop off the network and come back, and other devices wouldn't notice. It's only UDP; going online doesn't scan.
 - No automatic discovery during a transfer, and the Send tab's check also runs when the connection comes up, since a phone can be offline when the tab opens.
 - Creating checksums when sending is a setting that's off by default (official has it on), because hashing large files first is slow on a phone. Verifying on receive is always on.
 - A file with a checksum mismatch is deleted and the retry saves it again under the same name. Official overwrites the same target.
@@ -178,7 +218,23 @@ These differences are deliberate or better for the phone:
 - A server or multicast listener that won't start or dies is tried again after 5 s, doubling up to 5 min, while online. Official tries a dead server once and doesn't restart multicast after failed reads.
 - The foreground check connects to the WLAN address (official: loopback), because a Symbian socket belongs to its access point. It waits 3 s (official: 1 s) and is skipped while clients are connected, because it shares a thread with the rest of the app. Qt 4 has no signal for a dead listener, so this is the only way to notice one.
 
+Found on 2026-11-06, and proposed here rather than chosen one by one:
+
+- Request bodies other than uploads are limited to 1 MB and answered with 413 above that (official has no limit). At an estimated 300 bytes per file, that refuses an offer of about 3,000 files. A larger body would block the UI thread while it is parsed.
+- Going offline clears the device list, because the next network may be another one. Official keeps it.
+- A changed alias applies and is announced at once. Official needs a server restart.
+- When the last upload breaks off, the session waits 3 s, so that a `/cancel` is reported as a cancel. Official ends at once.
+- A file named with `..` or an absolute path is cleaned up and saved inside the folder. Official refuses that file.
+- A download folder that can't be created fails the whole offer with a 500. Official accepts it and fails each file.
+- Media sent with no type or as `application/octet-stream` has its type guessed from the name, so it can go to the gallery. Official treats it as an ordinary file.
+- Incoming JSON is parsed leniently: a bad file entry is skipped, and a missing `alias`, `port` or `protocol` is tolerated where official answers 400 or ignores the message.
+- IPv4 only. Official also joins an IPv6 multicast group, which only matters on a network without IPv4.
+- A device keeps only the address it was last confirmed at. Official keeps every address and ranks them, preferring reachable ones, then IPv6, then the most recent.
+- A file offered with size 0 that can't be read when its turn comes reaches the receiver as an empty file, because an empty upload passes the size check there. It still counts as failed on our side. Official's upload breaks off, so no file is saved.
+
 The UDP reply is a harmless extra that official no longer has, and can be removed whenever convenient.
+
+Official's `/api/localsend/v3/` routes and WebRTC aren't differences: its app and CLI don't call those routes, and WebRTC is compiled out (`webRTCEnabled = false`).
 
 Protocol v1 isn't supported, as in official. Multicasts without `version`, `port` and `protocol` are ignored, and only `/v1/info` is left, as in official, because its versions up to 1.17 speak v2 but probe that route.
 
@@ -190,6 +246,7 @@ Protocol v1 isn't supported, as in official. Multicasts without `version`, `port
 4. **Protocol and receive:** receiver checksums and version 2.2, then selective accept and the message flow.
 5. **Performance and protection:** keep-alive, connection limits and the JSON guard.
 6. **Features:** Share via link, then multi-send and per-file progress.
+7. **Open differences:** #6 to #9, all small, so they can go before the features.
 
 ## Open decisions
 

@@ -198,13 +198,17 @@ bool Sender::start(const QString &fingerprint)
             f.size = it.text.toUtf8().size();
         } else {
             QFileInfo fi(it.path);
-            if (!fi.isFile()) {
-                qWarning() << "Sender: file is gone, skipped:" << it.path;
-                continue;
-            }
             f.fileName = it.relativePath;
             f.path = it.path;
-            f.size = fi.size(); // may have changed since it was picked
+            // A file that is gone is still offered, as in the official app,
+            // and fails when its turn comes (postUpload()). The size may have
+            // changed since it was picked.
+            if (fi.isFile()) {
+                f.size = fi.size();
+            } else {
+                qWarning() << "Sender: file is gone:" << it.path;
+                f.size = it.size;
+            }
         }
         m_files.append(f);
     }
@@ -379,10 +383,12 @@ void Sender::postPrepare()
         } else {
             m.insert(QLatin1String("fileType"), mimeType(f.fileName));
             QFileInfo fi(f.path);
-            QVariantMap meta;
-            meta.insert(QLatin1String("modified"), isoTime(fi.lastModified()));
-            meta.insert(QLatin1String("accessed"), isoTime(fi.lastRead()));
-            m.insert(QLatin1String("metadata"), meta);
+            if (fi.isFile()) {
+                QVariantMap meta;
+                meta.insert(QLatin1String("modified"), isoTime(fi.lastModified()));
+                meta.insert(QLatin1String("accessed"), isoTime(fi.lastRead()));
+                m.insert(QLatin1String("metadata"), meta);
+            }
         }
         files.insert(f.id, m);
     }
@@ -461,6 +467,7 @@ void Sender::onPrepareFinished()
             f.token = tokens.value(f.id).toString();
             f.status = Queued;
             f.attempts = 1;
+            f.unreadable = false;
             m_bytesTotal += f.size;
             m_queue.append(f);
         }
@@ -506,15 +513,11 @@ void Sender::onPrepareFinished()
 
 void Sender::startNextUpload()
 {
-    // A loop: every unreadable file of a large folder would otherwise be one
-    // more stack frame.
-    while (++m_current < m_queue.size()) {
-        m_currentSent = 0;
-        if (postUpload(m_queue.at(m_current)))
-            return;
-        fileFailed(QLatin1String("Can't read the file"));
-    }
-    finishUploads();
+    m_currentSent = 0;
+    if (++m_current < m_queue.size())
+        postUpload(m_queue[m_current]);
+    else
+        finishUploads();
 }
 
 // Like the official app: no /cancel, the receiver finishes by itself.
@@ -552,8 +555,7 @@ void Sender::failRemaining(const QString &error)
     finishUploads();
 }
 
-// False if the file can't be read; nothing is sent then.
-bool Sender::postUpload(const OutFile &f)
+void Sender::postUpload(OutFile &f)
 {
     QUrl u = url(QLatin1String("upload"));
     u.addEncodedQueryItem("sessionId", QUrl::toPercentEncoding(m_sessionId));
@@ -561,29 +563,32 @@ bool Sender::postUpload(const OutFile &f)
     u.addEncodedQueryItem("token", QUrl::toPercentEncoding(f.token));
     QNetworkRequest request(u);
     request.setHeader(QNetworkRequest::ContentTypeHeader, QLatin1String("application/octet-stream"));
-    request.setHeader(QNetworkRequest::ContentLengthHeader, f.size);
 
     qDebug() << "Sender: uploading" << (m_current + 1) << "/" << m_queue.size()
              << f.fileName << f.size << "bytes";
-    if (f.path.isEmpty()) {
-        m_reply = m_nam->post(request, f.text.toUtf8());
-    } else {
-        QFile *file = new QFile(f.path);
-        if (!file->open(QIODevice::ReadOnly)) {
-            qWarning() << "Sender: cannot open" << f.path << file->errorString();
-            delete file;
-            return false;
-        }
+    QFile *file = f.path.isEmpty() ? 0 : new QFile(f.path);
+    if (file && !file->open(QIODevice::ReadOnly)) {
+        qWarning() << "Sender: cannot open" << f.path << file->errorString();
+        delete file;
+        file = 0;
+        f.unreadable = true;
+    }
+    request.setHeader(QNetworkRequest::ContentLengthHeader, f.unreadable ? qint64(0) : f.size);
+    if (file) {
         // Streamed in chunks, not loaded into memory. The reply owns the
         // file, so it lives exactly as long as the reply reads it.
         m_reply = m_nam->post(request, file);
         file->setParent(m_reply);
+    } else {
+        // The receiver has to hear about an unreadable file too, or it waits
+        // for it: the official receiver for ever. The official sender's upload
+        // breaks off; an empty one fails the receiver's size check the same way.
+        m_reply = m_nam->post(request, f.unreadable ? QByteArray() : f.text.toUtf8());
     }
     connect(m_reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(onUploadProgress(qint64,qint64)));
     connect(m_reply, SIGNAL(finished()), this, SLOT(onUploadFinished()));
     m_lastActivity = QDateTime::currentDateTime();
     emit progressChanged();
-    return true;
 }
 
 void Sender::onUploadProgress(qint64 sent, qint64 total)
@@ -606,7 +611,8 @@ void Sender::onUploadFinished()
     m_reply = 0;
     reply->deleteLater();
     const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    if (status >= 200 && status < 300) {
+    const bool unreadable = m_queue.at(m_current).unreadable;
+    if (status >= 200 && status < 300 && !unreadable) {
         m_queue[m_current].status = Done;
         m_bytesDone += m_queue.at(m_current).size;
         m_currentSent = 0;
@@ -622,6 +628,11 @@ void Sender::onUploadFinished()
         return;
     }
     m_currentSent = 0;
+    if (unreadable) {
+        fileFailed(QLatin1String("Can't read the file"));
+        startNextUpload();
+        return;
+    }
     if (status == 422) {
         // The receiver threw the file away: it was damaged on the way, or
         // changed while being read. Like the official app, send it again.
@@ -629,12 +640,10 @@ void Sender::onUploadFinished()
         if (f.attempts < kMaxUploadAttempts) {
             ++f.attempts;
             qDebug() << "Sender: checksum mismatch, upload" << f.attempts << "of" << kMaxUploadAttempts;
-            if (postUpload(f))
-                return;
-            fileFailed(QLatin1String("Can't read the file"));
-        } else {
-            fileFailed(QLatin1String("The checksum doesn't match"));
+            postUpload(f);
+            return;
         }
+        fileFailed(QLatin1String("The checksum doesn't match"));
         startNextUpload();
         return;
     }
