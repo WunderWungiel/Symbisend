@@ -52,6 +52,10 @@ class Settings : public QObject
     // (see discovery.needRestart); myDevice.port is the one in use.
     Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
     Q_PROPERTY(int defaultPort READ defaultPort CONSTANT)
+    // An IPv4 multicast address (224.0.0.0 to 239.255.255.255). Like port, it
+    // applies when the server restarts.
+    Q_PROPERTY(QString multicastGroup READ multicastGroup WRITE setMulticastGroup NOTIFY multicastGroupChanged)
+    Q_PROPERTY(QString defaultMulticastGroup READ defaultMulticastGroup CONSTANT)
     // Milliseconds a device gets to answer during discovery, 1 to 60000.
     // Official default: 500 ms; 3 s here, TLS is slow on a phone.
     Q_PROPERTY(int discoveryTimeout READ discoveryTimeout WRITE setDiscoveryTimeout NOTIFY discoveryTimeoutChanged)
@@ -100,6 +104,9 @@ public:
     int port() const { return m_port; }
     void setPort(int port);
     int defaultPort() const { return DefaultPort; }
+    QString multicastGroup() const { return m_multicastGroup; }
+    void setMulticastGroup(const QString &group);
+    QString defaultMulticastGroup() const;
     int discoveryTimeout() const { return m_discoveryTimeout; }
     void setDiscoveryTimeout(int ms);
     bool encryption() const { return m_encryption; }
@@ -144,6 +151,7 @@ signals:
     void verifyChecksumsChanged();
     void createChecksumsChanged();
     void portChanged();
+    void multicastGroupChanged();
     void discoveryTimeoutChanged();
     void encryptionChanged();
 
@@ -172,6 +180,7 @@ private:
     bool m_verifyChecksums;
     bool m_createChecksums;
     int m_port;
+    QString m_multicastGroup;
     int m_discoveryTimeout;
     bool m_encryption;
 

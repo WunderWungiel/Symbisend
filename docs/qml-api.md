@@ -42,7 +42,8 @@ Properties: `count` (int).  Methods: `clear()`.
 - `scanning` (bool) — `discover()`, `refresh()` or `scan()` is running, in any stage
 - `scanProgress` (0–100) — of the subnet scan; stays 0 when none was needed
 - `serverRunning` (bool) — our HTTP server on `myDevice.port` is up
-- `needRestart` (bool) — the running server doesn't use `settings.port` yet, until
+- `needRestart` (bool) — the server and multicast don't use `settings.port` and
+  `settings.multicastGroup` yet, until
   `restartServer()` or anything else that restarts it. Show the official app's "Restart the
   server to apply the settings!".
 - `serverHttps` (bool) — the running server speaks https (false while stopped). It
@@ -332,6 +333,9 @@ Network:
   once, and to our server and multicast when the server restarts (`discovery.needRestart`).
   Devices on another port find us only through an announcement on theirs, so changing this
   usually hides us.
+- `multicastGroup` (string, default `224.0.0.167`, also `defaultMulticastGroup`) — an IPv4
+  multicast address; anything else is ignored (the official app stores it and then runs
+  without multicast). Applies when the server restarts (`discovery.needRestart`).
 - `discoveryTimeout` (int, default 3000) — milliseconds a device gets to answer the subnet
   scan and the favourites' probes, 1 to 60000; other values are ignored. Used from the next
   request on. Answering an announcement and `lookUp()` keep their 5 s

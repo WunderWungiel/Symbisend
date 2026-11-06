@@ -169,6 +169,7 @@ private:
     bool m_scanning;
     bool m_confirmed;      // a device was confirmed since discover() started
     bool m_serverEnabled;  // false after stopServer() until startServer()
+    QString m_multicastGroup; // in use, follows settings.multicastGroup on a start
     bool m_linkActive;     // see setLinkEncryption()
     bool m_linkEncrypted;
     QTimer m_tickTimer;

@@ -193,10 +193,22 @@ Page {
                         encryptionOffDialog.open()
                 }
             }
+            SettingsItem {
+                visible: settings.advancedSettings
+                title: "Multicast address"
+                subTitle: settings.multicastGroup
+                onClicked: multicastDialog.openWith(settings.multicastGroup)
+            }
             SettingsNote {
                 visible: settings.port != settings.defaultPort
                 text: "You might not be detected by other devices because you are using "
                       + "a custom port. (default: " + settings.defaultPort + ")"
+            }
+            SettingsNote {
+                visible: settings.multicastGroup != settings.defaultMulticastGroup
+                text: "You might not be detected by other devices because you are using "
+                      + "a custom multicast address. (default: "
+                      + settings.defaultMulticastGroup + ")"
             }
 
             // ------------------------------------------------ Other
@@ -257,6 +269,12 @@ Page {
         titleText: "Port"
         digitsOnly: true
         onEntered: settings.port = parseInt(value, 10) // ignored if invalid
+    }
+
+    ValueDialog {
+        id: multicastDialog
+        titleText: "Multicast address"
+        onEntered: settings.multicastGroup = value // ignored if invalid
     }
 
     ValueDialog {

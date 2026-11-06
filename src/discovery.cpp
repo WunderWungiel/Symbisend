@@ -21,7 +21,6 @@
 #include "peermodel.h"
 #include "settings.h"
 
-static const char *kMulticastGroup = "224.0.0.167";
 static const int kMaxConcurrentScanJobs = 24;
 // settings.discoveryTimeout is for the scan and the favourites. Answering an
 // announcement and lookUp() (the user is waiting) need a phone's TLS handshake
@@ -61,8 +60,10 @@ Discovery::Discovery(DeviceInfo *device, PeerModel *peers, FavoritesModel *favor
 {
     m_device->setHttps(wantHttps()); // until the server actually starts
     m_device->setPort(m_settings->port());
+    m_multicastGroup = m_settings->multicastGroup();
     connect(m_settings, SIGNAL(encryptionChanged()), this, SLOT(applyEncryption()));
     connect(m_settings, SIGNAL(portChanged()), this, SIGNAL(statusChanged()));
+    connect(m_settings, SIGNAL(multicastGroupChanged()), this, SIGNAL(statusChanged()));
     m_server->addHandler(this);
     connect(m_device, SIGNAL(aliasChanged()), this, SLOT(onAliasChanged()));
     connect(m_network, SIGNAL(onlineChanged()), this, SLOT(onOnlineChanged()));
@@ -101,11 +102,13 @@ bool Discovery::isServerRunning() const
     return m_server->isListening();
 }
 
-// Like the official app: a port takes effect when the server restarts. The
+// Like the official app: a port takes effect when the server restarts, and so
+// does a multicast group (official doesn't say so for that one). The
 // encryption and the alias apply at once here, so they never need this.
 bool Discovery::needRestart() const
 {
-    return isServerRunning() && m_device->port() != m_settings->port();
+    return isServerRunning() && (m_device->port() != m_settings->port()
+                                 || m_multicastGroup != m_settings->multicastGroup());
 }
 
 bool Discovery::isServerHttps() const
@@ -189,6 +192,7 @@ void Discovery::startListening()
 {
     m_server->close();
     m_device->setPort(m_settings->port());
+    m_multicastGroup = m_settings->multicastGroup();
     const bool https = wantHttps();
     if (m_server->listen(m_device->port(), https, !m_linkActive))
         m_device->setHttps(m_server->isHttps());
@@ -202,7 +206,7 @@ void Discovery::startListening()
 
 void Discovery::startMulticast()
 {
-    m_multicast->start(QHostAddress(QLatin1String(kMulticastGroup)), m_device->port(),
+    m_multicast->start(QHostAddress(m_multicastGroup), m_device->port(),
                        m_network->localAddress());
 }
 
@@ -479,7 +483,7 @@ void Discovery::sendDatagram(const QByteArray &data)
 {
     if (!m_udp)
         resetUdpSocket(true);
-    qint64 n = m_udp->writeDatagram(data, QHostAddress(QLatin1String(kMulticastGroup)), m_device->port());
+    qint64 n = m_udp->writeDatagram(data, QHostAddress(m_multicastGroup), m_device->port());
     if (n < 0)
         qWarning() << "Discovery: multicast send failed:" << m_udp->errorString();
     else

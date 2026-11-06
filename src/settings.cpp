@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QHostAddress>
 #include <QSettings>
 #include <QTimer>
 
@@ -27,11 +28,25 @@ static const char *kReceiveViaLinkAutoAcceptKey = "receive/viaLinkAutoAccept";
 static const char *kVerifyChecksumsKey = "receive/verifyChecksums";
 static const char *kCreateChecksumsKey = "send/createChecksums";
 static const char *kPortKey = "network/port";
+static const char *kMulticastGroupKey = "network/multicastGroup";
 static const char *kDiscoveryTimeoutKey = "network/discoveryTimeout";
 static const char *kEncryptionKey = "network/encryption";
 
+static const char *kDefaultMulticastGroup = "224.0.0.167";
 static const int kDefaultDiscoveryTimeoutMs = 3000;
 static const int kMaxDiscoveryTimeoutMs = 60000;
+
+// Anything else would leave the multicast listener failing for ever. Gives
+// the address in its usual form, or "" if it isn't one.
+static QString cleanMulticastGroup(const QString &text)
+{
+    QHostAddress address;
+    if (!address.setAddress(text.trimmed())
+            || address.protocol() != QAbstractSocket::IPv4Protocol
+            || (address.toIPv4Address() >> 28) != 0xE)
+        return QString();
+    return address.toString();
+}
 
 Settings::Settings(QObject *parent)
     : QObject(parent)
@@ -62,6 +77,9 @@ Settings::Settings(QObject *parent)
     m_port = s.value(QLatin1String(kPortKey), int(DefaultPort)).toInt();
     if (m_port < 1 || m_port > 65535)
         m_port = DefaultPort;
+    m_multicastGroup = cleanMulticastGroup(s.value(QLatin1String(kMulticastGroupKey)).toString());
+    if (m_multicastGroup.isEmpty())
+        m_multicastGroup = defaultMulticastGroup();
     m_discoveryTimeout = s.value(QLatin1String(kDiscoveryTimeoutKey), kDefaultDiscoveryTimeoutMs).toInt();
     if (m_discoveryTimeout < 1 || m_discoveryTimeout > kMaxDiscoveryTimeoutMs)
         m_discoveryTimeout = kDefaultDiscoveryTimeoutMs;
@@ -75,7 +93,8 @@ Settings::Settings(QObject *parent)
              << "receiveViaLinkAutoAccept" << m_receiveViaLinkAutoAccept
              << "verifyChecksums" << m_verifyChecksums
              << "createChecksums" << m_createChecksums
-             << "port" << m_port << "discoveryTimeout" << m_discoveryTimeout
+             << "port" << m_port << "multicastGroup" << m_multicastGroup
+             << "discoveryTimeout" << m_discoveryTimeout
              << "encryption" << m_encryption;
 
     m_custom = s.value(QLatin1String(kDownloadFolderKey)).toString();
@@ -218,6 +237,22 @@ void Settings::setPort(int port)
     QSettings().setValue(QLatin1String(kPortKey), port);
     qDebug() << "Settings: port" << port;
     emit portChanged();
+}
+
+QString Settings::defaultMulticastGroup() const
+{
+    return QLatin1String(kDefaultMulticastGroup);
+}
+
+void Settings::setMulticastGroup(const QString &group)
+{
+    const QString clean = cleanMulticastGroup(group);
+    if (clean.isEmpty()) {
+        qWarning() << "Settings:" << group << "is not a multicast address, ignored";
+        return;
+    }
+    if (store(kMulticastGroupKey, &m_multicastGroup, clean))
+        emit multicastGroupChanged();
 }
 
 void Settings::setDiscoveryTimeout(int ms)
