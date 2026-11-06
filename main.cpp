@@ -3,6 +3,7 @@
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QDateTime>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QUrl>
 
 #include "qmlapplicationviewer.h"
@@ -61,7 +62,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
                      &sender, SLOT(onCancelReceived(QString,QString)));
     qDebug() << "Identity:" << device.alias() << "fingerprint" << device.fingerprint();
 
+    QElapsedTimer startup;
+    startup.start();
     QmlApplicationViewer viewer;
+    qDebug() << "Startup: viewer created after" << startup.elapsed() << "ms";
     QDeclarativeContext *ctx = viewer.rootContext();
     ctx->setContextProperty(QLatin1String("logger"), Logger::instance());
     ctx->setContextProperty(QLatin1String("myDevice"), &device);
@@ -81,8 +85,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
+    qDebug() << "Startup: context ready after" << startup.elapsed() << "ms";
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));
+    qDebug() << "Startup: QML loaded after" << startup.elapsed() << "ms";
     viewer.showExpanded();
+    qDebug() << "Startup: window shown after" << startup.elapsed() << "ms";
 
     network.connectNetwork();
 
