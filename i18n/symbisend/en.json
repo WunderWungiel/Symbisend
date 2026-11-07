@@ -47,8 +47,7 @@
   },
   "history": {
     "cannotOpenFolder": "Cannot open folder",
-    "cannotOpenFolderContent": "The download folder could not be opened:\n{folder}",
-    "clearContent": "Do you want to delete the entire history? Received files are not deleted."
+    "cannotOpenFolderContent": "The download folder could not be opened:\n{folder}"
   },
   "openFile": {
     "cannotShowFolder": "The folder can't be shown."
@@ -89,8 +88,7 @@
     "sentSome": "Sent {curr} of {n} files to {name}",
     "sentTo": "Sent to {name}",
     "totalProgress": "Total progress",
-    "videos": "Videos",
-    "waitingFor": "Waiting for {name} to accept..."
+    "videos": "Videos"
   },
   "settings": {
     "about": "About Symbisend",

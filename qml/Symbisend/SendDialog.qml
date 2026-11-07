@@ -93,7 +93,7 @@ CommonDialog {
                 if (root.sendState == "connecting") return i18n.t("symbisend.send.connectingTo", peer)
                 if (root.sendState == "hashing")
                     return i18n.t("sendPage.calculatingChecksum", { curr: sender.fileIndex, n: sender.fileCount })
-                if (root.sendState == "waiting") return i18n.t("symbisend.send.waitingFor", peer)
+                if (root.sendState == "waiting") return i18n.t("sendPage.waiting")
                 if (root.sendState == "pin") return sender.errorText != "" ? sender.errorText
                                                                        : i18n.t("symbisend.send.asksForPin", peer)
                 if (root.sendState == "sending")

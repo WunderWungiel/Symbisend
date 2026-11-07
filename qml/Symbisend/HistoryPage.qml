@@ -317,7 +317,7 @@ Page {
         id: clearDialog
         platformInverted: page.platformInverted
         titleText: i18n.t("dialogs.historyClearDialog.title") + i18n.rev
-        message: i18n.t("symbisend.history.clearContent") + i18n.rev
+        message: i18n.t("dialogs.historyClearDialog.content") + i18n.rev
         acceptButtonText: i18n.t("general.delete") + i18n.rev
         rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: history.clear()
