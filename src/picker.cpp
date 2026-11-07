@@ -3,6 +3,7 @@
 
 #include "picker.h"
 
+#include "i18n.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QDebug>
@@ -132,7 +133,7 @@ void Picker::runFilePicker()
     TBool ok = EFalse;
     // Memory selection first, then browsing; resource id 0 = default resources.
     TRAPD(err, ok = AknCommonDialogsDynMem::RunSelectDlgLD(
-                kAllMedias, file, 0, toPtr(QLatin1String("Select file"))));
+                kAllMedias, file, 0, toPtr(I18n::text("symbisend.picker.selectFile"))));
     if (err != KErrNone) {
         qWarning() << "Picker: file picker failed, error" << err;
         return;
@@ -140,7 +141,7 @@ void Picker::runFilePicker()
     if (ok)
         paths << fromDesC(file);
 #else
-    paths = QFileDialog::getOpenFileNames(0, QLatin1String("Select files"), QDir::homePath());
+    paths = QFileDialog::getOpenFileNames(0, I18n::text("symbisend.picker.selectFiles"), QDir::homePath());
 #endif
 
     reportFiles("file", paths);
@@ -191,7 +192,7 @@ void Picker::runFolderPicker()
     TFileName folder;
     TBool ok = EFalse;
     TRAPD(err, ok = AknCommonDialogsDynMem::RunFolderSelectDlgLD(
-                kAllMedias, folder, KNullDesC, 0, 0, toPtr(QLatin1String("Select folder"))));
+                kAllMedias, folder, KNullDesC, 0, 0, toPtr(I18n::text("symbisend.picker.selectFolder"))));
     if (err != KErrNone) {
         qWarning() << "Picker: folder picker failed, error" << err;
         return;
@@ -199,7 +200,7 @@ void Picker::runFolderPicker()
     if (ok)
         picked = fromDesC(folder);
 #else
-    picked = QFileDialog::getExistingDirectory(0, QLatin1String("Select folder"), QDir::homePath());
+    picked = QFileDialog::getExistingDirectory(0, I18n::text("symbisend.picker.selectFolder"), QDir::homePath());
 #endif
 
     if (picked.isEmpty()) {

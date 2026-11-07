@@ -3,6 +3,7 @@
 
 #include "settings.h"
 
+#include "i18n.h"
 #include <QDebug>
 #include <QDir>
 #include <QHostAddress>
@@ -395,7 +396,7 @@ void Settings::pickDownloadFolder()
 
 void Settings::runFolderPicker()
 {
-    const QString picked = chooseFolder(m_downloadFolder, QLatin1String("Download folder"));
+    const QString picked = chooseFolder(m_downloadFolder, I18n::text("settingsTab.receive.destination"));
     if (!picked.isEmpty())
         setCustomDownloadFolder(picked);
 }

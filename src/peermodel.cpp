@@ -7,6 +7,7 @@
 #include <QLocale>
 
 #include "favoritesmodel.h"
+#include "i18n.h"
 
 // Same cap as LocalSend's discovery store (MAX_LOGS).
 static const int MaxPeerLogs = 100;
@@ -188,9 +189,9 @@ QVariantMap PeerModel::peer(const QString &fingerprint) const
         QVariantMap entry;
         entry.insert(QLatin1String("time"), locale.toString(l.time.time(), QLocale::ShortFormat));
         entry.insert(QLatin1String("text"),
-                     QString::fromLatin1("%1 via %2 (%3)")
-                     .arg(QLatin1String(l.discovered ? "Discovered" : "Updated"),
-                          l.protocol.toUpper(), l.host));
+                     I18n::text(l.discovered ? "deviceDetailsPage.logs.discovered"
+                                             : "deviceDetailsPage.logs.updated",
+                                I18n::args("protocol", l.protocol.toUpper(), "host", l.host)));
         logs.append(entry);
     }
     map.insert(QLatin1String("logs"), logs);

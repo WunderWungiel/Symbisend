@@ -19,6 +19,7 @@
 #include "deviceinfo.h"
 #include "discovery.h"
 #include "favoritesmodel.h"
+#include "i18n.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
@@ -138,7 +139,7 @@ bool Sender::lookUpAndSend(const QString &ip, int port, const QString &name)
     }
     reset();
     if (!m_network->isOnline()) {
-        finish(QLatin1String("failed"), QLatin1String("Not connected"));
+        finish(QLatin1String("failed"), I18n::text("symbisend.errors.notConnected"));
         return false;
     }
     m_peer.alias = name;
@@ -178,7 +179,7 @@ bool Sender::start(const QString &fingerprint)
 {
     reset();
     if (!m_peers->find(fingerprint, &m_peer)) {
-        finish(QLatin1String("failed"), QLatin1String("The device is gone"));
+        finish(QLatin1String("failed"), I18n::text("symbisend.errors.deviceGone"));
         return false;
     }
     // Like the official app: a favourite goes by the name given to it.
@@ -186,7 +187,7 @@ bool Sender::start(const QString &fingerprint)
     if (!favoriteAlias.isEmpty())
         m_peer.alias = favoriteAlias;
     if (!m_network->isOnline()) {
-        finish(QLatin1String("failed"), QLatin1String("Not connected"));
+        finish(QLatin1String("failed"), I18n::text("symbisend.errors.notConnected"));
         return false;
     }
 
@@ -216,7 +217,7 @@ bool Sender::start(const QString &fingerprint)
         m_files.append(f);
     }
     if (m_files.isEmpty()) {
-        finish(QLatin1String("failed"), QLatin1String("Nothing to send"));
+        finish(QLatin1String("failed"), I18n::text("dialogs.noFiles.content"));
         return false;
     }
 
@@ -458,7 +459,7 @@ void Sender::onPrepareFinished()
         m_sessionId = map.value(QLatin1String("sessionId")).toString();
         if (!ok || m_sessionId.isEmpty()) {
             qWarning() << "Sender: invalid prepare-upload answer:" << data.left(300);
-            finish(QLatin1String("failed"), QLatin1String("The receiver sent an invalid answer"));
+            finish(QLatin1String("failed"), I18n::text("symbisend.errors.invalidAnswer"));
             return;
         }
         // The receiver may accept only some of the files.
@@ -492,25 +493,25 @@ void Sender::onPrepareFinished()
         return;
     case 401:
         qDebug() << "Sender:" << (m_pinSent ? "wrong PIN" : "PIN required");
-        setState(QLatin1String("pin"), m_pinSent ? QLatin1String("Wrong PIN") : QString());
+        setState(QLatin1String("pin"), m_pinSent ? I18n::text("web.invalidPin") : QString());
         return;
     case 403:
         finish(QLatin1String("declined"),
-               QString::fromLatin1("%1 declined the transfer").arg(m_peer.alias));
+               I18n::text("symbisend.errors.declined", I18n::args("name", m_peer.alias)));
         return;
     case 409:
         finish(QLatin1String("failed"),
-               QString::fromLatin1("%1 is busy with another transfer").arg(m_peer.alias));
+               I18n::text("sendPage.busy"));
         return;
     case 429:
-        finish(QLatin1String("failed"), QLatin1String("Too many attempts, try again later"));
+        finish(QLatin1String("failed"), I18n::text("web.tooManyAttempts"));
         return;
     case 0:
         finish(QLatin1String("failed"), reply->errorString());
         return;
     default:
         finish(QLatin1String("failed"),
-               QString::fromLatin1("%1 answered with error %2").arg(m_peer.alias).arg(status));
+               I18n::text("symbisend.errors.httpError", I18n::args("name", m_peer.alias, "status", status)));
     }
 }
 
@@ -537,7 +538,7 @@ void Sender::finishUploads()
         finish(QLatin1String("finished"));
     else
         finish(QLatin1String("finishedWithErrors"),
-               failureText(QLatin1String("Not sent:"), failures));
+               failureText(I18n::text("symbisend.errors.notSent"), failures));
 }
 
 void Sender::fileFailed(const QString &error)
@@ -632,7 +633,7 @@ void Sender::onUploadFinished()
     }
     m_currentSent = 0;
     if (unreadable) {
-        fileFailed(QLatin1String("Can't read the file"));
+        fileFailed(I18n::text("symbisend.errors.cannotRead"));
         startNextUpload();
         return;
     }
@@ -646,19 +647,18 @@ void Sender::onUploadFinished()
             postUpload(f);
             return;
         }
-        fileFailed(QLatin1String("The checksum doesn't match"));
+        fileFailed(I18n::text("symbisend.errors.checksum"));
         startNextUpload();
         return;
     }
     fileFailed(status == 0 ? reply->errorString()
-                           : QString::fromLatin1("%1 answered with error %2").arg(m_peer.alias).arg(status));
+                           : I18n::text("symbisend.errors.httpError", I18n::args("name", m_peer.alias, "status", status)));
     startNextUpload();
 }
 
 QString Sender::certificateError() const
 {
-    return QString::fromLatin1("This is not the %1 that was found (its certificate is different)")
-            .arg(m_peer.alias);
+    return I18n::text("symbisend.errors.certificateChanged", I18n::args("name", m_peer.alias));
 }
 
 void Sender::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
@@ -691,7 +691,7 @@ void Sender::onTick()
         dropReply();
         sendCancel();
         finish(QLatin1String("failed"),
-               QString::fromLatin1("%1 stopped responding").arg(m_peer.alias));
+               I18n::text("symbisend.errors.stoppedResponding", I18n::args("name", m_peer.alias)));
         return;
     }
     // Average speed since the first upload started.
@@ -709,11 +709,11 @@ void Sender::onOnlineChanged()
     if (!m_network->isOnline() && isBusy()) {
         qWarning() << "Sender: connection lost during the transfer";
         if (m_state == QLatin1String("sending")) {
-            failRemaining(QLatin1String("Connection lost"));
+            failRemaining(I18n::text("symbisend.errors.connectionLost"));
             return;
         }
         dropReply();
-        finish(QLatin1String("failed"), QLatin1String("Connection lost"));
+        finish(QLatin1String("failed"), I18n::text("symbisend.errors.connectionLost"));
     }
 }
 
@@ -722,7 +722,7 @@ QString Sender::failureText(const QString &title, const QStringList &lines)
     QStringList text = lines.mid(0, kMaxFailuresListed);
     text.prepend(title);
     if (lines.size() > kMaxFailuresListed)
-        text.append(QString::fromLatin1("and %1 more").arg(lines.size() - kMaxFailuresListed));
+        text.append(I18n::text("symbisend.errors.andMore", I18n::args("n", lines.size() - kMaxFailuresListed)));
     return text.join(QLatin1String("\n"));
 }
 
@@ -746,7 +746,7 @@ void Sender::onCancelReceived(const QString &ip, const QString &sessionId)
     }
     qDebug() << "Sender:" << m_peer.alias << "cancelled the session";
     finish(QLatin1String("cancelled"),
-           QString::fromLatin1("%1 cancelled the transfer").arg(m_peer.alias));
+           I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peer.alias)));
 }
 
 // Forgets the request in flight without its finished() reaching us.

@@ -21,6 +21,7 @@
 #include "clientidentity.h"
 #include "favoritesmodel.h"
 #include "historymodel.h"
+#include "i18n.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "receivefilesmodel.h"
@@ -239,8 +240,8 @@ void Receiver::requestAborted(const HttpRequest &request)
             qDebug() << "Receiver:" << m_peerAlias << "withdrew the request";
             finish(QLatin1String("cancelled"),
                    m_network->isOnline()
-                   ? QString::fromLatin1("%1 cancelled the transfer").arg(m_peerAlias)
-                   : QString::fromLatin1("Connection lost"));
+                   ? I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias))
+                   : I18n::text("symbisend.errors.connectionLost"));
         }
         return;
     }
@@ -248,7 +249,7 @@ void Receiver::requestAborted(const HttpRequest &request)
         const InFile &f = m_files.at(m_uploads.value(request.id).file);
         qWarning() << "Receiver: upload of" << f.fileName << "broke off after"
                    << f.received << "of" << f.size << "bytes";
-        closeUpload(request.id, false, QLatin1String("The connection broke off"));
+        closeUpload(request.id, false, I18n::text("symbisend.errors.connectionBroke"));
         // Not the end of the session by itself: the sender may still send
         // /cancel or the other files. onTick() settles it.
         m_lastActivity = QDateTime::currentDateTime();
@@ -442,7 +443,7 @@ void Receiver::pickFolder()
 
 void Receiver::runFolderPicker()
 {
-    const QString picked = Settings::chooseFolder(m_folder, QLatin1String("Save to folder"));
+    const QString picked = Settings::chooseFolder(m_folder, I18n::text("settingsTab.receive.destination"));
     // The sender may have given up while the picker was open.
     if (picked.isEmpty() || m_state != QLatin1String("request"))
         return;
@@ -492,7 +493,7 @@ HttpResponse Receiver::startSession()
     if (!QDir().mkpath(m_folder)) {
         qWarning() << "Receiver: cannot create" << m_folder;
         finish(QLatin1String("failed"),
-               QString::fromLatin1("Can't create the folder %1").arg(QDir::toNativeSeparators(m_folder)));
+               I18n::text("symbisend.errors.cannotCreateFolder", I18n::args("folder", QDir::toNativeSeparators(m_folder))));
         return HttpResponse::message(500, QLatin1String("Cannot save files"));
     }
     m_usedFolders.clear();
@@ -524,14 +525,14 @@ HttpResponse Receiver::cancelRequest(const HttpRequest &request)
     if (m_state == QLatin1String("receiving") && sessionId == m_sessionId && fromPeer) {
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the session";
         finish(QLatin1String("cancelled"),
-               QString::fromLatin1("%1 cancelled the transfer").arg(m_peerAlias));
+               I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
     } else if (m_state == QLatin1String("request") && fromPeer && !hasSessionId) {
         // No session yet: the sender gave up waiting for our answer. Like the
         // official app, a /cancel that names a session is about something else:
         // this device may be cancelling what we are sending to it.
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the request";
         finish(QLatin1String("cancelled"),
-               QString::fromLatin1("%1 cancelled the transfer").arg(m_peerAlias));
+               I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
     } else if (!sessionId.isEmpty()) {
         // Not ours to receive: maybe the device we are sending to is cancelling.
         emit cancelReceived(request.remoteAddress.toString(), sessionId);
@@ -589,7 +590,7 @@ HttpResponse Receiver::startUpload(const HttpRequest &request)
         qWarning() << "Receiver: cannot write" << path << out->errorString();
         delete out;
         f.status = Failed;
-        f.error = QLatin1String("Can't create the file");
+        f.error = I18n::text("symbisend.errors.cannotCreateFile");
         checkDone();
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
@@ -614,13 +615,13 @@ HttpResponse Receiver::writeUpload(const HttpRequest &request, const QByteArray 
     InFile &f = m_files[u.file];
     if (f.received + data.size() > f.size) {
         qWarning() << "Receiver:" << f.fileName << "is larger than the" << f.size << "bytes announced";
-        closeUpload(request.id, false, QLatin1String("Larger than announced"));
+        closeUpload(request.id, false, I18n::text("symbisend.errors.largerThanAnnounced"));
         checkDone();
         return HttpResponse::message(400, QLatin1String("More data than announced"));
     }
     if (u.out->write(data) != data.size()) {
         qWarning() << "Receiver: writing" << f.savedPath << "failed:" << u.out->errorString();
-        closeUpload(request.id, false, QLatin1String("Can't write the file (memory full?)"));
+        closeUpload(request.id, false, I18n::text("symbisend.errors.cannotWrite"));
         checkDone();
         return HttpResponse::message(500, QLatin1String("Cannot save the file"));
     }
@@ -653,7 +654,7 @@ HttpResponse Receiver::finishUpload(const HttpRequest &request)
                        << f.attempts << "of" << kMaxUploadAttempts << "- expected" << f.sha256
                        << "got" << actual;
             // Deleted, so that the next upload gets the same name.
-            closeUpload(request.id, false, QLatin1String("The checksum doesn't match"));
+            closeUpload(request.id, false, I18n::text("symbisend.errors.checksum"));
             if (f.attempts < kMaxUploadAttempts) {
                 f.status = Pending; // the same token works again
                 f.error.clear();
@@ -698,7 +699,7 @@ void Receiver::closeUpload(quint32 requestId, bool keepFile, const QString &erro
             qWarning() << "Receiver: closing" << f.savedPath << "failed:" << u.out->errorString();
         u.out->remove();
         f.status = Failed;
-        f.error = keepFile ? QString::fromLatin1("Can't write the file (memory full?)") : error;
+        f.error = keepFile ? I18n::text("symbisend.errors.cannotWrite") : error;
         f.received = 0;
         f.savedPath.clear();
     }
@@ -757,7 +758,7 @@ void Receiver::checkDone()
         finish(QLatin1String("finished"));
     else
         finish(QLatin1String("finishedWithErrors"),
-               Sender::failureText(QLatin1String("Not saved:"), failures));
+               Sender::failureText(I18n::text("symbisend.errors.notSaved"), failures));
 }
 
 void Receiver::onTick()
@@ -783,9 +784,10 @@ void Receiver::onTick()
             qWarning() << "Receiver: nothing more from" << m_peerAlias << "-" << done
                        << "of" << m_files.size() << "file(s) received";
             finish(QLatin1String("failed"),
-                   done == 0 ? QString::fromLatin1("%1 stopped sending").arg(m_peerAlias)
-                             : QString::fromLatin1("%1 stopped sending. %2 of %3 files were saved.")
-                               .arg(m_peerAlias).arg(done).arg(m_files.size()));
+                   done == 0 ? I18n::text("symbisend.errors.stoppedSending", I18n::args("name", m_peerAlias))
+                             : I18n::text("symbisend.errors.stoppedSendingSome",
+                                          I18n::args("name", m_peerAlias, "curr", done,
+                                                     "n", m_files.size())));
             return;
         }
     }
@@ -803,7 +805,7 @@ void Receiver::onOnlineChanged()
 {
     if (!m_network->isOnline() && isBusy()) {
         qWarning() << "Receiver: connection lost (state" << m_state + ")";
-        finish(QLatin1String("failed"), QLatin1String("Connection lost"));
+        finish(QLatin1String("failed"), I18n::text("symbisend.errors.connectionLost"));
     }
 }
 
@@ -828,7 +830,7 @@ void Receiver::cancel()
         if (!m_draining.isEmpty())
             m_drainTimer.start();
     }
-    finish(QLatin1String("cancelled"), QLatin1String("The transfer was cancelled"));
+    finish(QLatin1String("cancelled"), I18n::text("symbisend.general.transferCancelled"));
 }
 
 // Tells the sender that we stopped. Like the official app: fire and forget,

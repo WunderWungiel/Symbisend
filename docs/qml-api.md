@@ -257,7 +257,7 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
     offer; `progress`, `bytesSent` and `bytesTotal` run over all the files, `cancel()` works
   - `waiting` — the receiver's user hasn't accepted yet (no timeout; with quick save this
     passes at once)
-  - `pin` — the receiver wants a PIN; `errorText` is `Wrong PIN` after a wrong one
+  - `pin` — the receiver wants a PIN; `errorText` is `Invalid PIN` (`web.invalidPin`) after a wrong one
   - `sending` — uploading
   - `finished` — everything accepted was sent (also: a text message was shown, or the
     receiver accepted nothing)

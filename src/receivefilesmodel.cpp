@@ -3,6 +3,7 @@
 
 #include "receivefilesmodel.h"
 
+#include "i18n.h"
 #include <QDebug>
 
 #include "selectionmodel.h"
@@ -101,14 +102,14 @@ QString ReceiveFilesModel::nameError(const QString &input) const
 {
     const QString name = input.trimmed();
     if (name.isEmpty())
-        return QLatin1String("Filename cannot be empty");
+        return I18n::text("sanitization.empty");
     static const QString bad = QLatin1String("<>:\"/\\|?*");
     bool valid = name != QLatin1String(".") && name != QLatin1String("..")
             && !name.endsWith(QLatin1Char('.')) // Symbian drops it, as Windows does
             && name.toUtf8().size() <= kMaxNameBytes;
     for (int i = 0; valid && i < name.size(); ++i)
         valid = name.at(i).unicode() >= 32 && !bad.contains(name.at(i));
-    return valid ? QString() : QString::fromLatin1("Filename contains invalid characters");
+    return valid ? QString() : I18n::text("sanitization.invalid");
 }
 
 bool ReceiveFilesModel::rename(int row, const QString &input)

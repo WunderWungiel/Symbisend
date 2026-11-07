@@ -18,6 +18,7 @@
 #include "clientidentity.h"
 #include "deviceinfo.h"
 #include "favoritesmodel.h"
+#include "i18n.h"
 #include "json.h"
 #include "multicastreceiver.h"
 #include "networkmanager.h"
@@ -373,7 +374,7 @@ void Discovery::abortJobs()
         emit scanningChanged();
     }
     foreach (const QString &ip, lookUps)
-        emit lookUpFinished(ip, QString(), QLatin1String("Connection lost"));
+        emit lookUpFinished(ip, QString(), I18n::text("symbisend.errors.connectionLost"));
 }
 
 // A reply that already failed is about to emit finished() by itself; aborting
@@ -697,7 +698,7 @@ void Discovery::onSslErrors(QNetworkReply *reply, const QList<QSslError> &errors
 
 static QString notFoundError(const QString &ip)
 {
-    return QString::fromLatin1("No LocalSend device found at %1").arg(ip);
+    return I18n::text("symbisend.errors.noDeviceAt", I18n::args("ip", ip));
 }
 
 void Discovery::onScanTick()
@@ -825,7 +826,7 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
                    << ", accessible" << int(m_nam->networkAccessible()) << ") - stopping scan";
         abortJobs();
         if (job.kind == LookUpJob)
-            emit lookUpFinished(job.ip, QString(), QLatin1String("Connection lost"));
+            emit lookUpFinished(job.ip, QString(), I18n::text("symbisend.errors.connectionLost"));
         return;
     }
 
@@ -898,11 +899,11 @@ void Discovery::onReplyFinished(QNetworkReply *reply)
     if (job.kind == LookUpJob) {
         QString why;
         if (job.certRejected)
-            why = QString::fromLatin1("The certificate of %1 was rejected").arg(job.ip);
+            why = I18n::text("symbisend.errors.certificateRejected", I18n::args("ip", job.ip));
         else if (fingerprint.isEmpty())
             why = notFoundError(job.ip);
         else if (fingerprint == m_device->fingerprint())
-            why = QLatin1String("This is the address of this phone");
+            why = I18n::text("symbisend.errors.ownAddress");
         emit lookUpFinished(job.ip, why.isEmpty() ? fingerprint : QString(), why);
     }
 
