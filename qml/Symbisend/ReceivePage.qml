@@ -20,7 +20,7 @@ Page {
     Column {
         id: identity
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: platformStyle.paddingLarge
+        spacing: 2 * platformStyle.paddingLarge
 
         // Centered slightly above the middle of the page (at 42% of its
         // height); pushed further up only if it would run into whatever sits
@@ -41,7 +41,7 @@ Page {
             sourceSize.height: size
             fillMode: Image.PreserveAspectFit
             smooth: true
-            source: "images/symbisend.svg"
+            source: "images/localsend-logo.svg"
         }
 
         Label {
