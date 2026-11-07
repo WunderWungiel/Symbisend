@@ -53,5 +53,12 @@ Page {
             text: "A LocalSend client for Symbian.\n"
                   + "Compatible with LocalSend (protocol v2)."
         }
+        Label {
+            platformInverted: page.platformInverted
+            width: parent.width
+            wrapMode: Text.Wrap
+            horizontalAlignment: Text.AlignHCenter
+            text: "Author: Wunder Wungiel"
+        }
     }
 }
