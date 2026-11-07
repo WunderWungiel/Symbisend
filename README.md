@@ -55,6 +55,22 @@ and install it. Notes:
 - The package is deliberately left unsigned: the app uses capabilities that a self-signed
   certificate cannot grant. The phone has to allow installing unsigned packages.
 
+### Building from Qt Creator
+
+You can also open `Symbisend.pro` in the Qt Creator that comes with the Qt SDK, pick the
+**Symbian Device** target (Qt 4.7.4 for Symbian Anna, GCCE) and click Build. To get the
+same package as `build_symbian.bat`:
+
+- Leave **Shadow build** off (Projects → Build), because the build only works in-source.
+- Under Projects → Run → Deploy → **Create SIS Package**, choose **Not signed**. If
+  Qt Creator offers to patch the capabilities, say no. The patch removes
+  `ReadDeviceData`, `WriteDeviceData` and `SwEvent`, and the gallery picker needs them.
+- The package is named `Symbisend_unsigned.sis` (the script renames it to `Symbisend.sis`).
+- *Run* installs the package over CODA. If that fails, copy the `.sis` to the phone and
+  install it by hand.
+- All targets (Symbian, Harmattan, Simulator) build in the same folder, so after you
+  switch targets, run Clean or qmake again.
+
 ## Troubleshooting
 
 Symbisend logs heavily. Check the in-app **Log** page, or the log file in `E:/Symbisend/`
