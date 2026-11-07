@@ -1,0 +1,43 @@
+Symbisend
+Copyright (C) 2026 Wunder Wungiel
+
+This program is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version. See LICENSE.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+
+Third-party components
+======================
+
+Symbisend includes the following components, which keep their own licenses. All of
+them are compatible with GPL-3.0.
+
+mbedTLS 3.6 LTS (external/mbedtls/upstream, git submodule)
+  https://github.com/Mbed-TLS/mbedtls
+  Copyright The Mbed TLS Contributors
+  Apache License 2.0 (dual-licensed Apache-2.0 OR GPL-2.0-or-later; used here under
+  Apache-2.0). See external/mbedtls/upstream/LICENSE and LICENSES/Apache-2.0.txt.
+
+QR Code generator library, C version, v1.8.0 (external/qrcodegen)
+  https://github.com/nayuki/QR-Code-generator
+  Copyright (c) Project Nayuki
+  MIT License, see the top of qrcodegen.c / qrcodegen.h.
+
+LocalSend web pages (web/upload.html, web/error-403.html) and LocalSend logo
+(qml/Symbisend/images/localsend-logo.svg)
+  https://github.com/localsend/localsend
+  Copyright the LocalSend authors
+  Apache License 2.0, see LICENSES/Apache-2.0.txt.
+
+Material Icons (fingerprint-icons/, and the Material Design icons in
+qml/Symbisend/images/)
+  https://github.com/google/material-design-icons
+  Copyright Google LLC
+  Apache License 2.0, see LICENSES/Apache-2.0.txt.
+
+Symbisend is an independent project and is not affiliated with or endorsed by
+LocalSend. "LocalSend" and its logo belong to their respective owners.

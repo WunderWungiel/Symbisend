@@ -67,12 +67,21 @@ Symbisend logs heavily. Check the in-app **Log** page, or the log file in `E:/Sy
 - `docs/qml-api.md` – the interface between C++ and QML.
 - `CLAUDE.md` – architecture and platform constraints in more detail.
 
+## License
+
+Symbisend is free software, licensed under the
+[GNU General Public License v3.0 or later](LICENSE). Copyright © 2026 Wunder Wungiel.
+
 ## Third-party code
+
+These keep their own licenses; see [`NOTICE`](NOTICE) for details.
 
 - [mbedTLS](https://github.com/Mbed-TLS/mbedtls) 3.6 LTS (Apache-2.0) – server-side TLS,
   `external/mbedtls/`.
 - [QR Code generator](https://github.com/nayuki/QR-Code-generator) by Project Nayuki
   (MIT) – `external/qrcodegen/`.
-- LocalSend web pages (Apache-2.0, © the LocalSend authors) – `web/`.
+- LocalSend web pages and logo (Apache-2.0, © the LocalSend authors) – `web/`.
+- [Material Icons](https://github.com/google/material-design-icons) (Apache-2.0) –
+  `fingerprint-icons/`, `qml/Symbisend/images/`.
 
 Symbisend is an independent project and is not affiliated with LocalSend.
