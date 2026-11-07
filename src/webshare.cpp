@@ -9,6 +9,7 @@
 
 #include "deviceinfo.h"
 #include "discovery.h"
+#include "i18n.h"
 #include "json.h"
 #include "networkmanager.h"
 #include "settings.h"
@@ -117,21 +118,9 @@ HttpResponse WebShare::page(int status, const QString &resource)
     return response;
 }
 
-// The official server's default strings (WebI18n::default() in web.rs);
-// the app fills them from its translations, we have none yet.
+// The page's strings in the app's language, filled like the official
+// server does (I18n::webStrings()).
 QByteArray WebShare::i18nJson()
 {
-    QVariantMap m;
-    m.insert(QLatin1String("waiting"), QString::fromUtf8("Waiting for response\xE2\x80\xA6"));
-    m.insert(QLatin1String("enterPin"), QLatin1String("Enter PIN"));
-    m.insert(QLatin1String("invalidPin"), QLatin1String("Invalid PIN"));
-    m.insert(QLatin1String("tooManyAttempts"), QLatin1String("Too many attempts"));
-    m.insert(QLatin1String("rejected"), QLatin1String("Rejected"));
-    m.insert(QLatin1String("uploadRejected"), QLatin1String("The recipient has rejected the request."));
-    m.insert(QLatin1String("busy"), QLatin1String("The recipient is busy with another request."));
-    m.insert(QLatin1String("files"), QLatin1String("Files"));
-    m.insert(QLatin1String("fileName"), QLatin1String("File name"));
-    m.insert(QLatin1String("size"), QLatin1String("Size"));
-    m.insert(QLatin1String("dropHint"), QLatin1String("Place items to share."));
-    return Json::serialize(m);
+    return I18n::instance() ? I18n::instance()->webStrings() : QByteArray("{}");
 }

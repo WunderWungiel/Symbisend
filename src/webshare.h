@@ -22,7 +22,7 @@ class Settings;
 //    v2 prepare-upload/upload endpoints, i.e. through Receiver, which uses
 //    this object's pin and settings.receiveViaLinkAutoAccept meanwhile.
 //  - otherwise GET / is the official 403 page.
-//  - GET /i18n.json: the page's strings (the official English defaults).
+//  - GET /i18n.json: the page's strings, in the app's language (I18n::webStrings()).
 //
 // Encryption: like the official app, the link starts as plain http
 // (browsers can't verify our self-signed certificate and warn about it).
