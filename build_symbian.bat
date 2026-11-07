@@ -1,4 +1,6 @@
 @echo off
+:: SPDX-FileCopyrightText: 2026 Wunder Wungiel
+:: SPDX-License-Identifier: GPL-3.0-or-later
 :: Builds Symbisend for Symbian^3/Anna/Belle (Qt 4.7.4 SDK, GCCE) and produces an unsigned .sis.
 :: In-source build: Qt 4.7 + sbsv2 does not support shadow builds.
 :: Usage: build_symbian.bat [release|debug]   (default: release)

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Wunder Wungiel
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # mbedTLS (upstream, 3.6 LTS), compiled into the application.
 # The sources are the git submodule upstream/ (see README.md). Only the modules
 # that symbisend_config.h enables are listed.

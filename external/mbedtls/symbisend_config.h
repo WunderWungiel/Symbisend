@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Wunder Wungiel
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 /*
  * mbedTLS configuration for Symbisend, selected with MBEDTLS_CONFIG_FILE
  * (see mbedtls.pri). The upstream include/mbedtls/mbedtls_config.h is not

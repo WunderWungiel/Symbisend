@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Wunder Wungiel
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #ifndef VERIFICATION_H
 #define VERIFICATION_H
 

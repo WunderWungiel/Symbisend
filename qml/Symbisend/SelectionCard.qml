@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Wunder Wungiel
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 

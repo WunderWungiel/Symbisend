@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Wunder Wungiel
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # The QML and images are compiled into the binary (qml.qrc), so no loose
 # folders are deployed. List every new file under qml/Symbisend in qml.qrc.
 DEPLOYMENTFOLDERS =

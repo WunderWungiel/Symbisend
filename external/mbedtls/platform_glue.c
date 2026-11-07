@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Wunder Wungiel
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 /*
  * What upstream mbedTLS needs beyond its own sources on platforms it doesn't
  * cover. Each function is selected in symbisend_config.h through one of

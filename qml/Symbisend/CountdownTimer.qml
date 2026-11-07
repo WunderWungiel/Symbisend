@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Wunder Wungiel
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 import QtQuick 1.1
 
 // Counts down once a second and then says so, for a "Close (3)" button.
