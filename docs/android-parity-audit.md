@@ -2,7 +2,7 @@
 
 Goal: Symbisend's behaviour (logic) should be nearly identical to the official Android/desktop apps.
 
-Audit of 2026-11-04: Symbisend `fd4ea6f` against official `main@92e133a` (app 1.18.2+64, protocol 2.2). Both codebases were read; nothing was run, so the scenarios below come from the code, not from tests. Line numbers are from `fd4ea6f` and will drift. Before fixing an item, check that it still applies.
+Audit of 2026-11-04: Symbisend `fd4ea6f` against official `main@92e133a` (app 1.18.2+64, protocol 2.2). Both codebases were read; nothing was run, so the scenarios below come from the code, not from tests. Line numbers are from `fd4ea6f` and will drift. Before fixing an item, check that it still applies. In a fixed item, **Ours** describes the code as it was when the item was found.
 
 Checked again on 2026-11-06: Symbisend `a2a986c` against the same official commit, which was still upstream's latest. Also by reading only. The results are under "Open differences", "Missing features" and "Keep as is", and line numbers there are from `a2a986c`. The settings were compared the same day, with the same official commit.
 
@@ -175,6 +175,7 @@ This is the biggest logic change, and it should also save battery and CPU on the
 
 - [ ] **Share via link:** `prepare-download`, `download`, the download page, `download:true`, accept prompts (`packages/core/src/http/server/web.rs`, `send_controller.dart`)
 - [ ] **Multiple send mode:** several parallel sessions
+- [ ] **Quick actions** on the receive options page: random names and counters (`receive_options_page.dart`)
 - [ ] **Per-file progress:** file list, speed, retrying failed files
 - [ ] **Address dialog:** `#123` suffix mode and recent devices
 - [x] **Settings:** Advanced settings switch, port, multicast address, discovery timeout, device type and model, turning off checksum verification, the notices after turning on quick save (`settings_tab.dart`, `settings_tab_controller.dart`)
@@ -203,8 +204,7 @@ These differences are deliberate or better for the phone:
 - No automatic discovery during a transfer, and the Send tab's check also runs when the connection comes up, since a phone can be offline when the tab opens.
 - Creating checksums when sending is a setting that's off by default (official has it on), because hashing large files first is slow on a phone. Verifying on receive is on by default, as in official.
 - A file with a checksum mismatch is deleted and the retry saves it again under the same name. Official overwrites the same target.
-- Favourites are probed with https, then http, like the subnet scan (official uses only the protocol from its own settings). Each probe has our 3 s scan timeout, so the 1 s grace can start up to 3 s later (6 s with the http retry) when a favourite is away.
-
+- Favourites are probed with https, then http, like the subnet scan (official uses only the protocol from its own settings). Each probe has the discovery timeout (3 s by default), so the 1 s grace can start up to 3 s later (6 s with the http retry) when a favourite is away.
 - Tapping a favourite with nothing selected says so and stays on the page. Official registers first and then opens its add-file dialog, which we can't show on top of a pushed page.
 - The Favourites page keeps a delete button on each row, next to the edit button. Official has Delete inside its edit dialog.
 - A favourite added by address is custom-named when the typed name differs from the device's own, so discovery doesn't overwrite it. Official stores it as automatic, and the next discovery replaces the typed name. Adding a device that is a favourite already updates it. Official adds a duplicate.
@@ -251,6 +251,8 @@ Official's `/api/localsend/v3/` routes and WebRTC aren't differences: its app an
 Protocol v1 isn't supported, as in official. Multicasts without `version`, `port` and `protocol` are ignored, and only `/v1/info` is left, as in official, because its versions up to 1.17 speak v2 but probe that route.
 
 ## Suggested order
+
+Steps 1 to 5 and 7 are done; step 6 is what remains.
 
 1. **Quick fixes:** #2, #4, #5, auto finish on send, preview.
 2. **Transfer failures:** #1 and #3 together.

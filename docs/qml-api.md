@@ -105,6 +105,11 @@ All read/write unless noted. Settings marked *(stored only)* are not acted on ye
 
 - `advancedSettings` (bool, default false) — the Settings page shows the same rows as the
   official app's "Advanced settings". Changes nothing else: hidden settings stay in force.
+- `restoreDefaults()` — every setting here back to its default (our own; the official app
+  has none), which also removes the PIN. Each change takes effect as if made by hand, so
+  turning `encryption` back on restarts a running server, and `port` and `multicastGroup`
+  wait for `discovery.needRestart`. The Settings page also calls
+  `myDevice.restoreDefaults()`; the alias, certificate, `favorites` and `history` stay.
 
 General:
 - `theme` (string) — `"dark"` (default) or `"light"`; other values are ignored.
@@ -123,8 +128,8 @@ Receive:
   is non-empty (otherwise the write is ignored); turning it off also clears `pin`
 - `pin` (string, default `""`) — any text, not only digits. After 3 wrong PINs an address is
   refused (429), even with the right PIN, until the server restarts or a PIN or link setting
-  changes. Setting it
-  to `""` is ignored while `requirePin` is on. To enable: set `pin`, then `requirePin = true`.
+  changes. Setting it to `""` is ignored while `requirePin` is on. To enable: set `pin`,
+  then `requirePin = true`.
 - `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
   received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else
   `C:\Data\Symbisend`; recomputed each launch. If the chosen folder is unavailable
@@ -133,9 +138,6 @@ Receive:
 - `pickDownloadFolder()` — opens the native folder picker; returns immediately,
   `downloadFolder` changes when the user confirms (nothing happens on cancel)
 - `resetDownloadFolder()` — back to the default
-- `restoreDefaults()` — every setting here back to its default, which also removes the PIN.
-  Each change takes effect as if made by hand, so turning `encryption` back on restarts a
-  running server, and `port` and `multicastGroup` wait for `discovery.needRestart`.
 - `saveMediaToGallery` (bool, default true) — received images and videos go to the
   phone's media folders instead of `downloadFolder`, like the official app: images to
   `Images\Symbisend`, videos to `Videos\Symbisend` on the download folder's drive
@@ -154,6 +156,31 @@ Receive:
 - `receiveViaLinkAutoAccept` (bool, default false) — while `webShare.receiveActive`, every
   file offer is accepted at once (like `quickSave`; messages are still shown). The
   official app's "Automatically accept requests" on its Receive via link page.
+- `verifyChecksums` (bool, default true) — a received file with a `sha256` in the offer is
+  checked, and a mismatch answered 422 (see `receiver`). Off: the offer's `sha256` is
+  ignored. Read when an upload starts, so a change needs no server restart.
+
+Send:
+- `createChecksums` (bool, default false) — `sender` hashes every file first (state
+  `hashing`) and offers it with its `sha256`. The official app has this on by default; it
+  is off here because hashing large files first is slow on a phone.
+
+Network:
+- `port` (int, default 53317, also `defaultPort`) — 1 to 65535; other values are ignored.
+  Like the official app it applies to the scan, looking up addresses and new favourites at
+  once, and to our server and multicast when the server restarts (`discovery.needRestart`).
+  Devices on another port find us only through an announcement on theirs, so changing this
+  usually hides us.
+- `multicastGroup` (string, default `224.0.0.167`, also `defaultMulticastGroup`) — an IPv4
+  multicast address; anything else is ignored (the official app stores it and then runs
+  without multicast). Applies when the server restarts (`discovery.needRestart`).
+- `discoveryTimeout` (int, default 3000) — milliseconds a device gets to answer the subnet
+  scan and the favourites' probes, 1 to 60000; other values are ignored. Used from the next
+  request on. Answering an announcement and `lookUp()` keep their 5 s and 8 s, unless this
+  is longer. The official app has 500 ms.
+- `encryption` (bool, default true) — our server speaks https (LocalSend's "Encryption").
+  Applied at once, see `discovery.serverHttps`. Sending to others always uses the protocol
+  each peer announced, whatever this says.
 
 ## `picker` — what to send (Send page buttons)
 Native pickers. Their results go straight into `selection` (connected in `main.cpp`).
@@ -258,8 +285,8 @@ The Send page calls `send()` when a device is tapped, `sendToAddress()` after
 and opens `SendDialog.qml`.
 
 ## `receiver` — receiving from other devices
-Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (plain HTTP, port
-`myDevice.port`, while `discovery.serverRunning`). One session at a time; while busy, other senders
+Our server answers LocalSend v2 `prepare-upload`, `upload` and `cancel` (https or http,
+see `discovery.serverHttps`; port `myDevice.port`, while `discovery.serverRunning`). One session at a time; while busy, other senders
 are told we're busy. Files go to the session's `folder`, at first `settings.downloadFolder`
 (images/videos to the media folders with `saveToGallery`), folders inside it are created
 as sent (`Trip/day1/a.jpg`); an existing file is not overwritten, the new one becomes
@@ -322,32 +349,6 @@ times the sender gave, like the official app (Symbian files only have the first)
   changes on confirm. For this session only, `settings.downloadFolder` stays as it is.
 - `cancel()` — stops receiving and tells the sender (in `request`: same as `decline()`)
 - Signals `stateChanged()`, `progressChanged()`.
-
-- `verifyChecksums` (bool, default true) — a received file with a `sha256` in the offer is
-  checked, and a mismatch answered 422 (see `receiver`). Off: the offer's `sha256` is
-  ignored. Read when an upload starts, so a change needs no server restart.
-
-Send:
-- `createChecksums` (bool, default false) — `sender` hashes every file first (state
-  `hashing`) and offers it with its `sha256`. The official app has this on by default; it
-  is off here because hashing large files first is slow on a phone.
-
-Network:
-- `port` (int, default 53317, also `defaultPort`) — 1 to 65535; other values are ignored.
-  Like the official app it applies to the scan, looking up addresses and new favourites at
-  once, and to our server and multicast when the server restarts (`discovery.needRestart`).
-  Devices on another port find us only through an announcement on theirs, so changing this
-  usually hides us.
-- `multicastGroup` (string, default `224.0.0.167`, also `defaultMulticastGroup`) — an IPv4
-  multicast address; anything else is ignored (the official app stores it and then runs
-  without multicast). Applies when the server restarts (`discovery.needRestart`).
-- `discoveryTimeout` (int, default 3000) — milliseconds a device gets to answer the subnet
-  scan and the favourites' probes, 1 to 60000; other values are ignored. Used from the next
-  request on. Answering an announcement and `lookUp()` keep their 5 s
-  and 8 s, unless this is longer. The official app has 500 ms.
-- `encryption` (bool, default true) — our server speaks https (LocalSend's "Encryption").
-  Applied at once, see `discovery.serverHttps`. Sending to others always uses the protocol
-  each peer announced, whatever this says.
 
 `main.qml` opens `ReceiveDialog.qml` whenever `state` becomes `request`, `receiving`,
 `failed` or `finishedWithErrors`. All but the first cover offers accepted without asking
