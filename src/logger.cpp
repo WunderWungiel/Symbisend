@@ -16,8 +16,8 @@ static const int kMaxLines = 300;
 static QString pickLogDir()
 {
 #ifdef Q_OS_SYMBIAN
-    // E: is mass memory on most Symbian^3 phones (808, N8); fall back to C:/Data.
-    const char *candidates[] = { "E:/Symbisend", "F:/Symbisend", "C:/Data/Symbisend" };
+    // Same drive order as the default download folder: F:, E:, then C:/Data.
+    const char *candidates[] = { "F:/Symbisend", "E:/Symbisend", "C:/Data/Symbisend" };
     for (unsigned i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
         QString path = QString::fromLatin1(candidates[i]);
         QDir root(path.left(3));

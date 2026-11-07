@@ -40,7 +40,7 @@ Item 3 below (our direct `libcrypto` link) is the one to look at first, because 
 | Information note | `CAknInformationNote` | blocking `QMessageBox` | `InfoBanner` | 4 |
 | Open folder | starts File manager (`FileMgr.exe`) | starts File Manager (OpenRepos), optional | done | 5 |
 | Drive letters, media folders | `F:`, `E:`, `C:/Data` | `~/Downloads`, `QDesktopServices` | `/home/user/MyDocs/...` | 6 |
-| Log folder | `E:/Symbisend` | `~/.symbisend` | `MyDocs` or data location | 6 |
+| Log folder | `F:/Symbisend` | `~/.symbisend` | `MyDocs` or data location | 6 |
 | History file | private folder | `DataLocation`, works | none | - |
 | Client certificate | libcrypto (Open C) | `-lcrypto` = 0.9.8 | mbedTLS instead | 3 |
 | Access point binding | `setdefaultif()` | not needed | none | - |
