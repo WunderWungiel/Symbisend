@@ -29,7 +29,7 @@ CommonDialog {
     }
 
     platformInverted: settings.theme == "light"
-    buttonTexts: ["OK", "Cancel"]
+    buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
     content: Item {
         width: root.platformContentMaximumWidth

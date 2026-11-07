@@ -43,7 +43,7 @@ Page {
                 right: parent.right; verticalCenter: backButton.verticalCenter
             }
             elide: Text.ElideRight
-            text: "History"
+            text: i18n.t("receiveHistoryPage.title") + i18n.rev
             font.pixelSize: 26
         }
     }
@@ -68,7 +68,7 @@ Page {
             width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
             anchors.left: parent.left
             iconSource: page.platformInverted ? "images/send-folder-inverted.svg" : "images/send-folder.svg"
-            text: "Open folder"
+            text: i18n.t("receiveHistoryPage.openFolder") + i18n.rev
             onClicked: {
                 if (!history.openFolder(settings.downloadFolder))
                     openFolderFailedDialog.open()
@@ -79,7 +79,7 @@ Page {
             width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
             anchors { left: openFolderButton.right; leftMargin: buttonRow.spacing }
             iconSource: "toolbar-delete"
-            text: "Clear"
+            text: i18n.t("symbisend.general.clear") + i18n.rev
             enabled: history.count > 0
             onClicked: clearDialog.open()
         }
@@ -112,13 +112,13 @@ Page {
             function showInformation() {
                 var lines = []
                 if (!isText) {
-                    lines.push("File name: " + model.fileName)
-                    lines.push("Path: " + model.path)
+                    lines.push(i18n.t("dialogs.fileInfo.fileName") + " " + model.fileName)
+                    lines.push(i18n.t("dialogs.fileInfo.path") + " " + model.path)
                 }
-                lines.push("Size: " + model.sizeText)
-                lines.push("Sender: " + model.senderAlias)
-                lines.push("Time: " + model.timeText)
-                infoDialog.openWith(isText ? "Message information" : "File information",
+                lines.push(i18n.t("dialogs.fileInfo.size") + " " + model.sizeText)
+                lines.push(i18n.t("dialogs.fileInfo.sender") + " " + model.senderAlias)
+                lines.push(i18n.t("dialogs.fileInfo.time") + " " + model.timeText)
+                infoDialog.openWith(isText ? i18n.t("symbisend.history.messageInfo") : i18n.t("dialogs.fileInfo.title"),
                                     lines.join("\n"))
             }
 
@@ -195,7 +195,7 @@ Page {
         anchors.centerIn: list
         visible: history.count === 0
         color: page.mutedColor
-        text: "No history"
+        text: i18n.t("receiveHistoryPage.empty") + i18n.rev
     }
 
     // ------------------------------------------------ Entry menu
@@ -205,19 +205,19 @@ Page {
         MenuLayout {
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Open file"
+                text: i18n.t("receiveHistoryPage.entryActions.open") + i18n.rev
                 // Tapping a message shows it; it has no file.
                 visible: list.currentItem != null && !list.currentItem.isText
                 onClicked: list.currentItem.openEntry()
             }
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Information"
+                text: i18n.t("receiveHistoryPage.entryActions.info") + i18n.rev
                 onClicked: list.currentItem.showInformation()
             }
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Delete from history"
+                text: i18n.t("receiveHistoryPage.entryActions.deleteFromHistory") + i18n.rev
                 onClicked: history.removeEntry(list.currentIndex)
             }
         }
@@ -229,7 +229,7 @@ Page {
     CommonDialog {
         id: infoDialog
         platformInverted: page.platformInverted
-        buttonTexts: ["Close"]
+        buttonTexts: [i18n.t("general.close") + i18n.rev]
 
         function openWith(title, text) {
             titleText = title
@@ -267,7 +267,7 @@ Page {
     CommonDialog {
         id: textDialog
         platformInverted: page.platformInverted
-        buttonTexts: ["Close"]
+        buttonTexts: [i18n.t("general.close") + i18n.rev]
 
         function openWith(text, senderAlias) {
             titleText = senderAlias
@@ -296,17 +296,17 @@ Page {
     QueryDialog {
         id: openFailedDialog
         platformInverted: page.platformInverted
-        titleText: "Cannot open file"
-        message: "The file no longer exists or no application can open it."
-        acceptButtonText: "OK"
+        titleText: i18n.t("dialogs.cannotOpenFile.title") + i18n.rev
+        message: i18n.t("symbisend.history.cannotOpenFile") + i18n.rev
+        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
     }
 
     QueryDialog {
         id: openFolderFailedDialog
         platformInverted: page.platformInverted
-        titleText: "Cannot open folder"
-        message: "The download folder could not be opened:\n" + settings.downloadFolder
-        acceptButtonText: "OK"
+        titleText: i18n.t("symbisend.history.cannotOpenFolder") + i18n.rev
+        message: i18n.t("symbisend.history.cannotOpenFolderContent", { folder: settings.downloadFolder }) + i18n.rev
+        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
     }
 
     // Like the official app: confirm first. Only the list is cleared, the
@@ -314,10 +314,10 @@ Page {
     QueryDialog {
         id: clearDialog
         platformInverted: page.platformInverted
-        titleText: "Clear history"
-        message: "Do you want to delete the entire history? Received files are not deleted."
-        acceptButtonText: "Clear"
-        rejectButtonText: "Cancel"
+        titleText: i18n.t("dialogs.historyClearDialog.title") + i18n.rev
+        message: i18n.t("symbisend.history.clearContent") + i18n.rev
+        acceptButtonText: i18n.t("symbisend.general.clear") + i18n.rev
+        rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: history.clear()
     }
 

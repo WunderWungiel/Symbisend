@@ -47,7 +47,7 @@ Dialog {
                                          : platformStyle.colorNormalLink
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
-            text: "Enter file name"
+            text: i18n.t("dialogs.fileNameInput.title") + i18n.rev
         }
     }
 
@@ -68,7 +68,7 @@ Dialog {
                 platformInverted: root.platformInverted
                 width: parent.width
                 wrapMode: Text.WrapAnywhere
-                text: "Original: " + root.originalName
+                text: i18n.t("dialogs.fileNameInput.original", { original: root.originalName }) + i18n.rev
             }
             TextField {
                 id: nameField
@@ -100,13 +100,13 @@ Dialog {
             ToolButton {
                 width: Math.round((root.platformContentMaximumWidth - 3 * platformStyle.paddingMedium) / 2)
                 platformInverted: root.platformInverted
-                text: "Cancel"
+                text: i18n.t("general.cancel") + i18n.rev
                 onClicked: root.close()
             }
             ToolButton {
                 width: Math.round((root.platformContentMaximumWidth - 3 * platformStyle.paddingMedium) / 2)
                 platformInverted: root.platformInverted
-                text: "Confirm"
+                text: i18n.t("general.confirm") + i18n.rev
                 onClicked: root.confirm()
             }
         }

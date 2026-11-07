@@ -28,7 +28,7 @@ Page {
 
     function sendTo(fingerprint) {
         if (selection.count === 0) {
-            picker.showInfo("Select something to send first")
+            picker.showInfo(i18n.t("dialogs.noFiles.content"))
             return
         }
         page.pageStack.pop()
@@ -55,7 +55,7 @@ Page {
                 right: addButton.left; verticalCenter: backButton.verticalCenter
             }
             elide: Text.ElideRight
-            text: "Favourites"
+            text: i18n.t("dialogs.favoriteDialog.title") + i18n.rev
             font.pixelSize: 26
         }
         ToolButton {
@@ -154,7 +154,7 @@ Page {
         anchors.centerIn: list
         visible: favorites.count === 0
         color: page.mutedColor
-        text: "No favourites"
+        text: i18n.t("dialogs.favoriteDialog.noFavorites") + i18n.rev
     }
 
     ScrollDecorator {
@@ -173,13 +173,13 @@ Page {
 
         function openFor(fp, alias) {
             fingerprint = fp
-            message = "Do you really want to remove " + alias + " from favourites?"
+            message = i18n.t("dialogs.favoriteDeleteDialog.content", { name: alias })
             open()
         }
 
-        titleText: "Remove from favourites"
-        acceptButtonText: "Delete"
-        rejectButtonText: "Cancel"
+        titleText: i18n.t("dialogs.favoriteDeleteDialog.title") + i18n.rev
+        acceptButtonText: i18n.t("general.delete") + i18n.rev
+        rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: favorites.remove(fingerprint)
     }
 }

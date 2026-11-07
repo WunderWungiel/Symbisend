@@ -50,15 +50,14 @@ Page {
             width: parent.width
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
-            text: "A LocalSend client for Symbian.\n"
-                  + "Compatible with LocalSend (protocol v2)."
+            text: i18n.t("symbisend.about.description") + i18n.rev
         }
         Label {
             platformInverted: page.platformInverted
             width: parent.width
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
-            text: "Author: Wunder Wungiel"
+            text: i18n.t("aboutPage.author") + ": Wunder Wungiel" + i18n.rev
         }
     }
 }

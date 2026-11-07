@@ -49,7 +49,7 @@ Page {
                 right: parent.right; verticalCenter: backButton.verticalCenter
             }
             elide: Text.ElideRight
-            text: "Selection"
+            text: i18n.t("sendTab.selection.title") + i18n.rev
             font.pixelSize: 26
         }
     }
@@ -77,7 +77,7 @@ Page {
                 elide: Text.ElideRight
                 font.pixelSize: platformStyle.fontSizeSmall
                 color: page.mutedColor
-                text: "Elements: " + selection.count
+                text: i18n.t("sendTab.selection.files", { files: selection.count }) + i18n.rev
             }
             Label {
                 platformInverted: page.platformInverted
@@ -85,7 +85,7 @@ Page {
                 elide: Text.ElideRight
                 font.pixelSize: platformStyle.fontSizeSmall
                 color: page.mutedColor
-                text: "Size: " + selection.totalSizeText
+                text: i18n.t("sendTab.selection.size", { size: selection.totalSizeText }) + i18n.rev
             }
         }
 
@@ -94,7 +94,7 @@ Page {
             platformInverted: page.platformInverted
             anchors { right: parent.right; verticalCenter: parent.verticalCenter }
             iconSource: "toolbar-delete"
-            text: "Delete all"
+            text: i18n.t("selectedFilesPage.deleteAll") + i18n.rev
             onClicked: selection.clear()
         }
     }
@@ -155,7 +155,7 @@ Page {
                     elide: Text.ElideRight
                     font.pixelSize: platformStyle.fontSizeSmall
                     color: page.mutedColor
-                    text: row.isText ? "Text, " + model.sizeText + " - tap to edit" : model.sizeText
+                    text: row.isText ? i18n.t("symbisend.selection.textItem", { size: model.sizeText }) + i18n.rev : model.sizeText
                 }
             }
 

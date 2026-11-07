@@ -19,7 +19,7 @@ Page {
         }
         ToolButton {
             platformInverted: page.platformInverted
-            text: "Clear"
+            text: i18n.t("symbisend.general.clear") + i18n.rev
             onClicked: logger.clear()
         }
     }

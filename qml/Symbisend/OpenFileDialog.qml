@@ -43,7 +43,7 @@ Dialog {
                                          : platformStyle.colorNormalLink
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
-            text: "Open file"
+            text: i18n.t("dialogs.openFile.title") + i18n.rev
         }
     }
 
@@ -57,7 +57,7 @@ Dialog {
             platformInverted: root.platformInverted
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             wrapMode: Text.Wrap
-            text: "Do you want to open the received file?"
+            text: i18n.t("dialogs.openFile.content") + i18n.rev
         }
 
         Item { width: 1; height: platformStyle.paddingLarge }
@@ -75,29 +75,29 @@ Dialog {
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
-                text: "Open"
+                text: i18n.t("general.open") + i18n.rev
                 onClicked: {
                     root.close()
                     if (!history.openPath(root.filePath))
-                        picker.showInfo("The file no longer exists or no application can open it.")
+                        picker.showInfo(i18n.t("symbisend.history.cannotOpenFile"))
                 }
             }
             ToolButton {
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
-                text: "Folder"
+                text: i18n.t("symbisend.openFile.folder") + i18n.rev
                 onClicked: {
                     root.close()
                     if (!history.openFolder(root.filePath.substring(0, root.filePath.lastIndexOf("/"))))
-                        picker.showInfo("The folder can't be shown.")
+                        picker.showInfo(i18n.t("symbisend.openFile.cannotShowFolder"))
                 }
             }
             ToolButton {
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
-                text: "Close (" + closeTimer.counter + ")"
+                text: i18n.t("general.close") + " (" + closeTimer.counter + ")" + i18n.rev
                 onClicked: root.close()
             }
         }

@@ -16,8 +16,8 @@ CommonDialog {
     property string enteredIp
 
     platformInverted: settings.theme == "light"
-    titleText: "Enter address"
-    buttonTexts: ["Cancel", "Confirm"]
+    titleText: i18n.t("dialogs.addressInput.title") + i18n.rev
+    buttonTexts: [i18n.t("general.cancel") + i18n.rev, i18n.t("general.confirm") + i18n.rev]
 
     function validIp(text) {
         var parts = text.split(".")
@@ -64,7 +64,7 @@ CommonDialog {
                     id: ipLabel
                     platformInverted: root.platformInverted
                     anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                    text: "IP:"
+                    text: i18n.t("receiveTab.infoBox.ip") + i18n.rev
                 }
                 TextField {
                     id: ipField
@@ -83,7 +83,7 @@ CommonDialog {
                 color: platformInverted ? platformStyle.colorNormalMidInverted
                                         : platformStyle.colorNormalMid
                 font.pixelSize: platformStyle.fontSizeSmall
-                text: "Example: 192.168.1.123"
+                text: i18n.t("general.example") + ": 192.168.1.123" + i18n.rev
             }
         }
     }
@@ -95,7 +95,7 @@ CommonDialog {
         var ip = ipField.text.replace(/^\s+|\s+$/g, "")
         enteredIp = validIp(ip) ? ip : ""
         if (enteredIp == "")
-            picker.showInfo("Invalid IP address")
+            picker.showInfo(i18n.t("symbisend.general.invalidIp"))
         afterClose.start()
     }
 }

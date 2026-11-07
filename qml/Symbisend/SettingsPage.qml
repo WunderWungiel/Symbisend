@@ -16,12 +16,14 @@ Page {
 
     // Choices for the selection rows: what is stored, what is shown.
     property variant themeValues: ["dark", "light"]
-    property variant themeNames: ["Dark", "Light"]
-    property variant languageValues: ["system", "en"]
-    property variant languageNames: ["System", "English"]
+    property variant themeNames: [i18n.t("settingsTab.general.brightnessOptions.dark") + i18n.rev, i18n.t("settingsTab.general.brightnessOptions.light") + i18n.rev]
 
     property variant deviceTypeValues: ["mobile", "desktop", "web", "headless", "server"]
-    property variant deviceTypeNames: ["Mobile", "Desktop", "Web", "Headless", "Server"]
+    property variant deviceTypeNames: [i18n.t("symbisend.deviceTypes.mobile") + i18n.rev,
+        i18n.t("symbisend.deviceTypes.desktop") + i18n.rev,
+        i18n.t("symbisend.deviceTypes.web") + i18n.rev,
+        i18n.t("symbisend.deviceTypes.headless") + i18n.rev,
+        i18n.t("symbisend.deviceTypes.server") + i18n.rev]
 
     function nameOf(values, names, value) {
         for (var i = 0; i < values.length; ++i) {
@@ -43,24 +45,24 @@ Page {
             width: flick.width
 
             // ------------------------------------------------ General
-            SettingsHeading { text: "General" }
+            SettingsHeading { text: i18n.t("settingsTab.general.title") + i18n.rev }
 
             SettingsItem {
-                title: "Theme"
+                title: i18n.t("settingsTab.general.brightness") + i18n.rev
                 subTitle: page.nameOf(page.themeValues, page.themeNames, settings.theme)
                 onClicked: themeDialog.open()
             }
             SettingsItem {
-                title: "Language"
-                subTitle: page.nameOf(page.languageValues, page.languageNames, settings.language)
+                title: i18n.t("settingsTab.general.language") + i18n.rev
+                subTitle: i18n.languageName(settings.language) + i18n.rev
                 onClicked: languageDialog.open()
             }
 
             // ------------------------------------------------ Receive
-            SettingsHeading { text: "Receive" }
+            SettingsHeading { text: i18n.t("settingsTab.receive.title") + i18n.rev }
 
             SettingsSwitch {
-                title: "Quick save"
+                title: i18n.t("settingsTab.receive.quickSave") + i18n.rev
                 checked: settings.quickSave
                 onToggled: {
                     settings.quickSave = value
@@ -69,7 +71,7 @@ Page {
                 }
             }
             SettingsSwitch {
-                title: "Quick save for favourites"
+                title: i18n.t("settingsTab.receive.quickSaveFromFavorites") + i18n.rev
                 checked: settings.quickSaveFromFavorites
                 onToggled: {
                     settings.quickSaveFromFavorites = value
@@ -80,8 +82,8 @@ Page {
             // Turning it on asks for the PIN first (stays off on Cancel or
             // an empty PIN); tapping the row while on changes the PIN.
             SettingsSwitch {
-                title: "Require PIN"
-                subTitle: settings.requirePin ? "Tap to change the PIN" : ""
+                title: i18n.t("settingsTab.receive.requirePin") + i18n.rev
+                subTitle: settings.requirePin ? i18n.t("symbisend.settings.changePin") + i18n.rev : ""
                 checked: settings.requirePin
                 rowToggles: false
                 onClicked: pinDialog.openWith(settings.requirePin ? settings.pin : "")
@@ -93,55 +95,55 @@ Page {
                 }
             }
             SettingsItem {
-                title: "Save to folder"
+                title: i18n.t("settingsTab.receive.destination") + i18n.rev
                 subTitle: settings.downloadFolder
                 onClicked: folderMenu.open()
             }
             SettingsSwitch {
-                title: "Save media to gallery"
+                title: i18n.t("settingsTab.receive.saveToGallery") + i18n.rev
                 checked: settings.saveMediaToGallery
                 onToggled: settings.saveMediaToGallery = value
             }
             SettingsSwitch {
-                title: "Auto finish"
+                title: i18n.t("settingsTab.receive.autoFinish") + i18n.rev
                 checked: settings.autoFinish
                 onToggled: settings.autoFinish = value
             }
             SettingsSwitch {
-                title: "Save to history"
+                title: i18n.t("settingsTab.receive.saveToHistory") + i18n.rev
                 checked: settings.saveToHistory
                 onToggled: settings.saveToHistory = value
             }
             SettingsSwitch {
                 visible: settings.advancedSettings
-                title: "Verify checksums"
+                title: i18n.t("settingsTab.receive.verifyChecksums") + i18n.rev
                 checked: settings.verifyChecksums
                 onToggled: settings.verifyChecksums = value
             }
 
             // ------------------------------------------------ Send
-            SettingsHeading { text: "Send"; visible: settings.advancedSettings }
+            SettingsHeading { text: i18n.t("settingsTab.send.title") + i18n.rev; visible: settings.advancedSettings }
 
             SettingsSwitch {
                 visible: settings.advancedSettings
-                title: "Create checksums"
-                subTitle: "Slower start with large files"
+                title: i18n.t("settingsTab.send.createChecksums") + i18n.rev
+                subTitle: i18n.t("symbisend.settings.createChecksumsHint") + i18n.rev
                 checked: settings.createChecksums
                 onToggled: settings.createChecksums = value
             }
 
             // ------------------------------------------------ Network
-            SettingsHeading { text: "Network" }
+            SettingsHeading { text: i18n.t("settingsTab.network.title") + i18n.rev }
 
             SettingsNote {
                 visible: discovery.needRestart
                 warning: true
-                text: "Restart the server to apply the settings!"
+                text: i18n.t("settingsTab.network.needRestart") + i18n.rev
             }
 
             SettingsItem {
-                title: "Server"
-                subTitle: discovery.serverRunning ? "Running" : "Stopped"
+                title: i18n.t("settingsTab.network.server") + i18n.rev
+                subTitle: discovery.serverRunning ? i18n.t("symbisend.settings.serverRunning") + i18n.rev : i18n.t("symbisend.settings.serverStopped") + i18n.rev
 
                 // Icon-only (flat) tool buttons: restart / start, and stop,
                 // which is greyed out while stopped.
@@ -159,44 +161,44 @@ Page {
                 }
             }
             SettingsItem {
-                title: "Device name"
+                title: i18n.t("settingsTab.network.alias") + i18n.rev
                 subTitle: myDevice.alias
                 onClicked: nameDialog.openWith(myDevice.alias)
 
                 Button {
                     platformInverted: page.platformInverted
-                    text: "Random"
+                    text: i18n.t("symbisend.settings.randomAlias") + i18n.rev
                     onClicked: myDevice.randomizeAlias()
                 }
             }
             SettingsItem {
                 visible: settings.advancedSettings
-                title: "Device type"
+                title: i18n.t("settingsTab.network.deviceType") + i18n.rev
                 subTitle: page.nameOf(page.deviceTypeValues, page.deviceTypeNames, myDevice.deviceType)
                 onClicked: deviceTypeDialog.open()
             }
             SettingsItem {
                 visible: settings.advancedSettings
-                title: "Device model"
+                title: i18n.t("settingsTab.network.deviceModel") + i18n.rev
                 subTitle: myDevice.deviceModel
                 onClicked: deviceModelDialog.openWith(myDevice.deviceModel)
             }
             SettingsItem {
                 visible: settings.advancedSettings
-                title: "Port"
+                title: i18n.t("settingsTab.network.port") + i18n.rev
                 subTitle: String(settings.port)
                 onClicked: portDialog.openWith(settings.port)
             }
             SettingsItem {
                 visible: settings.advancedSettings
-                title: "Discovery timeout"
+                title: i18n.t("settingsTab.network.discoveryTimeout") + i18n.rev
                 subTitle: settings.discoveryTimeout + " ms"
                 onClicked: discoveryTimeoutDialog.openWith(settings.discoveryTimeout)
             }
             // Applied at once: a running server restarts as https / http.
             SettingsSwitch {
                 visible: settings.advancedSettings
-                title: "Encryption"
+                title: i18n.t("settingsTab.network.encryption") + i18n.rev
                 checked: settings.encryption
                 onToggled: {
                     settings.encryption = value
@@ -206,39 +208,36 @@ Page {
             }
             SettingsItem {
                 visible: settings.advancedSettings
-                title: "Multicast address"
+                title: i18n.t("settingsTab.network.multicastGroup") + i18n.rev
                 subTitle: settings.multicastGroup
                 onClicked: multicastDialog.openWith(settings.multicastGroup)
             }
             SettingsNote {
                 visible: settings.port != settings.defaultPort
-                text: "You might not be detected by other devices because you are using "
-                      + "a custom port. (default: " + settings.defaultPort + ")"
+                text: i18n.t("settingsTab.network.portWarning", { defaultPort: settings.defaultPort }) + i18n.rev
             }
             SettingsNote {
                 visible: settings.multicastGroup != settings.defaultMulticastGroup
-                text: "You might not be detected by other devices because you are using "
-                      + "a custom multicast address. (default: "
-                      + settings.defaultMulticastGroup + ")"
+                text: i18n.t("settingsTab.network.multicastGroupWarning", { defaultMulticast: settings.defaultMulticastGroup }) + i18n.rev
             }
 
             // ------------------------------------------------ Other
-            SettingsHeading { text: "Other" }
+            SettingsHeading { text: i18n.t("settingsTab.other.title") + i18n.rev }
 
             SettingsItem {
-                title: "About Symbisend"
+                title: i18n.t("symbisend.settings.about") + i18n.rev
                 onClicked: page.aboutRequested()
             }
             SettingsItem {
-                title: "Log"
+                title: i18n.t("symbisend.settings.log") + i18n.rev
                 onClicked: page.logRequested()
             }
             SettingsItem {
-                title: "Restore defaults"
+                title: i18n.t("symbisend.settings.restoreDefaults") + i18n.rev
                 onClicked: restoreDialog.open()
             }
             SettingsSwitch {
-                title: "Advanced settings"
+                title: i18n.t("settingsTab.advancedSettings") + i18n.rev
                 checked: settings.advancedSettings
                 onToggled: settings.advancedSettings = value
             }
@@ -252,7 +251,7 @@ Page {
     SelectionDialog {
         id: themeDialog
         platformInverted: page.platformInverted
-        titleText: "Theme"
+        titleText: i18n.t("settingsTab.general.brightness") + i18n.rev
         model: page.themeNames
         onAccepted: settings.theme = page.themeValues[selectedIndex]
     }
@@ -260,41 +259,41 @@ Page {
     SelectionDialog {
         id: languageDialog
         platformInverted: page.platformInverted
-        titleText: "Language"
-        model: page.languageNames
-        onAccepted: settings.language = page.languageValues[selectedIndex]
+        titleText: i18n.t("settingsTab.general.language") + i18n.rev
+        model: i18n.languageNames
+        onAccepted: settings.language = i18n.languageCodes[selectedIndex]
     }
 
     SelectionDialog {
         id: deviceTypeDialog
         platformInverted: page.platformInverted
-        titleText: "Device type"
+        titleText: i18n.t("settingsTab.network.deviceType") + i18n.rev
         model: page.deviceTypeNames
         onAccepted: myDevice.deviceType = page.deviceTypeValues[selectedIndex]
     }
 
     ValueDialog {
         id: deviceModelDialog
-        titleText: "Device model"
+        titleText: i18n.t("settingsTab.network.deviceModel") + i18n.rev
         onEntered: myDevice.deviceModel = value
     }
 
     ValueDialog {
         id: portDialog
-        titleText: "Port"
+        titleText: i18n.t("settingsTab.network.port") + i18n.rev
         digitsOnly: true
         onEntered: settings.port = parseInt(value, 10) // ignored if invalid
     }
 
     ValueDialog {
         id: multicastDialog
-        titleText: "Multicast address"
+        titleText: i18n.t("settingsTab.network.multicastGroup") + i18n.rev
         onEntered: settings.multicastGroup = value // ignored if invalid
     }
 
     ValueDialog {
         id: discoveryTimeoutDialog
-        titleText: "Discovery timeout (ms)"
+        titleText: i18n.t("settingsTab.network.discoveryTimeout") + " (ms)" + i18n.rev
         digitsOnly: true
         onEntered: settings.discoveryTimeout = parseInt(value, 10) // ignored if invalid
     }
@@ -305,12 +304,12 @@ Page {
         MenuLayout {
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Choose folder..."
+                text: i18n.t("symbisend.settings.chooseFolder") + i18n.rev
                 onClicked: settings.pickDownloadFolder()
             }
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Use default"
+                text: i18n.t("symbisend.settings.useDefaultFolder") + i18n.rev
                 enabled: !settings.downloadFolderIsDefault
                 onClicked: settings.resetDownloadFolder()
             }
@@ -320,8 +319,8 @@ Page {
     CommonDialog {
         id: pinDialog
         platformInverted: page.platformInverted
-        titleText: "PIN"
-        buttonTexts: ["OK", "Cancel"]
+        titleText: i18n.t("dialogs.pin.title") + i18n.rev
+        buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
         function openWith(pin) {
             pinField.text = pin
@@ -342,7 +341,7 @@ Page {
                     margins: platformStyle.paddingLarge
                 }
                 maximumLength: 64
-                placeholderText: "Enter PIN"
+                placeholderText: i18n.t("web.enterPin") + i18n.rev
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
             }
         }
@@ -358,11 +357,10 @@ Page {
     QueryDialog {
         id: restoreDialog
         platformInverted: page.platformInverted
-        titleText: "Restore defaults"
-        message: "All settings go back to their defaults, and the PIN is removed. "
-                 + "Your device name, favourites and history stay."
-        acceptButtonText: "Restore"
-        rejectButtonText: "Cancel"
+        titleText: i18n.t("symbisend.settings.restoreDefaults") + i18n.rev
+        message: i18n.t("symbisend.settings.restoreDefaultsContent") + i18n.rev
+        acceptButtonText: i18n.t("symbisend.settings.restore") + i18n.rev
+        rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: {
             settings.restoreDefaults()
             myDevice.restoreDefaults()
@@ -373,36 +371,33 @@ Page {
     QueryDialog {
         id: quickSaveDialog
         platformInverted: page.platformInverted
-        titleText: "Quick save"
-        message: "File requests are now accepted automatically. Be aware that everyone "
-                 + "on the local network can send you files."
-        acceptButtonText: "Close"
+        titleText: i18n.t("dialogs.quickSaveNotice.title") + i18n.rev
+        message: i18n.t("dialogs.quickSaveNotice.content") + i18n.rev
+        acceptButtonText: i18n.t("general.close") + i18n.rev
     }
 
     QueryDialog {
         id: quickSaveFavouritesDialog
         platformInverted: page.platformInverted
-        titleText: "Quick save for favourites"
-        message: "File requests are now accepted automatically from devices in your "
-                 + "favourites list."
-        acceptButtonText: "Close"
+        titleText: i18n.t("dialogs.quickSaveFromFavoritesNotice.title") + i18n.rev
+        message: i18n.t("dialogs.quickSaveFromFavoritesNotice.content") + i18n.rev
+        acceptButtonText: i18n.t("general.close") + i18n.rev
     }
 
     // The official app's notice after turning encryption off.
     QueryDialog {
         id: encryptionOffDialog
         platformInverted: page.platformInverted
-        titleText: "Encryption disabled"
-        message: "Communication now takes place via the unencrypted HTTP protocol. "
-                 + "To use HTTPS protocol, enable encryption again."
-        acceptButtonText: "OK"
+        titleText: i18n.t("dialogs.encryptionDisabledNotice.title") + i18n.rev
+        message: i18n.t("dialogs.encryptionDisabledNotice.content") + i18n.rev
+        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
     }
 
     CommonDialog {
         id: nameDialog
         platformInverted: page.platformInverted
-        titleText: "Device name"
-        buttonTexts: ["OK", "Cancel"]
+        titleText: i18n.t("settingsTab.network.alias") + i18n.rev
+        buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
         function openWith(name) {
             nameField.text = name

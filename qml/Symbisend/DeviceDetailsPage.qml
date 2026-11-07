@@ -87,7 +87,7 @@ Page {
                         right: parent.right; verticalCenter: backButton.verticalCenter
                     }
                     elide: Text.ElideRight
-                    text: "Device details"
+                    text: i18n.t("deviceDetailsPage.title") + i18n.rev
                     font.pixelSize: 26
                 }
             }
@@ -103,7 +103,7 @@ Page {
                     platformInverted: page.platformInverted
                     iconSource: "images/" + (page.isFavourite ? "favorite" : "favorite-border")
                                 + (page.platformInverted ? "-inverted.svg" : ".svg")
-                    text: "Favourite"
+                    text: i18n.t("deviceDetailsPage.favorite") + i18n.rev
                     onClicked: {
                         if (page.isFavourite)
                             removeFavouriteDialog.open()
@@ -115,7 +115,7 @@ Page {
                     platformInverted: page.platformInverted
                     iconSource: page.platformInverted ? "images/verified-user-inverted.svg"
                                                       : "images/verified-user.svg"
-                    text: "Verify"
+                    text: i18n.t("deviceDetailsPage.verify") + i18n.rev
                     onClicked: verifyDialog.openFor(page.fingerprint)
                 }
             }
@@ -139,7 +139,7 @@ Page {
                         platformInverted: page.platformInverted
                         width: info.keyWidth
                         color: page.mutedColor
-                        text: "Name"
+                        text: i18n.t("deviceDetailsPage.info.name") + i18n.rev
                     }
                     Label {
                         platformInverted: page.platformInverted
@@ -154,13 +154,13 @@ Page {
                         platformInverted: page.platformInverted
                         width: info.keyWidth
                         color: page.mutedColor
-                        text: "Version"
+                        text: i18n.t("deviceDetailsPage.info.version") + i18n.rev
                     }
                     Label {
                         platformInverted: page.platformInverted
                         width: info.valueWidth
                         wrapMode: Text.Wrap
-                        text: page.device.version ? "Protocol v" + page.device.version : ""
+                        text: page.device.version ? i18n.t("deviceDetailsPage.info.protocol", { version: page.device.version }) + i18n.rev : ""
                     }
                 }
                 Row {
@@ -169,7 +169,7 @@ Page {
                         platformInverted: page.platformInverted
                         width: info.keyWidth
                         color: page.mutedColor
-                        text: "Address"
+                        text: i18n.t("deviceDetailsPage.info.address") + i18n.rev
                     }
                     Label {
                         platformInverted: page.platformInverted
@@ -183,7 +183,7 @@ Page {
             // ------------------------------------------------ Logs
             // Same section heading as on the Settings page.
             SettingsHeading {
-                text: "Logs"
+                text: i18n.t("deviceDetailsPage.logs.title") + i18n.rev
                 platformInverted: page.platformInverted
             }
 
@@ -206,7 +206,7 @@ Page {
                         visible: logRepeater.count === 0
                         font { family: platformStyle.fontFamilyRegular; pixelSize: platformStyle.fontSizeSmall }
                         color: page.mutedColor
-                        text: "No logs available."
+                        text: i18n.t("deviceDetailsPage.logs.empty") + i18n.rev
                     }
 
                     Repeater {
@@ -250,11 +250,11 @@ Page {
     QueryDialog {
         id: removeFavouriteDialog
         platformInverted: page.platformInverted
-        titleText: "Remove from favourites"
-        message: "Do you really want to remove " + (page.device.alias || "this device")
-                 + " from favourites?"
-        acceptButtonText: "Delete"
-        rejectButtonText: "Cancel"
+        titleText: i18n.t("dialogs.favoriteDeleteDialog.title") + i18n.rev
+        message: i18n.t("dialogs.favoriteDeleteDialog.content",
+                        { name: page.device.alias || i18n.t("symbisend.favorites.thisDevice") }) + i18n.rev
+        acceptButtonText: i18n.t("general.delete") + i18n.rev
+        rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: favorites.remove(page.fingerprint)
     }
 }

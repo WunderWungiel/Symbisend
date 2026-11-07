@@ -99,11 +99,12 @@ Page {
     QueryDialog {
         id: infoDialog
         platformInverted: page.platformInverted
-        titleText: "Info"
-        message: "Alias: " + myDevice.alias
-                 + "\nIP: " + (network.localAddress !== "" ? network.localAddress : "-")
-                 + "\nPort: " + myDevice.port
-        acceptButtonText: "OK"
+        titleText: i18n.t("symbisend.receive.info") + i18n.rev
+        message: i18n.rev + i18n.t("receiveTab.infoBox.alias") + " " + myDevice.alias
+                 + "\n" + i18n.t("receiveTab.infoBox.ip") + " "
+                 + (network.localAddress !== "" ? network.localAddress : "-")
+                 + "\n" + i18n.t("receiveTab.infoBox.port") + " " + myDevice.port
+        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
     }
 
     // "Receive via link": browsers upload to us (ReceiveLinkPage).
@@ -115,7 +116,7 @@ Page {
             bottom: parent.bottom
             bottomMargin: Math.max(2 * platformStyle.paddingLarge, Math.round(page.height * 0.1))
         }
-        text: "Receive via link"
+        text: i18n.t("receiveTab.link") + i18n.rev
         onClicked: page.linkRequested()
     }
 }

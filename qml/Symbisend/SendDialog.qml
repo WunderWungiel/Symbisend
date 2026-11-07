@@ -25,20 +25,24 @@ CommonDialog {
     }
 
     titleText: {
-        if (sendState == "connecting") return "Connecting"
-        if (sendState == "hashing") return "Preparing"
-        if (sendState == "waiting") return "Waiting for response"
-        if (sendState == "pin") return "PIN required"
+        var rev = i18n.rev
+        if (sendState == "connecting") return i18n.t("symbisend.send.connecting")
+        if (sendState == "hashing") return i18n.t("symbisend.send.preparing")
+        if (sendState == "waiting") return i18n.t("sendPage.waiting")
+        if (sendState == "pin") return i18n.t("symbisend.send.pinRequired")
         if (sendState == "sending")
-            return sender.remainingSeconds < 0 ? "Total progress"
-                                               : "Total progress (" + formatTime(sender.remainingSeconds) + ")"
-        if (sendState == "finished") return "Finished"
-        if (sendState == "finishedWithErrors") return "Finished with error"
-        if (sendState == "declined") return "Declined"
-        if (sendState == "cancelled") return "Cancelled"
-        return "Error"
+            return sender.remainingSeconds < 0 ? i18n.t("symbisend.send.totalProgress")
+                                               : i18n.t("progressPage.total.title.sending",
+                                                        { time: formatTime(sender.remainingSeconds) })
+        if (sendState == "finished") return i18n.t("general.finished")
+        if (sendState == "finishedWithErrors") return i18n.t("progressPage.total.title.finishedError")
+        if (sendState == "declined") return i18n.t("web.rejected")
+        if (sendState == "cancelled") return i18n.t("symbisend.general.cancelled")
+        return i18n.t("general.error")
     }
-    buttonTexts: [busy ? "Cancel" : finishTimer.running ? "Close (" + finishTimer.counter + ")" : "Close"]
+    buttonTexts: [i18n.rev + (busy ? i18n.t("general.cancel")
+                               : finishTimer.running ? i18n.t("general.close") + " (" + finishTimer.counter + ")"
+                               : i18n.t("general.close"))]
 
     // Size the dialog from the column explicitly: the default sizing reads
     // childrenRect, which lags behind when rows appear (state changes,
@@ -82,21 +86,26 @@ CommonDialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             wrapMode: Text.Wrap
             text: {
-                if (root.sendState == "connecting") return "Connecting to " + sender.peerAlias + "..."
-                if (root.sendState == "hashing") return "Calculating checksums..."
-                if (root.sendState == "waiting") return "Waiting for " + sender.peerAlias + " to accept..."
+                var rev = i18n.rev
+                var peer = { name: sender.peerAlias }
+                if (root.sendState == "connecting") return i18n.t("symbisend.send.connectingTo", peer)
+                if (root.sendState == "hashing") return i18n.t("symbisend.send.hashing")
+                if (root.sendState == "waiting") return i18n.t("symbisend.send.waitingFor", peer)
                 if (root.sendState == "pin") return sender.errorText != "" ? sender.errorText
-                                                                       : sender.peerAlias + " asks for a PIN"
+                                                                       : i18n.t("symbisend.send.asksForPin", peer)
                 if (root.sendState == "sending")
                     return sender.fileName + (sender.fileCount > 1
-                                              ? " (" + sender.fileIndex + " of " + sender.fileCount + ")" : "")
-                if (root.sendState == "finished") return "Sent to " + sender.peerAlias
+                                              ? " (" + i18n.t("symbisend.general.xOfY",
+                                                              { curr: sender.fileIndex, n: sender.fileCount }) + ")"
+                                              : "")
+                if (root.sendState == "finished") return i18n.t("symbisend.send.sentTo", peer)
                 if (root.sendState == "finishedWithErrors")
                     return (sender.filesDone > 0
-                            ? "Sent " + sender.filesDone + " of " + sender.fileCount + " files to " + sender.peerAlias + "\n"
+                            ? i18n.t("symbisend.send.sentSome", { curr: sender.filesDone, n: sender.fileCount,
+                                                                 name: sender.peerAlias }) + "\n"
                             : "") + sender.errorText
                 if (root.sendState == "cancelled")
-                    return sender.errorText != "" ? sender.errorText : "The transfer was cancelled"
+                    return sender.errorText != "" ? sender.errorText : i18n.t("symbisend.general.transferCancelled")
                 return sender.errorText
             }
         }
@@ -118,7 +127,8 @@ CommonDialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             visible: root.sendState == "sending"
             font.pixelSize: platformStyle.fontSizeSmall
-            text: selection.formatSize(sender.bytesSent) + " of " + selection.formatSize(sender.bytesTotal)
+            text: i18n.t("symbisend.general.xOfY", { curr: selection.formatSize(sender.bytesSent),
+                                                         n: selection.formatSize(sender.bytesTotal) }) + i18n.rev
         }
 
         Row {
@@ -130,12 +140,12 @@ CommonDialog {
                 id: pinField
                 platformInverted: root.platformInverted
                 width: parent.width - pinButton.width - parent.spacing
-                placeholderText: "PIN"
+                placeholderText: i18n.t("web.enterPin") + i18n.rev
             }
             Button {
                 id: pinButton
                 platformInverted: root.platformInverted
-                text: "OK"
+                text: i18n.t("symbisend.general.ok") + i18n.rev
                 enabled: pinField.text != ""
                 onClicked: {
                     pinField.closeSoftwareInputPanel()

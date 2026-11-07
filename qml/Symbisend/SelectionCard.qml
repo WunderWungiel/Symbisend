@@ -43,7 +43,7 @@ Rectangle {
                 anchors { left: parent.left; right: closeButton.left; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
                 font.pixelSize: platformStyle.fontSizeLarge
-                text: "Selection"
+                text: i18n.t("sendTab.selection.title") + i18n.rev
             }
             ToolButton {
                 id: closeButton
@@ -58,12 +58,12 @@ Rectangle {
         Label {
             platformInverted: root.platformInverted
             font.pixelSize: platformStyle.fontSizeSmall
-            text: "Elements: " + selection.count
+            text: i18n.t("sendTab.selection.files", { files: selection.count }) + i18n.rev
         }
         Label {
             platformInverted: root.platformInverted
             font.pixelSize: platformStyle.fontSizeSmall
-            text: "Size: " + selection.totalSizeText
+            text: i18n.t("sendTab.selection.size", { size: selection.totalSizeText }) + i18n.rev
         }
 
         // ------------------------------------------------ Item tiles
@@ -109,7 +109,7 @@ Rectangle {
                 width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
                 anchors { right: addButton.left; rightMargin: buttonRow.spacing }
                 iconSource: root.platformInverted ? "images/edit-inverted.svg" : "images/edit.svg"
-                text: "Edit"
+                text: i18n.t("general.edit") + i18n.rev
                 onClicked: root.editClicked()
             }
             ToolButton {
@@ -118,7 +118,7 @@ Rectangle {
                 width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
                 anchors.right: parent.right
                 iconSource: "toolbar-add"
-                text: "Add"
+                text: i18n.t("general.add") + i18n.rev
                 onClicked: root.addClicked()
             }
         }

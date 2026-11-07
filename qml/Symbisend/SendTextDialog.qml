@@ -13,8 +13,8 @@ CommonDialog {
     property int editIndex: -1
 
     platformInverted: settings.theme == "light"
-    titleText: editIndex < 0 ? "Send text" : "Edit text"
-    buttonTexts: ["OK", "Cancel"]
+    titleText: editIndex < 0 ? i18n.t("dialogs.messageInput.title") + i18n.rev : i18n.t("symbisend.send.editText") + i18n.rev
+    buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
     function openNew() {
         editIndex = -1
@@ -41,7 +41,7 @@ CommonDialog {
                 margins: platformStyle.paddingLarge
             }
             height: 4 * platformStyle.fontSizeLarge + 2 * platformStyle.paddingLarge
-            placeholderText: "Enter text"
+            placeholderText: i18n.t("symbisend.send.enterText") + i18n.rev
         }
     }
 

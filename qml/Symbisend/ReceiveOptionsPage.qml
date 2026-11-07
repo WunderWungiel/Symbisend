@@ -67,7 +67,7 @@ Page {
                 right: parent.right; verticalCenter: backButton.verticalCenter
             }
             elide: Text.ElideRight
-            text: "Options"
+            text: i18n.t("receiveOptionsPage.title") + i18n.rev
             font.pixelSize: 26
         }
     }
@@ -103,7 +103,7 @@ Page {
                         width: parent.width
                         elide: Text.ElideRight
                         font.pixelSize: platformStyle.fontSizeLarge
-                        text: "Save to folder"
+                        text: i18n.t("receiveOptionsPage.destination") + i18n.rev
                     }
                     Label {
                         platformInverted: page.platformInverted
@@ -124,7 +124,7 @@ Page {
             }
 
             SettingsSwitch {
-                title: "Save media to gallery"
+                title: i18n.t("receiveOptionsPage.saveToGallery") + i18n.rev
                 checked: receiver.saveToGallery
                 onToggled: receiver.saveToGallery = value
             }
@@ -138,7 +138,7 @@ Page {
                 wrapMode: Text.Wrap
                 font.pixelSize: platformStyle.fontSizeSmall
                 color: page.mutedColor
-                text: "Turned off automatically because there are folders."
+                text: i18n.t("receiveOptionsPage.saveToGalleryOff") + i18n.rev
             }
 
             Item {
@@ -154,7 +154,7 @@ Page {
                     }
                     elide: Text.ElideRight
                     font.pixelSize: platformStyle.fontSizeLarge
-                    text: "Files"
+                    text: i18n.t("general.files") + i18n.rev
                 }
                 ToolButton {
                     id: undoButton
@@ -210,7 +210,8 @@ Page {
                     elide: Text.ElideRight
                     font.pixelSize: platformStyle.fontSizeSmall
                     color: !selected ? page.mutedColor : renamed ? "#ff9800" : page.textColor
-                    text: (!selected ? "Skipped" : renamed ? "Renamed" : "Unchanged") + " - " + sizeText
+                    text: i18n.rev + (!selected ? i18n.t("general.skipped") : renamed ? i18n.t("general.renamed")
+                                                         : i18n.t("general.unchanged")) + " - " + sizeText
                 }
             }
             ToolButton {

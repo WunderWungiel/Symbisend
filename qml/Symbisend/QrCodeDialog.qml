@@ -14,8 +14,8 @@ CommonDialog {
     property string pin
 
     platformInverted: settings.theme == "light"
-    titleText: "QR Code"
-    buttonTexts: ["Close"]
+    titleText: i18n.t("dialogs.qr.title") + i18n.rev
+    buttonTexts: [i18n.t("general.close") + i18n.rev]
 
     content: Item {
         width: root.platformContentMaximumWidth

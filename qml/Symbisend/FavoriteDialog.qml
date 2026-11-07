@@ -23,8 +23,8 @@ CommonDialog {
     property bool lookingUp: lookUpIp != ""
 
     platformInverted: settings.theme == "light"
-    titleText: editing ? "Edit favourite" : "Add to favourites"
-    buttonTexts: ["Cancel", "Confirm"]
+    titleText: editing ? i18n.t("dialogs.favoriteEditDialog.titleEdit") + i18n.rev : i18n.t("dialogs.favoriteEditDialog.titleAdd") + i18n.rev
+    buttonTexts: [i18n.t("general.cancel") + i18n.rev, i18n.t("general.confirm") + i18n.rev]
 
     property color mutedColor: platformInverted ? platformStyle.colorNormalMidInverted
                                                 : platformStyle.colorNormalMid
@@ -74,7 +74,7 @@ CommonDialog {
 
     function save(fp, ip, port) {
         if (!favorites.add(fp, nameField.text, deviceAlias, ip, port))
-            picker.showInfo(editing ? "Could not save the favourite" : "Could not add to favourites")
+            picker.showInfo(editing ? i18n.t("symbisend.favorites.saveFailed") : i18n.t("symbisend.favorites.addFailed"))
     }
 
     function lookUpFinished(fp, error) {
@@ -118,14 +118,14 @@ CommonDialog {
             Label {
                 platformInverted: root.platformInverted
                 color: root.mutedColor
-                text: "Device name"
+                text: i18n.t("dialogs.favoriteEditDialog.name") + i18n.rev
             }
             TextField {
                 id: nameField
                 platformInverted: root.platformInverted
                 width: parent.width
                 maximumLength: 64
-                placeholderText: "(auto)"
+                placeholderText: i18n.t("dialogs.favoriteEditDialog.auto") + i18n.rev
                 inputMethodHints: Qt.ImhNoPredictiveText
             }
 
@@ -134,7 +134,7 @@ CommonDialog {
             Label {
                 platformInverted: root.platformInverted
                 color: root.mutedColor
-                text: "IP Address"
+                text: i18n.t("dialogs.favoriteEditDialog.ip") + i18n.rev
             }
             TextField {
                 id: ipField
@@ -149,7 +149,7 @@ CommonDialog {
             Label {
                 platformInverted: root.platformInverted
                 color: root.mutedColor
-                text: "Port"
+                text: i18n.t("dialogs.favoriteEditDialog.port") + i18n.rev
             }
             TextField {
                 id: portField
@@ -171,12 +171,12 @@ CommonDialog {
         var ip = ipField.text.replace(/^\s+|\s+$/g, "")
         var port = parseInt(portField.text, 10)
         if (!validIp(ip)) {
-            picker.showInfo("Invalid IP address")
+            picker.showInfo(i18n.t("symbisend.general.invalidIp"))
             reopenTimer.start()
             return
         }
         if (!(port >= 1 && port <= 65535)) {
-            picker.showInfo("Invalid port")
+            picker.showInfo(i18n.t("dialogs.favoriteEditDialog.invalidPort"))
             reopenTimer.start()
             return
         }

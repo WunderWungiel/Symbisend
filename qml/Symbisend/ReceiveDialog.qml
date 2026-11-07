@@ -44,18 +44,18 @@ Dialog {
 
     function offerText() {
         if (receiver.isMessage)
-            return receiver.messageIsLink ? "sent you a link:" : "sent you a message:"
-        var n = receiver.fileCount
-        return "wants to send you " + (n == 1 ? "a file" : n + " files")
+            return i18n.rev + (receiver.messageIsLink ? i18n.t("receivePage.subTitleLink")
+                                                      : i18n.t("receivePage.subTitleMessage"))
+        return i18n.rev + i18n.plural("receivePage.subTitle", receiver.fileCount)
                 + " (" + selection.formatSize(receiver.totalSize) + ")"
     }
 
     function savedText() {
-        return "Saved " + (receiver.filesDone == 1 ? "1 file" : receiver.filesDone + " files")
-                + " from " + receiver.peerAlias
+        return i18n.rev + i18n.plural("symbisend.receive.saved", receiver.filesDone,
+                                      { name: receiver.peerAlias })
                 // Own line for the folder: Qt allows a line break after
                 // "\", so "F:\download\Symbisend" would otherwise split there.
-                + "\nto " + receiver.folders.join("\n")
+                + "\n" + i18n.t("symbisend.receive.savedTo", { folder: receiver.folders.join("\n") })
     }
 
     // A waiting message is answered as the dialog closes. Accepting does
@@ -110,15 +110,17 @@ Dialog {
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
             text: {
-                if (root.showsMessage) return "Message"
-                if (root.recvState == "request") return "Receive"
+                var rev = i18n.rev
+                if (root.showsMessage) return i18n.t("symbisend.receive.message")
+                if (root.recvState == "request") return i18n.t("receiveTab.title")
                 if (root.recvState == "receiving")
-                    return receiver.remainingSeconds < 0 ? "Receiving"
-                                                         : "Receiving (" + root.formatTime(receiver.remainingSeconds) + ")"
-                if (root.recvState == "finished") return "Finished"
-                if (root.recvState == "finishedWithErrors") return "Finished with error"
-                if (root.recvState == "cancelled") return "Cancelled"
-                return "Error"
+                    return i18n.t("progressPage.titleReceiving")
+                            + (receiver.remainingSeconds < 0 ? ""
+                               : " (" + root.formatTime(receiver.remainingSeconds) + ")")
+                if (root.recvState == "finished") return i18n.t("general.finished")
+                if (root.recvState == "finishedWithErrors") return i18n.t("progressPage.total.title.finishedError")
+                if (root.recvState == "cancelled") return i18n.t("symbisend.general.cancelled")
+                return i18n.t("general.error")
             }
         }
     }
@@ -208,7 +210,7 @@ Dialog {
                 iconSource: root.showsMessage ? ""
                             : root.platformInverted ? "images/verified-user-inverted.svg"
                                                     : "images/verified-user.svg"
-                text: "Verify"
+                text: i18n.t("deviceDetailsPage.verify") + i18n.rev
                 enabled: receiver.peerHttps
                 onClicked: verifyDialog.openFor(receiver.peerFingerprint)
             }
@@ -217,7 +219,7 @@ Dialog {
                 width: root.offerActionWidth
                 platformInverted: root.platformInverted
                 iconSource: "toolbar-settings"
-                text: "Options"
+                text: i18n.t("receiveOptionsPage.title") + i18n.rev
                 onClicked: {
                     root.close()
                     root.optionsRequested()
@@ -227,7 +229,7 @@ Dialog {
                 visible: root.showsMessage
                 width: root.offerActionWidth
                 platformInverted: root.platformInverted
-                text: "Copy"
+                text: i18n.t("general.copy") + i18n.rev
                 onClicked: {
                     picker.copyText(receiver.message)
                     root.dismiss()
@@ -237,7 +239,7 @@ Dialog {
                 visible: root.showsMessage && receiver.messageIsLink
                 width: root.offerActionWidth
                 platformInverted: root.platformInverted
-                text: "Open"
+                text: i18n.t("general.open") + i18n.rev
                 onClicked: {
                     Qt.openUrlExternally(receiver.message.replace(/^\s+|\s+$/g, ""))
                     root.dismiss()
@@ -251,10 +253,12 @@ Dialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             visible: root.recvState == "receiving"
             wrapMode: Text.WrapAnywhere
-            text: (receiver.fileName != "" ? receiver.fileName : "Waiting for " + receiver.peerAlias + "...")
+            text: i18n.rev + (receiver.fileName != "" ? receiver.fileName
+                                  : i18n.t("symbisend.receive.waitingFor", { name: receiver.peerAlias }))
                   + (receiver.fileCount > 1
-                     ? " (" + Math.min(receiver.filesDone + receiver.filesFailed + 1, receiver.fileCount)
-                       + " of " + receiver.fileCount + ")"
+                     ? " (" + i18n.t("symbisend.general.xOfY",
+                                     { curr: Math.min(receiver.filesDone + receiver.filesFailed + 1, receiver.fileCount),
+                                       n: receiver.fileCount }) + ")"
                      : "")
         }
 
@@ -273,7 +277,8 @@ Dialog {
             anchors { left: parent.left; right: parent.right; margins: platformStyle.paddingLarge }
             visible: root.recvState == "receiving"
             font.pixelSize: platformStyle.fontSizeSmall
-            text: selection.formatSize(receiver.bytesReceived) + " of " + selection.formatSize(receiver.bytesTotal)
+            text: i18n.t("symbisend.general.xOfY", { curr: selection.formatSize(receiver.bytesReceived),
+                                                         n: selection.formatSize(receiver.bytesTotal) }) + i18n.rev
         }
 
         // ------------------------------------------------ Result
@@ -311,7 +316,7 @@ Dialog {
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
                 iconSource: root.platformInverted ? "images/close-inverted.svg" : "images/close.svg"
-                text: "Decline"
+                text: i18n.t("general.decline") + i18n.rev
                 onClicked: receiver.decline() // closes via state "idle"
             }
             ToolButton {
@@ -320,7 +325,7 @@ Dialog {
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
                 iconSource: root.platformInverted ? "images/check-inverted.svg" : "images/check.svg"
-                text: "Accept"
+                text: i18n.t("general.accept") + i18n.rev
                 enabled: receiveFiles.selectedCount > 0
                 onClicked: receiver.accept()
             }
@@ -329,8 +334,9 @@ Dialog {
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
-                text: root.recvState == "receiving" ? "Cancel"
-                      : finishTimer.running ? "Close (" + finishTimer.counter + ")" : "Close"
+                text: i18n.rev + (root.recvState == "receiving" ? i18n.t("general.cancel")
+                      : finishTimer.running ? i18n.t("general.close") + " (" + finishTimer.counter + ")"
+                      : i18n.t("general.close"))
                 onClicked: {
                     if (root.recvState == "receiving")
                         receiver.cancel()

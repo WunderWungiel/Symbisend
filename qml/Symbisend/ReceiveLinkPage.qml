@@ -36,7 +36,7 @@ Page {
             id: column
             width: flick.width
 
-            SettingsHeading { text: "Receive via link" }
+            SettingsHeading { text: i18n.t("webReceivePage.title") + i18n.rev }
 
             // The link, or why there is none.
             Item {
@@ -56,9 +56,9 @@ Page {
                         platformInverted: page.platformInverted
                         width: parent.width
                         wrapMode: Text.Wrap
-                        text: webShare.url == "" ? "Not connected to a network."
-                              : !discovery.serverRunning ? "The server is stopped."
-                              : "Open this link in your browser:"
+                        text: i18n.rev + (webShare.url == "" ? i18n.t("symbisend.receiveLink.noNetwork")
+                              : !discovery.serverRunning ? i18n.t("symbisend.receiveLink.serverStopped")
+                              : i18n.plural("webSharePage.openLink", 1))
                     }
                     Label {
                         platformInverted: page.platformInverted
@@ -88,7 +88,7 @@ Page {
                     Button {
                         platformInverted: page.platformInverted
                         visible: webShare.url == "" || !discovery.serverRunning
-                        text: webShare.url == "" ? "Connect" : "Start server"
+                        text: webShare.url == "" ? i18n.t("symbisend.receiveLink.connect") + i18n.rev : i18n.t("symbisend.receiveLink.startServer") + i18n.rev
                         onClicked: {
                             if (webShare.url == "")
                                 network.connectNetwork()
@@ -102,7 +102,7 @@ Page {
             // Only for this link, off every time the page opens. Restarts
             // the server as https / http (the link changes with it).
             SettingsSwitch {
-                title: "Encryption"
+                title: i18n.t("webSharePage.encryption") + i18n.rev
                 checked: webShare.encrypted
                 onToggled: webShare.encrypted = value
             }
@@ -121,19 +121,19 @@ Page {
                     }
                     wrapMode: Text.Wrap
                     font.pixelSize: platformStyle.fontSizeSmall
-                    text: "LocalSend uses a self-signed certificate. You need to accept it in your browser."
+                    text: i18n.t("webSharePage.encryptionHint") + i18n.rev
                 }
             }
             SettingsSwitch {
-                title: "Automatically accept requests"
+                title: i18n.t("webSharePage.autoAccept") + i18n.rev
                 checked: settings.receiveViaLinkAutoAccept
                 onToggled: settings.receiveViaLinkAutoAccept = value
             }
             // Only for this link (starts as the PIN from Settings). Turning it
             // on asks for the PIN; tapping the row while on changes it.
             SettingsSwitch {
-                title: "Require PIN"
-                subTitle: webShare.pin != "" ? "The PIN is \"" + webShare.pin + "\"" : ""
+                title: i18n.t("webSharePage.requirePin") + i18n.rev
+                subTitle: webShare.pin != "" ? i18n.t("webSharePage.pinHint", { pin: webShare.pin }) + i18n.rev : ""
                 checked: webShare.pin != ""
                 rowToggles: false
                 onClicked: pinDialog.openWith(webShare.pin)
@@ -162,8 +162,8 @@ Page {
     CommonDialog {
         id: pinDialog
         platformInverted: page.platformInverted
-        titleText: "PIN"
-        buttonTexts: ["OK", "Cancel"]
+        titleText: i18n.t("dialogs.pin.title") + i18n.rev
+        buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
         function openWith(pin) {
             pinField.text = pin
@@ -183,7 +183,7 @@ Page {
                     margins: platformStyle.paddingLarge
                 }
                 maximumLength: 64
-                placeholderText: "Enter PIN"
+                placeholderText: i18n.t("web.enterPin") + i18n.rev
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
             }
         }

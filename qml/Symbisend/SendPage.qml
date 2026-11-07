@@ -64,7 +64,7 @@ Page {
     function checkSelection() {
         if (selection.count > 0)
             return true
-        picker.showInfo("Select something to send first")
+        picker.showInfo(i18n.t("dialogs.noFiles.content"))
         return false
     }
 
@@ -89,7 +89,7 @@ Page {
 
     Connections {
         target: selection
-        onFolderTruncated: picker.showInfo("Only the first " + maxFiles + " files of the folder were added")
+        onFolderTruncated: picker.showInfo(i18n.t("symbisend.send.folderTruncated", { n: maxFiles }))
         // Start collapsed again the next time the card appears.
         onCountChanged: if (selection.count === 0) page.addOptionsShown = false
     }
@@ -107,7 +107,7 @@ Page {
                 platformInverted: page.platformInverted
                 anchors { left: parent.left; right: refreshButton.left; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
-                text: "Nearby devices"
+                text: i18n.t("sendTab.nearbyDevices") + i18n.rev
                 font.pixelSize: 26
             }
             ToolButton {
@@ -158,32 +158,32 @@ Page {
 
             SendOptionButton {
                 width: sendOptions.buttonWidth
-                label: "File"
+                label: i18n.t("sendTab.picker.file") + i18n.rev
                 icon: "send-file"
                 onClicked: picker.pickFile()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
-                label: "Media"
+                label: i18n.t("sendTab.picker.media") + i18n.rev
                 icon: "send-media"
                 onClicked: mediaMenu.open()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
-                label: "Paste"
+                label: i18n.t("sendTab.picker.clipboard") + i18n.rev
                 icon: "send-paste"
                 enabled: picker.clipboardHasText
                 onClicked: page.paste()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
-                label: "Text"
+                label: i18n.t("sendTab.picker.text") + i18n.rev
                 icon: "send-text"
                 onClicked: textDialog.openNew()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
-                label: "Folder"
+                label: i18n.t("sendTab.picker.folder") + i18n.rev
                 icon: "send-folder"
                 onClicked: picker.pickFolder()
             }
@@ -212,7 +212,7 @@ Page {
         anchors.centerIn: list
         visible: list.count === 0
         color: page.platformInverted ? platformStyle.colorNormalMidInverted : platformStyle.colorNormalMid
-        text: discovery.scanning ? "Searching..." : "No devices found"
+        text: discovery.scanning ? i18n.t("symbisend.send.searching") + i18n.rev : i18n.t("symbisend.send.noDevices") + i18n.rev
     }
 
     // ---------------------------------------------------- dialogs
@@ -224,12 +224,12 @@ Page {
         MenuLayout {
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Images"
+                text: i18n.t("symbisend.send.images") + i18n.rev
                 onClicked: picker.pickMedia("image")
             }
             MenuItem {
                 platformInverted: page.platformInverted
-                text: "Videos"
+                text: i18n.t("symbisend.send.videos") + i18n.rev
                 onClicked: picker.pickMedia("video")
             }
         }

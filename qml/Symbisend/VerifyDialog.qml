@@ -45,7 +45,7 @@ Dialog {
                                          : platformStyle.colorNormalLink
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
-            text: "Verify"
+            text: i18n.t("verifyPage.title") + i18n.rev
         }
     }
 
@@ -64,12 +64,12 @@ Dialog {
             Button {
                 id: iconsButton
                 platformInverted: root.platformInverted
-                text: "Icons"
+                text: i18n.t("verifyPage.icons") + i18n.rev
                 onClicked: root.showText = false
             }
             Button {
                 platformInverted: root.platformInverted
-                text: "Text"
+                text: i18n.t("verifyPage.text") + i18n.rev
                 onClicked: root.showText = true
             }
         }
@@ -107,7 +107,7 @@ Dialog {
             wrapMode: Text.Wrap
             font { family: platformStyle.fontFamilyRegular; pixelSize: platformStyle.fontSizeSmall }
             color: root.mutedColor
-            text: "Does it look the same on the other device?"
+            text: i18n.t("verifyPage.question") + i18n.rev
         }
 
         Item { width: 1; height: platformStyle.paddingSmall }
@@ -122,7 +122,7 @@ Dialog {
             width: Math.round((root.platformContentMaximumWidth - 3 * platformStyle.paddingMedium) / 2)
             height: privateStyle.toolBarHeightLandscape
             platformInverted: root.platformInverted
-            text: "Close"
+            text: i18n.t("general.close") + i18n.rev
             onClicked: root.close()
         }
     }
