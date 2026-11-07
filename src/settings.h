@@ -33,7 +33,7 @@ class Settings : public QObject
     // requirePin can only be on with a non-empty pin; turning it off clears the pin.
     Q_PROPERTY(bool requirePin READ requirePin WRITE setRequirePin NOTIFY requirePinChanged)
     Q_PROPERTY(QString pin READ pin WRITE setPin NOTIFY pinChanged)
-    // Native-separator path for display, e.g. "F:\Symbisend".
+    // Native-separator path for display, e.g. "F:\download\Symbisend".
     Q_PROPERTY(QString downloadFolder READ downloadFolderNative NOTIFY downloadFolderChanged)
     Q_PROPERTY(bool downloadFolderIsDefault READ downloadFolderIsDefault NOTIFY downloadFolderChanged)
     Q_PROPERTY(bool saveMediaToGallery READ saveMediaToGallery WRITE setSaveMediaToGallery NOTIFY saveMediaToGalleryChanged)
@@ -115,7 +115,7 @@ public:
     bool encryption() const { return m_encryption; }
     void setEncryption(bool on);
 
-    // Qt-style path ("F:/Symbisend") for C++ code that writes files.
+    // Qt-style path ("F:/download/Symbisend") for C++ code that writes files.
     QString downloadFolder() const { return m_downloadFolder; }
     QString downloadFolderNative() const;
     bool downloadFolderIsDefault() const { return m_custom.isEmpty(); }

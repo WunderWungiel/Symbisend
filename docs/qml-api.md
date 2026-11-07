@@ -130,10 +130,11 @@ Receive:
   refused (429), even with the right PIN, until the server restarts or a PIN or link setting
   changes. Setting it to `""` is ignored while `requirePin` is on. To enable: set `pin`,
   then `requirePin = true`.
-- `downloadFolder` (string, read-only, native separators, e.g. `F:\Symbisend`) — where
-  received files go. Default: `F:\Symbisend` if F: exists, else `E:\Symbisend`, else
-  `C:\Data\Symbisend`; recomputed each launch. If the chosen folder is unavailable
-  (card removed) the default is used, but the choice is kept.
+- `downloadFolder` (string, read-only, native separators, e.g. `F:\download\Symbisend`) —
+  where received files go. Default: `F:\download\Symbisend` if F: exists, else
+  `E:\download\Symbisend`, else `C:\Data\download\Symbisend`; recomputed each launch. If
+  the chosen folder is unavailable (card removed) the default is used, but the choice is
+  kept.
 - `downloadFolderIsDefault` (bool) — false once the user picked a folder
 - `pickDownloadFolder()` — opens the native folder picker; returns immediately,
   `downloadFolder` changes when the user confirms (nothing happens on cancel)
@@ -331,7 +332,7 @@ times the sender gave, like the official app (Symbian files only have the first)
   Doesn't change the setting.
 - `hasFolders` (bool) — the offer has files in folders
 - `folders` (string list, native separators) — every folder files were saved to (e.g.
-  `F:\Images\Symbisend` and `F:\Symbisend` for photos plus a PDF); final once `finished`
+  `F:\Images\Symbisend` and `F:\download\Symbisend` for photos plus a PDF); final once `finished`
 - `filesDone` (int, files saved), `filesFailed` (int), `fileName` (string, the file coming
   in now)
 - `quickSaved` (bool) — `finished`, and `settings.quickSave` or

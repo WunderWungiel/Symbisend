@@ -16,8 +16,9 @@ static const int kMaxLines = 300;
 static QString pickLogDir()
 {
 #ifdef Q_OS_SYMBIAN
-    // Same drive order as the default download folder: F:, E:, then C:/Data.
-    const char *candidates[] = { "F:/Symbisend", "E:/Symbisend", "C:/Data/Symbisend" };
+    // The default download folder: F:, E:, then C:/Data.
+    const char *candidates[] = { "F:/download/Symbisend", "E:/download/Symbisend",
+                                 "C:/Data/download/Symbisend" };
     for (unsigned i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
         QString path = QString::fromLatin1(candidates[i]);
         QDir root(path.left(3));

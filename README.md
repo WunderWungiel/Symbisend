@@ -73,7 +73,7 @@ same package as `build_symbian.bat`:
 
 ## Troubleshooting
 
-Symbisend logs heavily. Check the in-app **Log** page, or the log file in `F:/Symbisend/`
+Symbisend logs heavily. Check the in-app **Log** page, or the log file in `F:/download/Symbisend/`
 (falling back to `E:` or `C:/Data`).
 
 ## For developers

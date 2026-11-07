@@ -310,14 +310,15 @@ QString Settings::defaultDownloadFolder()
 {
 #ifdef Q_OS_SYMBIAN
     // Prefer the memory card (F:), then mass memory (E:), then phone memory.
-    const char *candidates[] = { "F:/Symbisend", "E:/Symbisend", "C:/Data/Symbisend" };
+    const char *candidates[] = { "F:/download/Symbisend", "E:/download/Symbisend",
+                                 "C:/Data/download/Symbisend" };
     for (unsigned i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
         QString path = QString::fromLatin1(candidates[i]);
         if (QDir(path.left(3)).exists() && QDir().mkpath(path))
             return path;
         qDebug() << "Settings: default download folder" << path << "not usable";
     }
-    return QLatin1String("C:/Data/Symbisend");
+    return QLatin1String("C:/Data/download/Symbisend");
 #else
     return QDir::homePath() + QLatin1String("/Downloads/Symbisend");
 #endif
