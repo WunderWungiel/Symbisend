@@ -78,7 +78,7 @@ public:
     // "dark" (default) or "light".
     QString theme() const { return m_theme; }
     void setTheme(const QString &theme);
-    // "system" (default) or a language code ("en"). No translations yet.
+    // "system" (default) or a language code ("pl", "pt-BR"); see I18n.
     QString language() const { return m_language; }
     void setLanguage(const QString &language);
 

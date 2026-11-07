@@ -76,6 +76,7 @@ SOURCES += main.cpp \
     src/multicastreceiver.cpp \
     src/discovery.cpp \
     src/settings.cpp \
+    src/i18n.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
     src/historymodel.cpp \
@@ -102,6 +103,7 @@ HEADERS += \
     src/multicastreceiver.h \
     src/discovery.h \
     src/settings.h \
+    src/i18n.h \
     src/picker.h \
     src/selectionmodel.h \
     src/historymodel.h \
@@ -120,6 +122,9 @@ HEADERS += \
 
 # Pages served to web browsers (official LocalSend assets, see web/README.md)
 RESOURCES += web.qrc
+
+# UI strings: the official LocalSend translations and ours (i18n/README.md)
+RESOURCES += i18n.qrc
 
 # QML UI and its images, loaded from qrc:/qml/Symbisend/
 RESOURCES += qml.qrc

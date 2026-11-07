@@ -115,8 +115,8 @@ General:
 - `theme` (string) — `"dark"` (default) or `"light"`; other values are ignored.
   Applied in QML: light = `platformInverted` on the window and every component
   (each page has `property bool platformInverted: settings.theme == "light"`).
-- `language` (string) — `"system"` (default) or a language code (`"en"`). No
-  translations exist yet *(stored only)*
+- `language` (string) — `"system"` (default: the phone's language) or one of
+  `i18n.languageCodes` (`"pl"`, `"pt-BR"`, ...). Applied at once, see `i18n`.
 
 Receive:
 - `quickSave` (bool, default false) — offers of files are accepted at once, without the
@@ -479,6 +479,31 @@ they arrive through `receiver` as a sender with `peerAlias` `Web Browser`,
 - Signals `receiveActiveChanged()`, `urlChanged()`, `pinChanged()`, `encryptedChanged()`.
 - Also see `settings.receiveViaLinkAutoAccept`. Not implemented yet: "Share via link"
   (browsers downloading from us).
+
+## `i18n` — the UI's strings (translations)
+The official LocalSend translations (`i18n/*.json`, keys as in upstream's
+`app/assets/i18n/en.json`) plus Symbisend's own strings (`i18n/symbisend/en.json`,
+keys prefixed `symbisend.`). See `i18n/README.md`.
+
+- `t(key)`, `t(key, args)` → string — e.g. `i18n.t("sendTab.scan")`,
+  `i18n.t("dialogs.fileNameInput.original", { original: name })`: `{original}` is
+  replaced. A key missing in the language falls back to English, then to the key
+  itself (logged as `I18n: missing string`).
+- `plural(key, n)`, `plural(key, n, args)` → string — the form of a plural key for `n`
+  (`{n}` is filled in), e.g. `i18n.plural("receivePage.subTitle", 3)`.
+- `rev` (string) — always `""`, but changes with the language. **Append it to every
+  binding that uses `t()` / `plural()`** (`text: i18n.t("general.close") + i18n.rev`),
+  or the text won't follow a language change: QML can't see what a function call reads.
+- `language` (string) — the language in use (`"pl"`), resolved from `settings.language`.
+- `languageCodes` (list of strings) — `"system"`, then every language; `languageNames`
+  (list of strings) — the same order, as the official app names them (each in its own
+  language, `System` translated). For a `SelectionDialog`:
+  `model: i18n.languageNames`, `settings.language = i18n.languageCodes[selectedIndex]`.
+- `languageName(code)` → string — one of `languageNames` (`"system"` too).
+- Signal `changed()` on a language change.
+
+Texts that C++ hands to QML (`errorText`, `nameError()`, device `logs`, the picker's
+titles) are translated when they are made, so they stay in the language they were made in.
 
 ## `logger` — debug log
 - `model` — list model of the last ~300 lines, oldest first, role `line` (string). Use it

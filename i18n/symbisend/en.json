@@ -1,0 +1,120 @@
+{
+  "@info": "Symbisend's own strings, for what the official app has no string for. Looked up as symbisend.<key>; same format as the files in i18n/. Translations go in <language code>.json next to this file.",
+  "about": {
+    "description": "A LocalSend client for Symbian.\nCompatible with LocalSend (protocol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Desktop",
+    "headless": "Headless",
+    "mobile": "Mobile",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "and {n} more",
+    "cancelledBy": "{name} cancelled the transfer",
+    "cannotCreateFile": "Can't create the file",
+    "cannotCreateFolder": "Can't create the folder {folder}",
+    "cannotRead": "Can't read the file",
+    "cannotWrite": "Can't write the file (memory full?)",
+    "certificateChanged": "This is not the {name} that was found (its certificate is different)",
+    "certificateRejected": "The certificate of {ip} was rejected",
+    "checksum": "The checksum doesn't match",
+    "connectionBroke": "The connection broke off",
+    "connectionLost": "Connection lost",
+    "declined": "{name} declined the transfer",
+    "deviceGone": "The device is gone",
+    "httpError": "{name} answered with error {status}",
+    "invalidAnswer": "The receiver sent an invalid answer",
+    "largerThanAnnounced": "Larger than announced",
+    "noDeviceAt": "No LocalSend device found at {ip}",
+    "notConnected": "Not connected",
+    "notSaved": "Not saved:",
+    "notSent": "Not sent:",
+    "ownAddress": "This is the address of this phone",
+    "stoppedResponding": "{name} stopped responding",
+    "stoppedSending": "{name} stopped sending",
+    "stoppedSendingSome": "{name} stopped sending. {curr} of {n} files were saved."
+  },
+  "favorites": {
+    "addFailed": "Could not add to favourites",
+    "saveFailed": "Could not save the favourite",
+    "thisDevice": "this device"
+  },
+  "general": {
+    "cancelled": "Cancelled",
+    "clear": "Clear",
+    "invalidIp": "Invalid IP address",
+    "ok": "OK",
+    "transferCancelled": "The transfer was cancelled",
+    "xOfY": "{curr} of {n}"
+  },
+  "history": {
+    "cannotOpenFile": "The file no longer exists or no application can open it.",
+    "cannotOpenFolder": "Cannot open folder",
+    "cannotOpenFolderContent": "The download folder could not be opened:\n{folder}",
+    "clearContent": "Do you want to delete the entire history? Received files are not deleted.",
+    "messageInfo": "Message information"
+  },
+  "openFile": {
+    "cannotShowFolder": "The folder can't be shown.",
+    "folder": "Folder"
+  },
+  "picker": {
+    "selectFile": "Select file",
+    "selectFiles": "Select files",
+    "selectFolder": "Select folder"
+  },
+  "receive": {
+    "info": "Info",
+    "message": "Message",
+    "saved": {
+      "one": "Saved 1 file from {name}",
+      "other": "Saved {n} files from {name}"
+    },
+    "savedTo": "to {folder}",
+    "waitingFor": "Waiting for {name}..."
+  },
+  "receiveLink": {
+    "connect": "Connect",
+    "noNetwork": "Not connected to a network.",
+    "serverStopped": "The server is stopped.",
+    "startServer": "Start server"
+  },
+  "selection": {
+    "textItem": "Text, {size} - tap to edit"
+  },
+  "send": {
+    "asksForPin": "{name} asks for a PIN",
+    "connecting": "Connecting",
+    "connectingTo": "Connecting to {name}...",
+    "editText": "Edit text",
+    "enterText": "Enter text",
+    "folderTruncated": "Only the first {n} files of the folder were added",
+    "hashing": "Calculating checksums...",
+    "images": "Images",
+    "noDevices": "No devices found",
+    "pinRequired": "PIN required",
+    "preparing": "Preparing",
+    "searching": "Searching...",
+    "sentSome": "Sent {curr} of {n} files to {name}",
+    "sentTo": "Sent to {name}",
+    "totalProgress": "Total progress",
+    "videos": "Videos",
+    "waitingFor": "Waiting for {name} to accept..."
+  },
+  "settings": {
+    "about": "About Symbisend",
+    "changePin": "Tap to change the PIN",
+    "chooseFolder": "Choose folder...",
+    "createChecksumsHint": "Slower start with large files",
+    "log": "Log",
+    "randomAlias": "Random",
+    "restore": "Restore",
+    "restoreDefaults": "Restore defaults",
+    "restoreDefaultsContent": "All settings go back to their defaults, and the PIN is removed. Your device name, favourites and history stay.",
+    "serverRunning": "Running",
+    "serverStopped": "Stopped",
+    "useDefaultFolder": "Use default"
+  }
+}

@@ -15,6 +15,7 @@
 #include "src/networkmanager.h"
 #include "src/discovery.h"
 #include "src/settings.h"
+#include "src/i18n.h"
 #include "src/picker.h"
 #include "src/selectionmodel.h"
 #include "src/historymodel.h"
@@ -40,6 +41,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     TlsRandom::init();
 
     Settings settings;
+    // The UI's strings; follows settings.language.
+    I18n i18n(&settings);
     Picker picker;
     SelectionModel selection;
     // Everything picked on the Send page goes into the selection.
@@ -72,6 +75,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("network"), &network);
     ctx->setContextProperty(QLatin1String("discovery"), &discovery);
     ctx->setContextProperty(QLatin1String("settings"), &settings);
+    ctx->setContextProperty(QLatin1String("i18n"), &i18n);
     ctx->setContextProperty(QLatin1String("picker"), &picker);
     ctx->setContextProperty(QLatin1String("selection"), &selection);
     ctx->setContextProperty(QLatin1String("sender"), &sender);
