@@ -42,6 +42,18 @@ Page {
             fillMode: Image.PreserveAspectFit
             smooth: true
             source: "images/localsend-logo.svg"
+
+            // Slow clockwise spin, one turn per 15 s, like the official app.
+            // Paused (not reset) while the server is down (as there), another
+            // tab is shown or the app is in the background.
+            NumberAnimation on rotation {
+                from: 0
+                to: 360
+                duration: 15000
+                loops: Animation.Infinite
+                running: true
+                paused: !(discovery.serverRunning && page.visible && Qt.application.active)
+            }
         }
 
         Label {
