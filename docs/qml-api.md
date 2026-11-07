@@ -276,7 +276,8 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
 - `peerAlias` (string) — the target; a favourite goes by the name given to it
 - `errorText` (string)
 - `fileCount` (int, accepted files), `filesDone` (int, of those sent),
-  `fileIndex` (int, 1-based, the file being uploaded),
+  `fileIndex` (int, 1-based, the file being uploaded). In state `hashing` `fileCount` is
+  all the files and `fileIndex` the one being hashed (for `sendPage.calculatingChecksum`),
   `fileName` (string, its relative path; `Text` for a text message)
 - `bytesSent`, `bytesTotal` (number, bytes of the accepted files), `progress` (0–1)
 - `remainingSeconds` (int) — estimated time left from the average speed so far; -1 while

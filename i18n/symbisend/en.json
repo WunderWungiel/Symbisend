@@ -82,7 +82,6 @@
     "connectingTo": "Connecting to {name}...",
     "editText": "Edit text",
     "folderTruncated": "Only the first {n} files of the folder were added",
-    "hashing": "Calculating checksums...",
     "images": "Images",
     "noDevices": "No devices found",
     "preparing": "Preparing",

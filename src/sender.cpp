@@ -90,6 +90,18 @@ bool Sender::isBusy() const
             || m_state == QLatin1String("waiting") || m_state == QLatin1String("pin") || m_state == QLatin1String("sending");
 }
 
+int Sender::fileCount() const
+{
+    return m_state == QLatin1String("hashing") ? m_files.size() : m_queue.size();
+}
+
+int Sender::fileIndex() const
+{
+    if (m_state == QLatin1String("hashing"))
+        return qMin(m_hashIndex + 1, m_files.size());
+    return m_current + 1;
+}
+
 QString Sender::fileName() const
 {
     if (m_current < 0 || m_current >= m_queue.size())
@@ -309,6 +321,7 @@ void Sender::nextHash()
     m_hash = 0;
     delete m_hashFile;
     m_hashFile = 0;
+    emit progressChanged(); // the next file's number
 }
 
 void Sender::stopHashing()

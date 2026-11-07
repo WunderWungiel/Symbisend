@@ -56,11 +56,13 @@ class Sender : public QObject
     Q_PROPERTY(QString errorText READ errorText NOTIFY stateChanged)
     // State "cancelled": "sender" (we did) or "receiver"; empty otherwise.
     Q_PROPERTY(QString cancelledBy READ cancelledBy NOTIFY stateChanged)
-    // Accepted files (a declined part of the selection is not counted).
+    // Accepted files (a declined part of the selection is not counted);
+    // while hashing, all the files.
     Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
     // Accepted files that were sent.
     Q_PROPERTY(int filesDone READ filesDone NOTIFY progressChanged)
-    // 1-based index of the file being uploaded, 0 before the first one.
+    // 1-based index of the file being uploaded (while hashing: being hashed),
+    // 0 before the first one.
     Q_PROPERTY(int fileIndex READ fileIndex NOTIFY progressChanged)
     Q_PROPERTY(QString fileName READ fileName NOTIFY progressChanged)
     // Bytes of the accepted files; qreal for sizes over 2 GB.
@@ -88,9 +90,9 @@ public:
     QString peerAlias() const { return m_peer.alias; }
     QString errorText() const { return m_errorText; }
     QString cancelledBy() const { return m_cancelledBy; }
-    int fileCount() const { return m_queue.size(); }
+    int fileCount() const;
     int filesDone() const;
-    int fileIndex() const { return m_current + 1; }
+    int fileIndex() const;
     QString fileName() const;
     qreal bytesSent() const { return qreal(m_bytesDone + m_currentSent); }
     qreal bytesTotal() const { return qreal(m_bytesTotal); }

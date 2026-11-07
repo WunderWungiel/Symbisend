@@ -91,7 +91,8 @@ CommonDialog {
                 var rev = i18n.rev
                 var peer = { name: sender.peerAlias }
                 if (root.sendState == "connecting") return i18n.t("symbisend.send.connectingTo", peer)
-                if (root.sendState == "hashing") return i18n.t("symbisend.send.hashing")
+                if (root.sendState == "hashing")
+                    return i18n.t("sendPage.calculatingChecksum", { curr: sender.fileIndex, n: sender.fileCount })
                 if (root.sendState == "waiting") return i18n.t("symbisend.send.waitingFor", peer)
                 if (root.sendState == "pin") return sender.errorText != "" ? sender.errorText
                                                                        : i18n.t("symbisend.send.asksForPin", peer)
