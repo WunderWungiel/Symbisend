@@ -231,7 +231,7 @@ Page {
                 onClicked: page.aboutRequested()
             }
             SettingsItem {
-                title: i18n.t("symbisend.settings.log") + i18n.rev
+                title: i18n.t("deviceDetailsPage.logs.title") + i18n.rev
                 onClicked: page.logRequested()
             }
             SettingsItem {

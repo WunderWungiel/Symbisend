@@ -99,7 +99,7 @@ Page {
     QueryDialog {
         id: infoDialog
         platformInverted: page.platformInverted
-        titleText: i18n.t("symbisend.receive.info") + i18n.rev
+        titleText: i18n.t("receiveHistoryPage.entryActions.info") + i18n.rev
         message: i18n.rev + i18n.t("receiveTab.infoBox.alias") + " " + myDevice.alias
                  + "\n" + i18n.t("receiveTab.infoBox.ip") + " "
                  + (network.localAddress !== "" ? network.localAddress : "-")

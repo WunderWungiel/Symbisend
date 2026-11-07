@@ -41,7 +41,7 @@ CommonDialog {
                 margins: platformStyle.paddingLarge
             }
             height: 4 * platformStyle.fontSizeLarge + 2 * platformStyle.paddingLarge
-            placeholderText: i18n.t("symbisend.send.enterText") + i18n.rev
+            placeholderText: i18n.t("dialogs.messageInput.title") + i18n.rev
         }
     }
 

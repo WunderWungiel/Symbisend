@@ -252,7 +252,7 @@ Page {
         platformInverted: page.platformInverted
         titleText: i18n.t("dialogs.favoriteDeleteDialog.title") + i18n.rev
         message: i18n.t("dialogs.favoriteDeleteDialog.content",
-                        { name: page.device.alias || i18n.t("symbisend.favorites.thisDevice") }) + i18n.rev
+                        { name: page.device.alias || i18n.t("sendTab.thisDevice") }) + i18n.rev
         acceptButtonText: i18n.t("general.delete") + i18n.rev
         rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: favorites.remove(page.fingerprint)

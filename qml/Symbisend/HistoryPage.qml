@@ -79,7 +79,7 @@ Page {
             width: Math.min(implicitWidth, buttonRow.maxButtonWidth)
             anchors { left: openFolderButton.right; leftMargin: buttonRow.spacing }
             iconSource: "toolbar-delete"
-            text: i18n.t("symbisend.general.clear") + i18n.rev
+            text: i18n.t("receiveHistoryPage.deleteHistory") + i18n.rev
             enabled: history.count > 0
             onClicked: clearDialog.open()
         }
@@ -106,7 +106,7 @@ Page {
                 if (isText)
                     textDialog.openWith(model.text, model.senderAlias)
                 else if (!history.openFile(index))
-                    openFailedDialog.open()
+                    openFailedDialog.openFor(model.fileName)
             }
 
             function showInformation() {
@@ -118,7 +118,7 @@ Page {
                 lines.push(i18n.t("dialogs.fileInfo.size") + " " + model.sizeText)
                 lines.push(i18n.t("dialogs.fileInfo.sender") + " " + model.senderAlias)
                 lines.push(i18n.t("dialogs.fileInfo.time") + " " + model.timeText)
-                infoDialog.openWith(isText ? i18n.t("symbisend.history.messageInfo") : i18n.t("dialogs.fileInfo.title"),
+                infoDialog.openWith(isText ? i18n.t("receiveHistoryPage.entryActions.info") : i18n.t("dialogs.fileInfo.title"),
                                     lines.join("\n"))
             }
 
@@ -296,8 +296,10 @@ Page {
     QueryDialog {
         id: openFailedDialog
         platformInverted: page.platformInverted
+        property string fileName: ""
+        function openFor(name) { fileName = name; open() }
         titleText: i18n.t("dialogs.cannotOpenFile.title") + i18n.rev
-        message: i18n.t("symbisend.history.cannotOpenFile") + i18n.rev
+        message: i18n.t("dialogs.cannotOpenFile.content", { file: fileName }) + i18n.rev
         acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
     }
 
@@ -316,7 +318,7 @@ Page {
         platformInverted: page.platformInverted
         titleText: i18n.t("dialogs.historyClearDialog.title") + i18n.rev
         message: i18n.t("symbisend.history.clearContent") + i18n.rev
-        acceptButtonText: i18n.t("symbisend.general.clear") + i18n.rev
+        acceptButtonText: i18n.t("general.delete") + i18n.rev
         rejectButtonText: i18n.t("general.cancel") + i18n.rev
         onAccepted: history.clear()
     }

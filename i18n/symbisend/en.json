@@ -38,8 +38,7 @@
   },
   "favorites": {
     "addFailed": "Could not add to favourites",
-    "saveFailed": "Could not save the favourite",
-    "thisDevice": "this device"
+    "saveFailed": "Could not save the favourite"
   },
   "general": {
     "cancelled": "Cancelled",
@@ -50,15 +49,12 @@
     "xOfY": "{curr} of {n}"
   },
   "history": {
-    "cannotOpenFile": "The file no longer exists or no application can open it.",
     "cannotOpenFolder": "Cannot open folder",
     "cannotOpenFolderContent": "The download folder could not be opened:\n{folder}",
-    "clearContent": "Do you want to delete the entire history? Received files are not deleted.",
-    "messageInfo": "Message information"
+    "clearContent": "Do you want to delete the entire history? Received files are not deleted."
   },
   "openFile": {
-    "cannotShowFolder": "The folder can't be shown.",
-    "folder": "Folder"
+    "cannotShowFolder": "The folder can't be shown."
   },
   "picker": {
     "selectFile": "Select file",
@@ -66,7 +62,6 @@
     "selectFolder": "Select folder"
   },
   "receive": {
-    "info": "Info",
     "message": "Message",
     "saved": {
       "one": "Saved 1 file from {name}",
@@ -89,12 +84,10 @@
     "connecting": "Connecting",
     "connectingTo": "Connecting to {name}...",
     "editText": "Edit text",
-    "enterText": "Enter text",
     "folderTruncated": "Only the first {n} files of the folder were added",
     "hashing": "Calculating checksums...",
     "images": "Images",
     "noDevices": "No devices found",
-    "pinRequired": "PIN required",
     "preparing": "Preparing",
     "searching": "Searching...",
     "sentSome": "Sent {curr} of {n} files to {name}",
@@ -108,7 +101,6 @@
     "changePin": "Tap to change the PIN",
     "chooseFolder": "Choose folder...",
     "createChecksumsHint": "Slower start with large files",
-    "log": "Log",
     "restore": "Restore",
     "restoreDefaults": "Restore defaults",
     "restoreDefaultsContent": "All settings go back to their defaults, and the PIN is removed. Your device name, favourites and history stay.",

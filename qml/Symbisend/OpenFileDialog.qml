@@ -79,14 +79,15 @@ Dialog {
                 onClicked: {
                     root.close()
                     if (!history.openPath(root.filePath))
-                        picker.showInfo(i18n.t("symbisend.history.cannotOpenFile"))
+                        picker.showInfo(i18n.t("dialogs.cannotOpenFile.content",
+                                                { file: root.filePath.substring(root.filePath.lastIndexOf("/") + 1) }))
                 }
             }
             ToolButton {
                 width: root.buttonWidth
                 height: privateStyle.toolBarHeightLandscape
                 platformInverted: root.platformInverted
-                text: i18n.t("symbisend.openFile.folder") + i18n.rev
+                text: i18n.t("receiveHistoryPage.entryActions.showInFolder") + i18n.rev
                 onClicked: {
                     root.close()
                     if (!history.openFolder(root.filePath.substring(0, root.filePath.lastIndexOf("/"))))

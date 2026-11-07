@@ -29,7 +29,7 @@ CommonDialog {
         if (sendState == "connecting") return i18n.t("symbisend.send.connecting")
         if (sendState == "hashing") return i18n.t("symbisend.send.preparing")
         if (sendState == "waiting") return i18n.t("sendPage.waiting")
-        if (sendState == "pin") return i18n.t("symbisend.send.pinRequired")
+        if (sendState == "pin") return i18n.t("dialogs.pin.title")
         if (sendState == "sending")
             return sender.remainingSeconds < 0 ? i18n.t("symbisend.send.totalProgress")
                                                : i18n.t("progressPage.total.title.sending",
