@@ -32,6 +32,8 @@
         <file>qml/Symbisend/OpenFileDialog.qml</file>
         <file>qml/Symbisend/images/ads-click-inverted.svg</file>
         <file>qml/Symbisend/images/ads-click.svg</file>
+        <file>qml/Symbisend/images/casino-inverted.svg</file>
+        <file>qml/Symbisend/images/casino.svg</file>
         <file>qml/Symbisend/images/check-circle-inverted.svg</file>
         <file>qml/Symbisend/images/check-circle.svg</file>
         <file>qml/Symbisend/images/check-inverted.svg</file>

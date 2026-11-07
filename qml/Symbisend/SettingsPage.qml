@@ -165,9 +165,11 @@ Page {
                 subTitle: myDevice.alias
                 onClicked: nameDialog.openWith(myDevice.alias)
 
-                Button {
+                // Dice: a new random alias, like the official app.
+                ToolButton {
                     platformInverted: page.platformInverted
-                    text: i18n.t("symbisend.settings.randomAlias") + i18n.rev
+                    iconSource: page.platformInverted ? "images/casino-inverted.svg"
+                                                      : "images/casino.svg"
                     onClicked: myDevice.randomizeAlias()
                 }
             }
