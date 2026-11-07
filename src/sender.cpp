@@ -734,7 +734,7 @@ void Sender::cancel()
     qDebug() << "Sender: cancelled by the user (state" << m_state + ")";
     dropReply();
     sendCancel();
-    finish(QLatin1String("cancelled"));
+    finishCancelled("sender");
 }
 
 void Sender::onCancelReceived(const QString &ip, const QString &sessionId)
@@ -744,8 +744,8 @@ void Sender::onCancelReceived(const QString &ip, const QString &sessionId)
         return;
     }
     qDebug() << "Sender:" << m_peer.alias << "cancelled the session";
-    finish(QLatin1String("cancelled"),
-           I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peer.alias)));
+    finishCancelled("receiver",
+                    I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peer.alias)));
 }
 
 // Forgets the request in flight without its finished() reaching us.
@@ -798,12 +798,20 @@ void Sender::finish(const QString &state, const QString &error)
     emit progressChanged();
 }
 
+void Sender::finishCancelled(const char *by, const QString &error)
+{
+    m_cancelledBy = QLatin1String(by);
+    finish(QLatin1String("cancelled"), error);
+}
+
 void Sender::setState(const QString &state, const QString &error)
 {
     if (!error.isEmpty())
         qDebug() << "Sender:" << state + ":" << error;
     else
         qDebug() << "Sender:" << state;
+    if (state != QLatin1String("cancelled"))
+        m_cancelledBy.clear();
     m_state = state;
     m_errorText = error;
     emit stateChanged();

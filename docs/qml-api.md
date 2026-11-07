@@ -269,7 +269,9 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
   - `declined` — the receiver said no (`errorText`: `sendPage.rejected`)
   - `failed` — the transfer stopped, see `errorText` (busy receiver, connection lost
     before sending began, no progress for 60 s, ...)
-  - `cancelled` — by us, or by the receiver (`errorText` says so)
+  - `cancelled` — by us, or by the receiver (`errorText` says so; see `cancelledBy`)
+- `cancelledBy` (string) — in state `cancelled`: `sender` (we cancelled) or `receiver`;
+  empty in any other state. Picks `progressPage.total.title.canceledSender` / `canceledReceiver`
 - `busy` (bool) — `connecting`, `hashing`, `waiting`, `pin` or `sending`
 - `peerAlias` (string) — the target; a favourite goes by the name given to it
 - `errorText` (string)
@@ -296,7 +298,7 @@ times the sender gave, like the official app (Symbian files only have the first)
 - `state` (string):
   - `idle` — nothing received yet, or the last offer was declined
   - `request` — an offer waits for `accept()` / `decline()` (no timeout; the sender may
-    withdraw it: `cancelled`). Files accepted without asking (`settings.quickSave`,
+    withdraw it: `cancelled`; `failed` if we went offline meanwhile). Files accepted without asking (`settings.quickSave`,
     `settings.quickSaveFromFavorites` for a favourite, `settings.receiveViaLinkAutoAccept`
     while the link is active) skip this state.
   - `receiving` — files are coming in
@@ -308,6 +310,8 @@ times the sender gave, like the official app (Symbian files only have the first)
     deleted, and the sender may upload it again, 3 uploads in all. Then it has failed.
   - `failed` — see `errorText` (connection lost, the sender stopped sending for 30 s, ...)
   - `cancelled` — by the sender (`errorText` says so) or by `cancel()`
+- `cancelledBy` (string) — in state `cancelled`: `sender` or `receiver` (we cancelled);
+  empty in any other state
 - `busy` (bool) — `request` or `receiving`
 - `errorText` (string)
 - The sender: `peerAlias` (a favourite goes by the name given to it, in `history` too),

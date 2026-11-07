@@ -40,7 +40,6 @@
     "saveFailed": "Could not save the favourite"
   },
   "general": {
-    "cancelled": "Cancelled",
     "clear": "Clear",
     "invalidIp": "Invalid IP address",
     "transferCancelled": "The transfer was cancelled",

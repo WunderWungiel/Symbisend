@@ -62,6 +62,8 @@ class Receiver : public QObject, public HttpHandler
     // request or receiving
     Q_PROPERTY(bool busy READ isBusy NOTIFY stateChanged)
     Q_PROPERTY(QString errorText READ errorText NOTIFY stateChanged)
+    // State "cancelled": "sender" or "receiver" (we did); empty otherwise.
+    Q_PROPERTY(QString cancelledBy READ cancelledBy NOTIFY stateChanged)
 
     // The sending device, from its prepare-upload request.
     Q_PROPERTY(QString peerAlias READ peerAlias NOTIFY stateChanged)
@@ -118,6 +120,7 @@ public:
     QString state() const { return m_state; }
     bool isBusy() const;
     QString errorText() const { return m_errorText; }
+    QString cancelledBy() const { return m_cancelledBy; }
     QString peerAlias() const { return m_peerAlias; }
     QString peerDeviceModel() const { return m_peerDeviceModel; }
     QString peerDeviceType() const { return m_peerDeviceType; }
@@ -219,6 +222,8 @@ private:
     bool notifySender();
     void checkDone();
     void finish(const QString &state, const QString &error = QString());
+    // finish("cancelled"), by "sender" or "receiver".
+    void finishCancelled(const char *by, const QString &error = QString());
     void setState(const QString &state, const QString &error = QString());
     void reset();
     static QDateTime parseTime(const QString &text);
@@ -238,6 +243,7 @@ private:
 
     QString m_state;
     QString m_errorText;
+    QString m_cancelledBy;
     QString m_peerAlias;
     QString m_peerDeviceModel;
     QString m_peerDeviceType;

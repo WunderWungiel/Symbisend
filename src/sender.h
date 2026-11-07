@@ -54,6 +54,8 @@ class Sender : public QObject
     Q_PROPERTY(QString peerAlias READ peerAlias NOTIFY stateChanged)
     // Why it failed / was declined; also "Wrong PIN" in state "pin".
     Q_PROPERTY(QString errorText READ errorText NOTIFY stateChanged)
+    // State "cancelled": "sender" (we did) or "receiver"; empty otherwise.
+    Q_PROPERTY(QString cancelledBy READ cancelledBy NOTIFY stateChanged)
     // Accepted files (a declined part of the selection is not counted).
     Q_PROPERTY(int fileCount READ fileCount NOTIFY stateChanged)
     // Accepted files that were sent.
@@ -85,6 +87,7 @@ public:
     bool isBusy() const;
     QString peerAlias() const { return m_peer.alias; }
     QString errorText() const { return m_errorText; }
+    QString cancelledBy() const { return m_cancelledBy; }
     int fileCount() const { return m_queue.size(); }
     int filesDone() const;
     int fileIndex() const { return m_current + 1; }
@@ -164,6 +167,8 @@ private:
     void failRemaining(const QString &error);
     void finishUploads();
     void finish(const QString &state, const QString &error = QString());
+    // finish("cancelled"), by "sender" or "receiver".
+    void finishCancelled(const char *by, const QString &error = QString());
     void setState(const QString &state, const QString &error = QString());
     void sendCancel();
     void dropReply();
@@ -180,6 +185,7 @@ private:
 
     QString m_state;
     QString m_errorText;
+    QString m_cancelledBy;
     QString m_lookUpIp;    // state "connecting": the address being asked
     Peer m_peer;
     QList<OutFile> m_files;   // everything offered

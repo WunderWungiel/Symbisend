@@ -119,7 +119,9 @@ Dialog {
                                : " (" + root.formatTime(receiver.remainingSeconds) + ")")
                 if (root.recvState == "finished") return i18n.t("general.finished")
                 if (root.recvState == "finishedWithErrors") return i18n.t("progressPage.total.title.finishedError")
-                if (root.recvState == "cancelled") return i18n.t("symbisend.general.cancelled")
+                if (root.recvState == "cancelled")
+                    return i18n.t(receiver.cancelledBy == "receiver" ? "progressPage.total.title.canceledReceiver"
+                                                                     : "progressPage.total.title.canceledSender")
                 return i18n.t("general.error")
             }
         }

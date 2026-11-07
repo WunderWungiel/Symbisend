@@ -37,7 +37,9 @@ CommonDialog {
         if (sendState == "finished") return i18n.t("general.finished")
         if (sendState == "finishedWithErrors") return i18n.t("progressPage.total.title.finishedError")
         if (sendState == "declined") return i18n.t("web.rejected")
-        if (sendState == "cancelled") return i18n.t("symbisend.general.cancelled")
+        if (sendState == "cancelled")
+            return i18n.t(sender.cancelledBy == "receiver" ? "progressPage.total.title.canceledReceiver"
+                                                           : "progressPage.total.title.canceledSender")
         return i18n.t("general.error")
     }
     buttonTexts: [i18n.rev + (busy ? i18n.t("general.cancel")

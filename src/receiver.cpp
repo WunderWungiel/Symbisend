@@ -237,11 +237,13 @@ void Receiver::requestAborted(const HttpRequest &request)
     if (request.id == m_pendingRequest) {
         m_pendingRequest = 0;
         if (m_state == QLatin1String("request")) {
-            qDebug() << "Receiver:" << m_peerAlias << "withdrew the request";
-            finish(QLatin1String("cancelled"),
-                   m_network->isOnline()
-                   ? I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias))
-                   : I18n::text("symbisend.errors.connectionLost"));
+            if (m_network->isOnline()) {
+                qDebug() << "Receiver:" << m_peerAlias << "withdrew the request";
+                finishCancelled("sender",
+                                I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
+            } else {
+                finish(QLatin1String("failed"), I18n::text("symbisend.errors.connectionLost"));
+            }
         }
         return;
     }
@@ -524,15 +526,15 @@ HttpResponse Receiver::cancelRequest(const HttpRequest &request)
     const bool fromPeer = request.remoteAddress == m_peerIp;
     if (m_state == QLatin1String("receiving") && sessionId == m_sessionId && fromPeer) {
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the session";
-        finish(QLatin1String("cancelled"),
-               I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
+        finishCancelled("sender",
+                        I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
     } else if (m_state == QLatin1String("request") && fromPeer && !hasSessionId) {
         // No session yet: the sender gave up waiting for our answer. Like the
         // official app, a /cancel that names a session is about something else:
         // this device may be cancelling what we are sending to it.
         qDebug() << "Receiver:" << m_peerAlias << "cancelled the request";
-        finish(QLatin1String("cancelled"),
-               I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
+        finishCancelled("sender",
+                        I18n::text("symbisend.errors.cancelledBy", I18n::args("name", m_peerAlias)));
     } else if (!sessionId.isEmpty()) {
         // Not ours to receive: maybe the device we are sending to is cancelling.
         emit cancelReceived(request.remoteAddress.toString(), sessionId);
@@ -830,7 +832,7 @@ void Receiver::cancel()
         if (!m_draining.isEmpty())
             m_drainTimer.start();
     }
-    finish(QLatin1String("cancelled"), I18n::text("symbisend.general.transferCancelled"));
+    finishCancelled("receiver", I18n::text("symbisend.general.transferCancelled"));
 }
 
 // Tells the sender that we stopped. Like the official app: fire and forget,
@@ -903,12 +905,20 @@ void Receiver::finish(const QString &state, const QString &error)
     emit progressChanged();
 }
 
+void Receiver::finishCancelled(const char *by, const QString &error)
+{
+    m_cancelledBy = QLatin1String(by);
+    finish(QLatin1String("cancelled"), error);
+}
+
 void Receiver::setState(const QString &state, const QString &error)
 {
     if (!error.isEmpty())
         qDebug() << "Receiver:" << state + ":" << error;
     else
         qDebug() << "Receiver:" << state;
+    if (state != QLatin1String("cancelled"))
+        m_cancelledBy.clear();
     m_state = state;
     m_errorText = error;
     emit stateChanged();
