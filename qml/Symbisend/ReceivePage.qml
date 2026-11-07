@@ -63,7 +63,8 @@ Page {
             width: Math.min(implicitWidth, page.width - 2 * platformStyle.paddingLarge)
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
-            font.pixelSize: platformStyle.fontSizeLarge
+            // Big, like the official app (48 px under a 200 px logo).
+            font.pixelSize: 2 * platformStyle.fontSizeLarge
             text: myDevice.alias
         }
     }
