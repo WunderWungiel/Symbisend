@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Кліент LocalSend для Symbian.\nСумяшчальны з LocalSend (пратакол v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Камп’ютар",
+    "headless": "Без экрана",
+    "mobile": "Мабільная прылада",
+    "server": "Сервер",
+    "web": "Вэб"
+  },
+  "errors": {
+    "andMore": "і яшчэ: {n}",
+    "cancelledBy": "Перадачу скасавала прылада {name}",
+    "cannotCreateFile": "Не ўдалося стварыць файл",
+    "cannotCreateFolder": "Не ўдалося стварыць папку {folder}",
+    "cannotRead": "Не ўдалося прачытаць файл",
+    "cannotWrite": "Не ўдалося запісаць файл (няма месца?)",
+    "certificateChanged": "Гэта не знойдзеная раней прылада {name} (сертыфікат іншы)",
+    "certificateRejected": "Сертыфікат {ip} адхілены",
+    "checksum": "Кантрольная сума не супадае",
+    "connectionBroke": "Злучэнне перарвалася",
+    "connectionLost": "Злучэнне страчана",
+    "deviceGone": "Прылада недаступная",
+    "httpError": "Прылада {name} адказала памылкай {status}",
+    "invalidAnswer": "Атрымальнік даслаў няправільны адказ",
+    "largerThanAnnounced": "Большы за заяўлены памер",
+    "noDeviceAt": "Прылада LocalSend не знойдзена па адрасе {ip}",
+    "notConnected": "Няма злучэння",
+    "notSaved": "Не захавана:",
+    "notSent": "Не адпраўлена:",
+    "ownAddress": "Гэта адрас гэтага тэлефона",
+    "stoppedResponding": "Прылада {name} перастала адказваць",
+    "stoppedSending": "Прылада {name} перастала адпраўляць",
+    "stoppedSendingSome": "Прылада {name} перастала адпраўляць. Захавана файлаў: {curr} з {n}."
+  },
+  "favorites": {
+    "addFailed": "Не ўдалося дадаць у абраныя",
+    "saveFailed": "Не ўдалося захаваць абранае"
+  },
+  "general": {
+    "clear": "Ачысціць",
+    "invalidIp": "Няправільны IP-адрас",
+    "transferCancelled": "Перадача скасавана",
+    "xOfY": "{curr} з {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Не ўдалося адкрыць папку",
+    "cannotOpenFolderContent": "Не ўдалося адкрыць папку загрузак:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Не ўдалося паказаць папку."
+  },
+  "picker": {
+    "selectFile": "Выберыце файл",
+    "selectFiles": "Выберыце файлы",
+    "selectFolder": "Выберыце папку"
+  },
+  "receive": {
+    "message": "Паведамленне",
+    "saved": {
+      "one": "Захаваны 1 файл ад {name}",
+      "other": "Захавана файлаў ад {name}: {n}"
+    },
+    "savedTo": "у {folder}",
+    "waitingFor": "Чаканне {name}..."
+  },
+  "receiveLink": {
+    "connect": "Падключыцца",
+    "noNetwork": "Няма падключэння да сеткі.",
+    "serverStopped": "Сервер спынены.",
+    "startServer": "Запусціць сервер"
+  },
+  "selection": {
+    "textItem": "Тэкст, {size} - націсніце, каб змяніць"
+  },
+  "send": {
+    "asksForPin": "{name} просіць PIN-код",
+    "connecting": "Падключэнне",
+    "connectingTo": "Падключэнне да {name}...",
+    "editText": "Змяніць тэкст",
+    "folderTruncated": "Дададзены толькі першыя файлы папкі: {n}",
+    "images": "Выявы",
+    "noDevices": "Прылады не знойдзены",
+    "preparing": "Падрыхтоўка",
+    "searching": "Пошук...",
+    "sentSome": "Адпраўлена файлаў {curr} з {n} на {name}",
+    "sentTo": "Адпраўлена на {name}",
+    "totalProgress": "Агульны ход выканання",
+    "videos": "Відэа"
+  },
+  "settings": {
+    "about": "Пра Symbisend",
+    "changePin": "Націсніце, каб змяніць PIN-код",
+    "chooseFolder": "Выбраць папку...",
+    "createChecksumsHint": "Павольнейшы пачатак з вялікімі файламі",
+    "restore": "Аднавіць",
+    "restoreDefaults": "Аднавіць прадвызначаныя",
+    "restoreDefaultsContent": "Усе налады вернуцца да прадвызначаных, PIN-код будзе выдалены. Назва прылады, абраныя і гісторыя застануцца.",
+    "serverRunning": "Працуе",
+    "serverStopped": "Спынены",
+    "useDefaultFolder": "Прадвызначаная"
+  }
+}

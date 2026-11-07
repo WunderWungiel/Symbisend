@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Klient LocalSend dla Symbiana.\nZgodny z LocalSend (protokół v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Komputer",
+    "headless": "Bez ekranu",
+    "mobile": "Telefon",
+    "server": "Serwer",
+    "web": "Przeglądarka"
+  },
+  "errors": {
+    "andMore": "i {n} więcej",
+    "cancelledBy": "Transfer anulowany przez: {name}",
+    "cannotCreateFile": "Nie można utworzyć pliku",
+    "cannotCreateFolder": "Nie można utworzyć folderu {folder}",
+    "cannotRead": "Nie można odczytać pliku",
+    "cannotWrite": "Nie można zapisać pliku (brak miejsca?)",
+    "certificateChanged": "To nie jest urządzenie {name}, które zostało znalezione (ma inny certyfikat)",
+    "certificateRejected": "Certyfikat {ip} został odrzucony",
+    "checksum": "Suma kontrolna się nie zgadza",
+    "connectionBroke": "Połączenie zostało przerwane",
+    "connectionLost": "Utracono połączenie",
+    "deviceGone": "Urządzenie jest niedostępne",
+    "httpError": "{name}: błąd {status}",
+    "invalidAnswer": "Odbiorca wysłał nieprawidłową odpowiedź",
+    "largerThanAnnounced": "Większy niż zapowiedziano",
+    "noDeviceAt": "Nie znaleziono urządzenia LocalSend pod adresem {ip}",
+    "notConnected": "Brak połączenia",
+    "notSaved": "Nie zapisano:",
+    "notSent": "Nie wysłano:",
+    "ownAddress": "To jest adres tego telefonu",
+    "stoppedResponding": "{name} nie odpowiada",
+    "stoppedSending": "{name}: wysyłanie zatrzymane",
+    "stoppedSendingSome": "{name}: wysyłanie zatrzymane. Zapisano plików: {curr} z {n}."
+  },
+  "favorites": {
+    "addFailed": "Nie udało się dodać do ulubionych",
+    "saveFailed": "Nie udało się zapisać ulubionego"
+  },
+  "general": {
+    "clear": "Wyczyść",
+    "invalidIp": "Nieprawidłowy adres IP",
+    "transferCancelled": "Transfer został anulowany",
+    "xOfY": "{curr} z {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Nie można otworzyć folderu",
+    "cannotOpenFolderContent": "Nie udało się otworzyć folderu pobierania:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Nie można pokazać folderu."
+  },
+  "picker": {
+    "selectFile": "Wybierz plik",
+    "selectFiles": "Wybierz pliki",
+    "selectFolder": "Wybierz folder"
+  },
+  "receive": {
+    "message": "Wiadomość",
+    "saved": {
+      "one": "Zapisano 1 plik od {name}",
+      "other": "Zapisano pliki od {name}: {n}"
+    },
+    "savedTo": "w: {folder}",
+    "waitingFor": "Czekanie na {name}..."
+  },
+  "receiveLink": {
+    "connect": "Połącz",
+    "noNetwork": "Brak połączenia z siecią.",
+    "serverStopped": "Serwer jest zatrzymany.",
+    "startServer": "Uruchom serwer"
+  },
+  "selection": {
+    "textItem": "Tekst, {size} - dotknij, aby edytować"
+  },
+  "send": {
+    "asksForPin": "{name} prosi o PIN",
+    "connecting": "Łączenie",
+    "connectingTo": "Łączenie z {name}...",
+    "editText": "Edytuj tekst",
+    "folderTruncated": "Dodano tylko pierwsze pliki z folderu (maks. {n})",
+    "images": "Obrazy",
+    "noDevices": "Nie znaleziono urządzeń",
+    "preparing": "Przygotowanie",
+    "searching": "Szukanie...",
+    "sentSome": "Wysłano pliki do {name}: {curr} z {n}",
+    "sentTo": "Wysłano do {name}",
+    "totalProgress": "Postęp łączny",
+    "videos": "Wideo"
+  },
+  "settings": {
+    "about": "O Symbisend",
+    "changePin": "Dotknij, aby zmienić PIN",
+    "chooseFolder": "Wybierz folder...",
+    "createChecksumsHint": "Wolniejszy start przy dużych plikach",
+    "restore": "Przywróć",
+    "restoreDefaults": "Przywróć domyślne",
+    "restoreDefaultsContent": "Wszystkie ustawienia wrócą do wartości domyślnych, a PIN zostanie usunięty. Nazwa urządzenia, ulubione i historia pozostaną.",
+    "serverRunning": "Działa",
+    "serverStopped": "Zatrzymany",
+    "useDefaultFolder": "Użyj domyślnego"
+  }
+}

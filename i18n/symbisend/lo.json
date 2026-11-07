@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "ແອັບ LocalSend ສຳລັບ Symbian.\nໃຊ້ຮ່ວມກັບ LocalSend ໄດ້ (protocol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "ເດັສທັອບ",
+    "headless": "Headless",
+    "mobile": "ມືຖື",
+    "server": "ເຊີບເວີ",
+    "web": "ເວັບ"
+  },
+  "errors": {
+    "andMore": "ແລະ ອີກ {n}",
+    "cancelledBy": "{name} ຍົກເລີກການໂອນ",
+    "cannotCreateFile": "ບໍ່ສາມາດສ້າງໄຟລ໌ໄດ້",
+    "cannotCreateFolder": "ບໍ່ສາມາດສ້າງໂຟລເດີ {folder} ໄດ້",
+    "cannotRead": "ບໍ່ສາມາດອ່ານໄຟລ໌ໄດ້",
+    "cannotWrite": "ບໍ່ສາມາດຂຽນໄຟລ໌ໄດ້ (ຄວາມຈຳເຕັມບໍ?)",
+    "certificateChanged": "ນີ້ບໍ່ແມ່ນ {name} ທີ່ພົບກ່ອນໜ້ານີ້ (ໃບຢັ້ງຢືນບໍ່ຄືກັນ)",
+    "certificateRejected": "ໃບຢັ້ງຢືນຂອງ {ip} ຖືກປະຕິເສດ",
+    "checksum": "checksum ບໍ່ກົງກັນ",
+    "connectionBroke": "ການເຊື່ອມຕໍ່ຂາດ",
+    "connectionLost": "ການເຊື່ອມຕໍ່ຫາຍໄປ",
+    "deviceGone": "ບໍ່ພົບອຸປະກອນແລ້ວ",
+    "httpError": "{name} ຕອບກັບດ້ວຍຂໍ້ຜິດພາດ {status}",
+    "invalidAnswer": "ຜູ້ຮັບສົ່ງຄຳຕອບທີ່ບໍ່ຖືກຕ້ອງ",
+    "largerThanAnnounced": "ໃຫຍ່ກວ່າທີ່ແຈ້ງໄວ້",
+    "noDeviceAt": "ບໍ່ພົບອຸປະກອນ LocalSend ທີ່ {ip}",
+    "notConnected": "ບໍ່ໄດ້ເຊື່ອມຕໍ່",
+    "notSaved": "ບໍ່ໄດ້ບັນທຶກ:",
+    "notSent": "ບໍ່ໄດ້ສົ່ງ:",
+    "ownAddress": "ນີ້ແມ່ນທີ່ຢູ່ຂອງໂທລະສັບເຄື່ອງນີ້",
+    "stoppedResponding": "{name} ຢຸດຕອບສະໜອງ",
+    "stoppedSending": "{name} ຢຸດສົ່ງ",
+    "stoppedSendingSome": "{name} ຢຸດສົ່ງ. ບັນທຶກໄຟລ໌ແລ້ວ {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "ບໍ່ສາມາດເພີ່ມໃສ່ລາຍການໂປຣດໄດ້",
+    "saveFailed": "ບໍ່ສາມາດບັນທຶກລາຍການໂປຣດໄດ້"
+  },
+  "general": {
+    "clear": "ລ້າງ",
+    "invalidIp": "ທີ່ຢູ່ IP ບໍ່ຖືກຕ້ອງ",
+    "transferCancelled": "ຍົກເລີກການໂອນແລ້ວ",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "ບໍ່ສາມາດເປີດໂຟລເດີໄດ້",
+    "cannotOpenFolderContent": "ບໍ່ສາມາດເປີດໂຟລເດີດາວໂຫຼດໄດ້:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "ບໍ່ສາມາດສະແດງໂຟລເດີໄດ້."
+  },
+  "picker": {
+    "selectFile": "ເລືອກໄຟລ໌",
+    "selectFiles": "ເລືອກໄຟລ໌",
+    "selectFolder": "ເລືອກໂຟລເດີ"
+  },
+  "receive": {
+    "message": "ຂໍ້ຄວາມ",
+    "saved": {
+      "one": "ບັນທຶກ 1 ໄຟລ໌ຈາກ {name}",
+      "other": "ບັນທຶກໄຟລ໌ຈາກ {name}: {n}"
+    },
+    "savedTo": "ໄປຍັງ {folder}",
+    "waitingFor": "ກຳລັງລໍຖ້າ {name}..."
+  },
+  "receiveLink": {
+    "connect": "ເຊື່ອມຕໍ່",
+    "noNetwork": "ບໍ່ໄດ້ເຊື່ອມຕໍ່ເຄືອຂ່າຍ.",
+    "serverStopped": "ເຊີບເວີຢຸດຢູ່.",
+    "startServer": "ເລີ່ມເຊີບເວີ"
+  },
+  "selection": {
+    "textItem": "ຂໍ້ຄວາມ, {size} - ແຕະເພື່ອແກ້ໄຂ"
+  },
+  "send": {
+    "asksForPin": "{name} ຂໍ PIN",
+    "connecting": "ກຳລັງເຊື່ອມຕໍ່",
+    "connectingTo": "ກຳລັງເຊື່ອມຕໍ່ຫາ {name}...",
+    "editText": "ແກ້ໄຂຂໍ້ຄວາມ",
+    "folderTruncated": "ເພີ່ມສະເພາະ {n} ໄຟລ໌ທຳອິດຂອງໂຟລເດີ",
+    "images": "ຮູບພາບ",
+    "noDevices": "ບໍ່ພົບອຸປະກອນ",
+    "preparing": "ກຳລັງກະກຽມ",
+    "searching": "ກຳລັງຄົ້ນຫາ...",
+    "sentSome": "ສົ່ງໄຟລ໌ຫາ {name} ແລ້ວ {curr} / {n}",
+    "sentTo": "ສົ່ງຫາ {name} ແລ້ວ",
+    "totalProgress": "ຄວາມຄືບໜ້າລວມ",
+    "videos": "ວິດີໂອ"
+  },
+  "settings": {
+    "about": "ກ່ຽວກັບ Symbisend",
+    "changePin": "ແຕະເພື່ອປ່ຽນ PIN",
+    "chooseFolder": "ເລືອກໂຟລເດີ...",
+    "createChecksumsHint": "ເລີ່ມຊ້າລົງເມື່ອໄຟລ໌ໃຫຍ່",
+    "restore": "ກູ້ຄືນ",
+    "restoreDefaults": "ກູ້ຄືນຄ່າເລີ່ມຕົ້ນ",
+    "restoreDefaultsContent": "ການຕັ້ງຄ່າທັງໝົດຈະກັບເປັນຄ່າເລີ່ມຕົ້ນ ແລະ PIN ຈະຖືກລຶບ. ຊື່ອຸປະກອນ, ລາຍການໂປຣດ ແລະ ປະຫວັດຍັງຢູ່.",
+    "serverRunning": "ກຳລັງເຮັດວຽກ",
+    "serverStopped": "ຢຸດຢູ່",
+    "useDefaultFolder": "ໃຊ້ຄ່າເລີ່ມຕົ້ນ"
+  }
+}

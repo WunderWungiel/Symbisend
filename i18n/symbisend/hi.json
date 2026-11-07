@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian के लिए LocalSend क्लाइंट।\nLocalSend (प्रोटोकॉल v2) के साथ संगत।"
+  },
+  "deviceTypes": {
+    "desktop": "डेस्कटॉप",
+    "headless": "हेडलेस",
+    "mobile": "मोबाइल",
+    "server": "सर्वर",
+    "web": "वेब"
+  },
+  "errors": {
+    "andMore": "{n} और",
+    "cancelledBy": "{name} ने ट्रांसफर रद्द किया",
+    "cannotCreateFile": "फ़ाइल नहीं बनाई जा सकती",
+    "cannotCreateFolder": "फ़ोल्डर {folder} नहीं बनाया जा सकता",
+    "cannotRead": "फ़ाइल नहीं पढ़ी जा सकती",
+    "cannotWrite": "फ़ाइल नहीं लिखी जा सकती (मेमोरी भरी है?)",
+    "certificateChanged": "यह वह {name} नहीं है जो मिला था (इसका सर्टिफ़िकेट अलग है)",
+    "certificateRejected": "{ip} का सर्टिफ़िकेट अस्वीकार कर दिया गया",
+    "checksum": "चेकसम मेल नहीं खाता",
+    "connectionBroke": "कनेक्शन टूट गया",
+    "connectionLost": "कनेक्शन खो गया",
+    "deviceGone": "डिवाइस उपलब्ध नहीं है",
+    "httpError": "{name} ने त्रुटि {status} के साथ जवाब दिया",
+    "invalidAnswer": "प्राप्तकर्ता ने अमान्य जवाब भेजा",
+    "largerThanAnnounced": "बताए गए आकार से बड़ी",
+    "noDeviceAt": "{ip} पर कोई LocalSend डिवाइस नहीं मिला",
+    "notConnected": "कनेक्टेड नहीं है",
+    "notSaved": "सहेजी नहीं गईं:",
+    "notSent": "भेजी नहीं गईं:",
+    "ownAddress": "यह इस फ़ोन का पता है",
+    "stoppedResponding": "{name} ने जवाब देना बंद कर दिया",
+    "stoppedSending": "{name} ने भेजना बंद कर दिया",
+    "stoppedSendingSome": "{name} ने भेजना बंद कर दिया। फ़ाइलें सहेजी गईं: {curr} / {n}।"
+  },
+  "favorites": {
+    "addFailed": "पसंदीदा में नहीं जोड़ा जा सका",
+    "saveFailed": "पसंदीदा सहेजा नहीं जा सका"
+  },
+  "general": {
+    "clear": "साफ़ करें",
+    "invalidIp": "अमान्य IP पता",
+    "transferCancelled": "ट्रांसफर रद्द कर दिया गया",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "फ़ोल्डर नहीं खुल सकता",
+    "cannotOpenFolderContent": "डाउनलोड फ़ोल्डर नहीं खोला जा सका:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "फ़ोल्डर नहीं दिखाया जा सकता।"
+  },
+  "picker": {
+    "selectFile": "फ़ाइल चुनें",
+    "selectFiles": "फ़ाइलें चुनें",
+    "selectFolder": "फ़ोल्डर चुनें"
+  },
+  "receive": {
+    "message": "संदेश",
+    "saved": {
+      "one": "{name} से 1 फ़ाइल सहेजी गई",
+      "other": "{name} से फ़ाइलें सहेजी गईं: {n}"
+    },
+    "savedTo": "{folder} में",
+    "waitingFor": "{name} की प्रतीक्षा है..."
+  },
+  "receiveLink": {
+    "connect": "कनेक्ट करें",
+    "noNetwork": "नेटवर्क से कनेक्टेड नहीं है।",
+    "serverStopped": "सर्वर बंद है।",
+    "startServer": "सर्वर शुरू करें"
+  },
+  "selection": {
+    "textItem": "टेक्स्ट, {size} - बदलने के लिए टैप करें"
+  },
+  "send": {
+    "asksForPin": "{name} को PIN चाहिए",
+    "connecting": "कनेक्ट हो रहा है",
+    "connectingTo": "{name} से कनेक्ट हो रहा है...",
+    "editText": "टेक्स्ट बदलें",
+    "folderTruncated": "फ़ोल्डर की केवल पहली {n} फ़ाइलें जोड़ी गईं",
+    "images": "चित्र",
+    "noDevices": "कोई डिवाइस नहीं मिला",
+    "preparing": "तैयारी हो रही है",
+    "searching": "खोज रहे हैं...",
+    "sentSome": "{name} को फ़ाइलें भेजी गईं: {curr} / {n}",
+    "sentTo": "{name} को भेज दिया गया",
+    "totalProgress": "कुल प्रगति",
+    "videos": "वीडियो"
+  },
+  "settings": {
+    "about": "Symbisend के बारे में",
+    "changePin": "PIN बदलने के लिए टैप करें",
+    "chooseFolder": "फ़ोल्डर चुनें...",
+    "createChecksumsHint": "बड़ी फ़ाइलों में शुरुआत धीमी होती है",
+    "restore": "पुनर्स्थापित करें",
+    "restoreDefaults": "डिफ़ॉल्ट पुनर्स्थापित करें",
+    "restoreDefaultsContent": "सभी सेटिंग्स डिफ़ॉल्ट पर लौट जाएँगी और PIN हटा दिया जाएगा। आपके डिवाइस का नाम, पसंदीदा और इतिहास बने रहेंगे।",
+    "serverRunning": "चालू है",
+    "serverStopped": "बंद है",
+    "useDefaultFolder": "डिफ़ॉल्ट उपयोग करें"
+  }
+}

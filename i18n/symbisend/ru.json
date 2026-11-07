@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Клиент LocalSend для Symbian.\nСовместим с LocalSend (протокол v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Компьютер",
+    "headless": "Без экрана",
+    "mobile": "Телефон",
+    "server": "Сервер",
+    "web": "Браузер"
+  },
+  "errors": {
+    "andMore": "и ещё: {n}",
+    "cancelledBy": "{name}: передача отменена",
+    "cannotCreateFile": "Не удалось создать файл",
+    "cannotCreateFolder": "Не удалось создать папку {folder}",
+    "cannotRead": "Не удалось прочитать файл",
+    "cannotWrite": "Не удалось записать файл (память заполнена?)",
+    "certificateChanged": "Это не то устройство {name}, которое было найдено (у него другой сертификат)",
+    "certificateRejected": "Сертификат {ip} отклонён",
+    "checksum": "Контрольная сумма не совпадает",
+    "connectionBroke": "Соединение прервано",
+    "connectionLost": "Соединение потеряно",
+    "deviceGone": "Устройство недоступно",
+    "httpError": "{name}: ошибка {status}",
+    "invalidAnswer": "Получатель прислал неверный ответ",
+    "largerThanAnnounced": "Больше, чем было заявлено",
+    "noDeviceAt": "По адресу {ip} не найдено устройство LocalSend",
+    "notConnected": "Нет подключения",
+    "notSaved": "Не сохранено:",
+    "notSent": "Не отправлено:",
+    "ownAddress": "Это адрес этого телефона",
+    "stoppedResponding": "{name} не отвечает",
+    "stoppedSending": "{name}: отправка прекращена",
+    "stoppedSendingSome": "{name}: отправка прекращена. Сохранено файлов: {curr} из {n}."
+  },
+  "favorites": {
+    "addFailed": "Не удалось добавить в избранное",
+    "saveFailed": "Не удалось сохранить избранное"
+  },
+  "general": {
+    "clear": "Очистить",
+    "invalidIp": "Неверный IP-адрес",
+    "transferCancelled": "Передача отменена",
+    "xOfY": "{curr} из {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Не удалось открыть папку",
+    "cannotOpenFolderContent": "Не удалось открыть папку загрузки:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Не удалось показать папку."
+  },
+  "picker": {
+    "selectFile": "Выберите файл",
+    "selectFiles": "Выберите файлы",
+    "selectFolder": "Выберите папку"
+  },
+  "receive": {
+    "message": "Сообщение",
+    "saved": {
+      "one": "Сохранён 1 файл от {name}",
+      "other": "Сохранено файлов от {name}: {n}"
+    },
+    "savedTo": "в: {folder}",
+    "waitingFor": "Ожидание {name}..."
+  },
+  "receiveLink": {
+    "connect": "Подключить",
+    "noNetwork": "Нет подключения к сети.",
+    "serverStopped": "Сервер остановлен.",
+    "startServer": "Запустить сервер"
+  },
+  "selection": {
+    "textItem": "Текст, {size} - нажмите, чтобы изменить"
+  },
+  "send": {
+    "asksForPin": "{name} запрашивает PIN",
+    "connecting": "Подключение",
+    "connectingTo": "Подключение к {name}...",
+    "editText": "Изменить текст",
+    "folderTruncated": "Добавлены только первые файлы из папки (макс. {n})",
+    "images": "Изображения",
+    "noDevices": "Устройства не найдены",
+    "preparing": "Подготовка",
+    "searching": "Поиск...",
+    "sentSome": "Отправлено файлов на {name}: {curr} из {n}",
+    "sentTo": "Отправлено на {name}",
+    "totalProgress": "Общий прогресс",
+    "videos": "Видео"
+  },
+  "settings": {
+    "about": "О Symbisend",
+    "changePin": "Нажмите, чтобы изменить PIN",
+    "chooseFolder": "Выбрать папку...",
+    "createChecksumsHint": "Медленнее старт с большими файлами",
+    "restore": "Сбросить",
+    "restoreDefaults": "Сбросить настройки",
+    "restoreDefaultsContent": "Все настройки вернутся к значениям по умолчанию, а PIN будет удалён. Имя устройства, избранное и история сохранятся.",
+    "serverRunning": "Работает",
+    "serverStopped": "Остановлен",
+    "useDefaultFolder": "По умолчанию"
+  }
+}

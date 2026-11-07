@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Klient LocalSend pro Symbian.\nKompatibilní s LocalSend (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Počítač",
+    "headless": "Bez displeje",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "a dalších: {n}",
+    "cancelledBy": "Přenos zrušen zařízením {name}",
+    "cannotCreateFile": "Soubor nelze vytvořit",
+    "cannotCreateFolder": "Složku {folder} nelze vytvořit",
+    "cannotRead": "Soubor nelze přečíst",
+    "cannotWrite": "Soubor nelze zapsat (plná paměť?)",
+    "certificateChanged": "Toto není zařízení {name}, které bylo nalezeno (má jiný certifikát)",
+    "certificateRejected": "Certifikát {ip} byl odmítnut",
+    "checksum": "Kontrolní součet nesouhlasí",
+    "connectionBroke": "Připojení bylo přerušeno",
+    "connectionLost": "Připojení ztraceno",
+    "deviceGone": "Zařízení je nedostupné",
+    "httpError": "{name} odpovědělo chybou {status}",
+    "invalidAnswer": "Příjemce poslal neplatnou odpověď",
+    "largerThanAnnounced": "Větší, než bylo oznámeno",
+    "noDeviceAt": "Na adrese {ip} nebylo nalezeno žádné zařízení LocalSend",
+    "notConnected": "Nepřipojeno",
+    "notSaved": "Neuloženo:",
+    "notSent": "Neodesláno:",
+    "ownAddress": "Toto je adresa tohoto telefonu",
+    "stoppedResponding": "{name} přestalo odpovídat",
+    "stoppedSending": "{name} přestalo odesílat",
+    "stoppedSendingSome": "{name} přestalo odesílat. Uložené soubory: {curr} z {n}."
+  },
+  "favorites": {
+    "addFailed": "Přidání do oblíbených se nezdařilo",
+    "saveFailed": "Uložení oblíbeného se nezdařilo"
+  },
+  "general": {
+    "clear": "Vymazat",
+    "invalidIp": "Neplatná IP adresa",
+    "transferCancelled": "Přenos byl zrušen",
+    "xOfY": "{curr} z {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Složku nelze otevřít",
+    "cannotOpenFolderContent": "Složku pro stahování se nepodařilo otevřít:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Složku nelze zobrazit."
+  },
+  "picker": {
+    "selectFile": "Vyberte soubor",
+    "selectFiles": "Vyberte soubory",
+    "selectFolder": "Vyberte složku"
+  },
+  "receive": {
+    "message": "Zpráva",
+    "saved": {
+      "one": "Uložen 1 soubor od {name}",
+      "other": "Uložené soubory od {name}: {n}"
+    },
+    "savedTo": "do: {folder}",
+    "waitingFor": "Čekání na {name}..."
+  },
+  "receiveLink": {
+    "connect": "Připojit",
+    "noNetwork": "Nepřipojeno k síti.",
+    "serverStopped": "Server je zastaven.",
+    "startServer": "Spustit server"
+  },
+  "selection": {
+    "textItem": "Text, {size} - klepnutím upravíte"
+  },
+  "send": {
+    "asksForPin": "{name} žádá o PIN",
+    "connecting": "Připojování",
+    "connectingTo": "Připojování k {name}...",
+    "editText": "Upravit text",
+    "folderTruncated": "Byly přidány jen první soubory ze složky (max. {n})",
+    "images": "Obrázky",
+    "noDevices": "Nenalezena žádná zařízení",
+    "preparing": "Příprava",
+    "searching": "Hledání...",
+    "sentSome": "Odeslané soubory pro {name}: {curr} z {n}",
+    "sentTo": "Odesláno zařízení {name}",
+    "totalProgress": "Celkový průběh",
+    "videos": "Videa"
+  },
+  "settings": {
+    "about": "O aplikaci Symbisend",
+    "changePin": "Klepnutím změníte PIN",
+    "chooseFolder": "Vybrat složku...",
+    "createChecksumsHint": "Pomalejší start u velkých souborů",
+    "restore": "Obnovit",
+    "restoreDefaults": "Obnovit výchozí",
+    "restoreDefaultsContent": "Všechna nastavení se vrátí na výchozí hodnoty a PIN bude odstraněn. Název zařízení, oblíbené a historie zůstanou.",
+    "serverRunning": "Běží",
+    "serverStopped": "Zastaveno",
+    "useDefaultFolder": "Použít výchozí"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "แอป LocalSend สำหรับ Symbian\nใช้งานร่วมกับ LocalSend ได้ (โปรโตคอล v2)"
+  },
+  "deviceTypes": {
+    "desktop": "เดสก์ท็อป",
+    "headless": "Headless",
+    "mobile": "มือถือ",
+    "server": "เซิร์ฟเวอร์",
+    "web": "เว็บ"
+  },
+  "errors": {
+    "andMore": "และอีก {n}",
+    "cancelledBy": "{name} ยกเลิกการถ่ายโอน",
+    "cannotCreateFile": "สร้างไฟล์ไม่ได้",
+    "cannotCreateFolder": "สร้างโฟลเดอร์ {folder} ไม่ได้",
+    "cannotRead": "อ่านไฟล์ไม่ได้",
+    "cannotWrite": "เขียนไฟล์ไม่ได้ (หน่วยความจำเต็มหรือไม่?)",
+    "certificateChanged": "นี่ไม่ใช่ {name} ที่พบก่อนหน้านี้ (ใบรับรองไม่ตรงกัน)",
+    "certificateRejected": "ใบรับรองของ {ip} ถูกปฏิเสธ",
+    "checksum": "checksum ไม่ตรงกัน",
+    "connectionBroke": "การเชื่อมต่อถูกตัดกลางคัน",
+    "connectionLost": "การเชื่อมต่อขาดหาย",
+    "deviceGone": "ไม่พบอุปกรณ์แล้ว",
+    "httpError": "{name} ตอบกลับด้วยข้อผิดพลาด {status}",
+    "invalidAnswer": "ผู้รับส่งการตอบกลับที่ไม่ถูกต้อง",
+    "largerThanAnnounced": "ใหญ่กว่าที่แจ้งไว้",
+    "noDeviceAt": "ไม่พบอุปกรณ์ LocalSend ที่ {ip}",
+    "notConnected": "ไม่ได้เชื่อมต่อ",
+    "notSaved": "ไม่ได้บันทึก:",
+    "notSent": "ไม่ได้ส่ง:",
+    "ownAddress": "นี่คือที่อยู่ของโทรศัพท์เครื่องนี้",
+    "stoppedResponding": "{name} หยุดตอบสนอง",
+    "stoppedSending": "{name} หยุดส่ง",
+    "stoppedSendingSome": "{name} หยุดส่ง บันทึกไฟล์แล้ว {curr} จาก {n}"
+  },
+  "favorites": {
+    "addFailed": "เพิ่มในรายการโปรดไม่ได้",
+    "saveFailed": "บันทึกรายการโปรดไม่ได้"
+  },
+  "general": {
+    "clear": "ล้าง",
+    "invalidIp": "ที่อยู่ IP ไม่ถูกต้อง",
+    "transferCancelled": "ยกเลิกการถ่ายโอนแล้ว",
+    "xOfY": "{curr} จาก {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "เปิดโฟลเดอร์ไม่ได้",
+    "cannotOpenFolderContent": "เปิดโฟลเดอร์ดาวน์โหลดไม่ได้:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "แสดงโฟลเดอร์ไม่ได้"
+  },
+  "picker": {
+    "selectFile": "เลือกไฟล์",
+    "selectFiles": "เลือกไฟล์",
+    "selectFolder": "เลือกโฟลเดอร์"
+  },
+  "receive": {
+    "message": "ข้อความ",
+    "saved": {
+      "one": "บันทึก 1 ไฟล์จาก {name}",
+      "other": "บันทึกไฟล์จาก {name}: {n}"
+    },
+    "savedTo": "ไปยัง {folder}",
+    "waitingFor": "กำลังรอ {name}..."
+  },
+  "receiveLink": {
+    "connect": "เชื่อมต่อ",
+    "noNetwork": "ไม่ได้เชื่อมต่อกับเครือข่าย",
+    "serverStopped": "เซิร์ฟเวอร์หยุดทำงาน",
+    "startServer": "เริ่มเซิร์ฟเวอร์"
+  },
+  "selection": {
+    "textItem": "ข้อความ {size} - แตะเพื่อแก้ไข"
+  },
+  "send": {
+    "asksForPin": "{name} ขอรหัส PIN",
+    "connecting": "กำลังเชื่อมต่อ",
+    "connectingTo": "กำลังเชื่อมต่อกับ {name}...",
+    "editText": "แก้ไขข้อความ",
+    "folderTruncated": "เพิ่มเฉพาะ {n} ไฟล์แรกของโฟลเดอร์",
+    "images": "รูปภาพ",
+    "noDevices": "ไม่พบอุปกรณ์",
+    "preparing": "กำลังเตรียม",
+    "searching": "กำลังค้นหา...",
+    "sentSome": "ส่งไฟล์ไปยัง {name} แล้ว {curr} จาก {n}",
+    "sentTo": "ส่งไปยัง {name} แล้ว",
+    "totalProgress": "ความคืบหน้ารวม",
+    "videos": "วิดีโอ"
+  },
+  "settings": {
+    "about": "เกี่ยวกับ Symbisend",
+    "changePin": "แตะเพื่อเปลี่ยน PIN",
+    "chooseFolder": "เลือกโฟลเดอร์...",
+    "createChecksumsHint": "เริ่มช้าลงเมื่อไฟล์ใหญ่",
+    "restore": "คืนค่า",
+    "restoreDefaults": "คืนค่าเริ่มต้น",
+    "restoreDefaultsContent": "การตั้งค่าทั้งหมดจะกลับเป็นค่าเริ่มต้นและ PIN จะถูกลบ ชื่ออุปกรณ์ รายการโปรด และประวัติจะยังอยู่",
+    "serverRunning": "กำลังทำงาน",
+    "serverStopped": "หยุดอยู่",
+    "useDefaultFolder": "ใช้ค่าเริ่มต้น"
+  }
+}

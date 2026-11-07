@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian-നുള്ള ഒരു LocalSend ക്ലയന്റ്.\nLocalSend (പ്രോട്ടോക്കോൾ v2) ന് അനുയോജ്യം."
+  },
+  "deviceTypes": {
+    "desktop": "ഡെസ്ക്ടോപ്പ്",
+    "headless": "ഹെഡ്‌ലെസ്",
+    "mobile": "മൊബൈൽ",
+    "server": "സെർവർ",
+    "web": "വെബ്"
+  },
+  "errors": {
+    "andMore": "{n} എണ്ണം കൂടി",
+    "cancelledBy": "{name} ട്രാൻസ്ഫർ റദ്ദാക്കി",
+    "cannotCreateFile": "ഫയൽ സൃഷ്ടിക്കാൻ കഴിയുന്നില്ല",
+    "cannotCreateFolder": "ഫോൾഡർ {folder} സൃഷ്ടിക്കാൻ കഴിയുന്നില്ല",
+    "cannotRead": "ഫയൽ വായിക്കാൻ കഴിയുന്നില്ല",
+    "cannotWrite": "ഫയൽ എഴുതാൻ കഴിയുന്നില്ല (മെമ്മറി നിറഞ്ഞോ?)",
+    "certificateChanged": "ഇത് കണ്ടെത്തിയ {name} അല്ല (ഇതിന്റെ സർട്ടിഫിക്കറ്റ് വ്യത്യസ്തമാണ്)",
+    "certificateRejected": "{ip}-ന്റെ സർട്ടിഫിക്കറ്റ് നിരസിച്ചു",
+    "checksum": "ചെക്ക്സം പൊരുത്തപ്പെടുന്നില്ല",
+    "connectionBroke": "കണക്ഷൻ മുറിഞ്ഞു",
+    "connectionLost": "കണക്ഷൻ നഷ്ടപ്പെട്ടു",
+    "deviceGone": "ഉപകരണം ലഭ്യമല്ല",
+    "httpError": "{name} പിശക് {status} ഉപയോഗിച്ച് മറുപടി നൽകി",
+    "invalidAnswer": "സ്വീകർത്താവ് അസാധുവായ മറുപടി അയച്ചു",
+    "largerThanAnnounced": "അറിയിച്ചതിലും വലുത്",
+    "noDeviceAt": "{ip}-ൽ LocalSend ഉപകരണം കണ്ടെത്തിയില്ല",
+    "notConnected": "കണക്റ്റ് ചെയ്തിട്ടില്ല",
+    "notSaved": "സേവ് ചെയ്തില്ല:",
+    "notSent": "അയച്ചില്ല:",
+    "ownAddress": "ഇത് ഈ ഫോണിന്റെ വിലാസമാണ്",
+    "stoppedResponding": "{name} പ്രതികരിക്കുന്നത് നിർത്തി",
+    "stoppedSending": "{name} അയയ്ക്കുന്നത് നിർത്തി",
+    "stoppedSendingSome": "{name} അയയ്ക്കുന്നത് നിർത്തി. സേവ് ചെയ്ത ഫയലുകൾ: {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "പ്രിയപ്പെട്ടവയിൽ ചേർക്കാൻ കഴിഞ്ഞില്ല",
+    "saveFailed": "പ്രിയപ്പെട്ടത് സേവ് ചെയ്യാൻ കഴിഞ്ഞില്ല"
+  },
+  "general": {
+    "clear": "മായ്ക്കുക",
+    "invalidIp": "അസാധുവായ IP വിലാസം",
+    "transferCancelled": "ട്രാൻസ്ഫർ റദ്ദാക്കി",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "ഫോൾഡർ തുറക്കാൻ കഴിയുന്നില്ല",
+    "cannotOpenFolderContent": "ഡൗൺലോഡ് ഫോൾഡർ തുറക്കാൻ കഴിഞ്ഞില്ല:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "ഫോൾഡർ കാണിക്കാൻ കഴിയുന്നില്ല."
+  },
+  "picker": {
+    "selectFile": "ഫയൽ തിരഞ്ഞെടുക്കുക",
+    "selectFiles": "ഫയലുകൾ തിരഞ്ഞെടുക്കുക",
+    "selectFolder": "ഫോൾഡർ തിരഞ്ഞെടുക്കുക"
+  },
+  "receive": {
+    "message": "സന്ദേശം",
+    "saved": {
+      "one": "{name}-ൽ നിന്ന് 1 ഫയൽ സേവ് ചെയ്തു",
+      "other": "{name}-ൽ നിന്ന് സേവ് ചെയ്ത ഫയലുകൾ: {n}"
+    },
+    "savedTo": "{folder}-ൽ",
+    "waitingFor": "{name} നായി കാത്തിരിക്കുന്നു..."
+  },
+  "receiveLink": {
+    "connect": "കണക്റ്റ് ചെയ്യുക",
+    "noNetwork": "നെറ്റ്‌വർക്കിലേക്ക് കണക്റ്റ് ചെയ്തിട്ടില്ല.",
+    "serverStopped": "സെർവർ നിർത്തിയിരിക്കുന്നു.",
+    "startServer": "സെർവർ ആരംഭിക്കുക"
+  },
+  "selection": {
+    "textItem": "ടെക്സ്റ്റ്, {size} - തിരുത്താൻ ടാപ്പ് ചെയ്യുക"
+  },
+  "send": {
+    "asksForPin": "{name} PIN ചോദിക്കുന്നു",
+    "connecting": "കണക്റ്റ് ചെയ്യുന്നു",
+    "connectingTo": "{name} ലേക്ക് കണക്റ്റ് ചെയ്യുന്നു...",
+    "editText": "ടെക്സ്റ്റ് തിരുത്തുക",
+    "folderTruncated": "ഫോൾഡറിലെ ആദ്യത്തെ {n} ഫയലുകൾ മാത്രം ചേർത്തു",
+    "images": "ചിത്രങ്ങൾ",
+    "noDevices": "ഉപകരണങ്ങളൊന്നും കണ്ടെത്തിയില്ല",
+    "preparing": "തയ്യാറാക്കുന്നു",
+    "searching": "തിരയുന്നു...",
+    "sentSome": "{name} ന് അയച്ച ഫയലുകൾ: {curr} / {n}",
+    "sentTo": "{name} ന് അയച്ചു",
+    "totalProgress": "മുഴുവൻ പുരോഗതി",
+    "videos": "വീഡിയോകൾ"
+  },
+  "settings": {
+    "about": "Symbisend നെക്കുറിച്ച്",
+    "changePin": "PIN മാറ്റാൻ ടാപ്പ് ചെയ്യുക",
+    "chooseFolder": "ഫോൾഡർ തിരഞ്ഞെടുക്കുക...",
+    "createChecksumsHint": "വലിയ ഫയലുകളിൽ തുടക്കം വൈകും",
+    "restore": "വീണ്ടെടുക്കുക",
+    "restoreDefaults": "ഡിഫോൾട്ട് വീണ്ടെടുക്കുക",
+    "restoreDefaultsContent": "എല്ലാ സജ്ജീകരണങ്ങളും ഡിഫോൾട്ടിലേക്ക് മടങ്ങും, PIN നീക്കം ചെയ്യും. നിങ്ങളുടെ ഉപകരണത്തിന്റെ പേര്, പ്രിയപ്പെട്ടവ, ഹിസ്റ്ററി എന്നിവ നിലനിൽക്കും.",
+    "serverRunning": "പ്രവർത്തിക്കുന്നു",
+    "serverStopped": "നിർത്തി",
+    "useDefaultFolder": "ഡിഫോൾട്ട് ഉപയോഗിക്കുക"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Klien LocalSend untuk Symbian.\nKompatibel dengan LocalSend (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Desktop",
+    "headless": "Headless",
+    "mobile": "Seluler",
+    "server": "Peladen",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "dan {n} lainnya",
+    "cancelledBy": "{name} membatalkan transfer",
+    "cannotCreateFile": "Tidak dapat membuat berkas",
+    "cannotCreateFolder": "Tidak dapat membuat direktori {folder}",
+    "cannotRead": "Tidak dapat membaca berkas",
+    "cannotWrite": "Tidak dapat menulis berkas (memori penuh?)",
+    "certificateChanged": "Ini bukan {name} yang ditemukan (sertifikatnya berbeda)",
+    "certificateRejected": "Sertifikat {ip} ditolak",
+    "checksum": "Checksum tidak cocok",
+    "connectionBroke": "Koneksi terputus",
+    "connectionLost": "Koneksi hilang",
+    "deviceGone": "Perangkat tidak ada lagi",
+    "httpError": "{name} menjawab dengan galat {status}",
+    "invalidAnswer": "Penerima mengirim jawaban yang tidak valid",
+    "largerThanAnnounced": "Lebih besar dari yang diumumkan",
+    "noDeviceAt": "Tidak ada perangkat LocalSend di {ip}",
+    "notConnected": "Tidak terhubung",
+    "notSaved": "Tidak disimpan:",
+    "notSent": "Tidak terkirim:",
+    "ownAddress": "Ini adalah alamat ponsel ini",
+    "stoppedResponding": "{name} berhenti merespons",
+    "stoppedSending": "{name} berhenti mengirim",
+    "stoppedSendingSome": "{name} berhenti mengirim. Berkas tersimpan: {curr} dari {n}."
+  },
+  "favorites": {
+    "addFailed": "Tidak dapat menambahkan ke favorit",
+    "saveFailed": "Tidak dapat menyimpan favorit"
+  },
+  "general": {
+    "clear": "Hapus",
+    "invalidIp": "Alamat IP tidak valid",
+    "transferCancelled": "Transfer dibatalkan",
+    "xOfY": "{curr} dari {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Tidak dapat membuka direktori",
+    "cannotOpenFolderContent": "Direktori unduhan tidak dapat dibuka:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Direktori tidak dapat ditampilkan."
+  },
+  "picker": {
+    "selectFile": "Pilih berkas",
+    "selectFiles": "Pilih berkas",
+    "selectFolder": "Pilih direktori"
+  },
+  "receive": {
+    "message": "Pesan",
+    "saved": {
+      "one": "Tersimpan 1 berkas dari {name}",
+      "other": "Tersimpan {n} berkas dari {name}"
+    },
+    "savedTo": "ke {folder}",
+    "waitingFor": "Menunggu {name}..."
+  },
+  "receiveLink": {
+    "connect": "Hubungkan",
+    "noNetwork": "Tidak terhubung ke jaringan.",
+    "serverStopped": "Peladen dihentikan.",
+    "startServer": "Mulai peladen"
+  },
+  "selection": {
+    "textItem": "Teks, {size} - ketuk untuk mengedit"
+  },
+  "send": {
+    "asksForPin": "{name} meminta PIN",
+    "connecting": "Menghubungkan",
+    "connectingTo": "Menghubungkan ke {name}...",
+    "editText": "Edit teks",
+    "folderTruncated": "Hanya {n} berkas pertama dari direktori yang ditambahkan",
+    "images": "Gambar",
+    "noDevices": "Tidak ada perangkat ditemukan",
+    "preparing": "Menyiapkan",
+    "searching": "Mencari...",
+    "sentSome": "Terkirim ke {name}: {curr} dari {n} berkas",
+    "sentTo": "Terkirim ke {name}",
+    "totalProgress": "Total kemajuan",
+    "videos": "Video"
+  },
+  "settings": {
+    "about": "Tentang Symbisend",
+    "changePin": "Ketuk untuk mengubah PIN",
+    "chooseFolder": "Pilih direktori...",
+    "createChecksumsHint": "Awal lebih lambat pada berkas besar",
+    "restore": "Pulihkan",
+    "restoreDefaults": "Pulihkan bawaan",
+    "restoreDefaultsContent": "Semua pengaturan kembali ke bawaan dan PIN dihapus. Nama perangkat, favorit, dan riwayat tetap ada.",
+    "serverRunning": "Berjalan",
+    "serverStopped": "Berhenti",
+    "useDefaultFolder": "Gunakan bawaan"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Клієнт LocalSend для Symbian.\nСумісний з LocalSend (протокол v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Комп'ютер",
+    "headless": "Без екрана",
+    "mobile": "Телефон",
+    "server": "Сервер",
+    "web": "Браузер"
+  },
+  "errors": {
+    "andMore": "та ще: {n}",
+    "cancelledBy": "{name}: передавання скасовано",
+    "cannotCreateFile": "Не вдалося створити файл",
+    "cannotCreateFolder": "Не вдалося створити папку {folder}",
+    "cannotRead": "Не вдалося прочитати файл",
+    "cannotWrite": "Не вдалося записати файл (пам'ять заповнена?)",
+    "certificateChanged": "Це не той пристрій {name}, який було знайдено (він має інший сертифікат)",
+    "certificateRejected": "Сертифікат {ip} відхилено",
+    "checksum": "Контрольна сума не збігається",
+    "connectionBroke": "З'єднання перервано",
+    "connectionLost": "З'єднання втрачено",
+    "deviceGone": "Пристрій недоступний",
+    "httpError": "{name}: помилка {status}",
+    "invalidAnswer": "Одержувач надіслав неправильну відповідь",
+    "largerThanAnnounced": "Більший, ніж було заявлено",
+    "noDeviceAt": "За адресою {ip} не знайдено пристрою LocalSend",
+    "notConnected": "Немає підключення",
+    "notSaved": "Не збережено:",
+    "notSent": "Не надіслано:",
+    "ownAddress": "Це адреса цього телефона",
+    "stoppedResponding": "{name} не відповідає",
+    "stoppedSending": "{name}: надсилання припинено",
+    "stoppedSendingSome": "{name}: надсилання припинено. Збережено файлів: {curr} з {n}."
+  },
+  "favorites": {
+    "addFailed": "Не вдалося додати до улюблених",
+    "saveFailed": "Не вдалося зберегти улюблений пристрій"
+  },
+  "general": {
+    "clear": "Очистити",
+    "invalidIp": "Неправильна IP-адреса",
+    "transferCancelled": "Передавання скасовано",
+    "xOfY": "{curr} з {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Не вдалося відкрити папку",
+    "cannotOpenFolderContent": "Не вдалося відкрити папку завантаження:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Не вдалося показати папку."
+  },
+  "picker": {
+    "selectFile": "Виберіть файл",
+    "selectFiles": "Виберіть файли",
+    "selectFolder": "Виберіть папку"
+  },
+  "receive": {
+    "message": "Повідомлення",
+    "saved": {
+      "one": "Збережено 1 файл від {name}",
+      "other": "Збережено файлів від {name}: {n}"
+    },
+    "savedTo": "у: {folder}",
+    "waitingFor": "Очікування {name}..."
+  },
+  "receiveLink": {
+    "connect": "Підключити",
+    "noNetwork": "Немає підключення до мережі.",
+    "serverStopped": "Сервер зупинено.",
+    "startServer": "Запустити сервер"
+  },
+  "selection": {
+    "textItem": "Текст, {size} - торкніться, щоб змінити"
+  },
+  "send": {
+    "asksForPin": "{name} запитує PIN",
+    "connecting": "Підключення",
+    "connectingTo": "Підключення до {name}...",
+    "editText": "Змінити текст",
+    "folderTruncated": "Додано лише перші файли з папки (макс. {n})",
+    "images": "Зображення",
+    "noDevices": "Пристроїв не знайдено",
+    "preparing": "Підготовка",
+    "searching": "Пошук...",
+    "sentSome": "Надіслано файлів на {name}: {curr} з {n}",
+    "sentTo": "Надіслано на {name}",
+    "totalProgress": "Загальний перебіг",
+    "videos": "Відео"
+  },
+  "settings": {
+    "about": "Про Symbisend",
+    "changePin": "Торкніться, щоб змінити PIN",
+    "chooseFolder": "Вибрати папку...",
+    "createChecksumsHint": "Повільніший старт із великими файлами",
+    "restore": "Скинути",
+    "restoreDefaults": "Скинути налаштування",
+    "restoreDefaultsContent": "Усі налаштування повернуться до типових значень, а PIN буде видалено. Назва пристрою, улюблені та історія залишаться.",
+    "serverRunning": "Працює",
+    "serverStopped": "Зупинено",
+    "useDefaultFolder": "Типова"
+  }
+}

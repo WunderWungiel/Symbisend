@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSendi klient Symbianile.\nÜhilduv LocalSendiga (protokoll v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Arvuti",
+    "headless": "Ekraanita",
+    "mobile": "Mobiil",
+    "server": "Server",
+    "web": "Veeb"
+  },
+  "errors": {
+    "andMore": "ja veel {n}",
+    "cancelledBy": "{name} katkestas edastamise",
+    "cannotCreateFile": "Faili ei saa luua",
+    "cannotCreateFolder": "Kausta {folder} ei saa luua",
+    "cannotRead": "Faili ei saa lugeda",
+    "cannotWrite": "Faili ei saa kirjutada (mälu täis?)",
+    "certificateChanged": "See seade ei ole {name} (sertifikaat on teistsugune)",
+    "certificateRejected": "Aadressi {ip} sertifikaat lükati tagasi",
+    "checksum": "Kontrollsumma ei klapi",
+    "connectionBroke": "Ühendus katkes",
+    "connectionLost": "Ühendus kadus",
+    "deviceGone": "Seade on kadunud",
+    "httpError": "{name} vastas veaga {status}",
+    "invalidAnswer": "Vastuvõtja saatis vigase vastuse",
+    "largerThanAnnounced": "Suurem kui teatati",
+    "noDeviceAt": "Aadressilt {ip} ei leitud LocalSendi seadet",
+    "notConnected": "Ühendus puudub",
+    "notSaved": "Salvestamata:",
+    "notSent": "Saatmata:",
+    "ownAddress": "See on selle telefoni aadress",
+    "stoppedResponding": "{name} ei vasta enam",
+    "stoppedSending": "{name} lõpetas saatmise",
+    "stoppedSendingSome": "{name} lõpetas saatmise. Salvestati faile: {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "Lemmikutesse lisamine ebaõnnestus",
+    "saveFailed": "Lemmiku salvestamine ebaõnnestus"
+  },
+  "general": {
+    "clear": "Tühjenda",
+    "invalidIp": "Vigane IP-aadress",
+    "transferCancelled": "Edastamine katkestati",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Kausta ei saa avada",
+    "cannotOpenFolderContent": "Allalaadimiste kausta ei õnnestunud avada:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Kausta ei saa näidata."
+  },
+  "picker": {
+    "selectFile": "Vali fail",
+    "selectFiles": "Vali failid",
+    "selectFolder": "Vali kaust"
+  },
+  "receive": {
+    "message": "Sõnum",
+    "saved": {
+      "one": "Salvestati 1 fail saatjalt {name}",
+      "other": "Salvestati faile saatjalt {name}: {n}"
+    },
+    "savedTo": "kausta {folder}",
+    "waitingFor": "Ootame seadet {name}..."
+  },
+  "receiveLink": {
+    "connect": "Ühenda",
+    "noNetwork": "Võrguühendus puudub.",
+    "serverStopped": "Server on peatatud.",
+    "startServer": "Käivita server"
+  },
+  "selection": {
+    "textItem": "Tekst, {size} - puuduta muutmiseks"
+  },
+  "send": {
+    "asksForPin": "{name} küsib PIN-koodi",
+    "connecting": "Ühendamine",
+    "connectingTo": "Ühendumine seadmega {name}...",
+    "editText": "Muuda teksti",
+    "folderTruncated": "Lisati ainult kausta esimesed {n} faili",
+    "images": "Pildid",
+    "noDevices": "Seadmeid ei leitud",
+    "preparing": "Ettevalmistus",
+    "searching": "Otsime...",
+    "sentSome": "Saadetud faile seadmele {name}: {curr} / {n}",
+    "sentTo": "Saadetud seadmele {name}",
+    "totalProgress": "Edenemine kokku",
+    "videos": "Videod"
+  },
+  "settings": {
+    "about": "Teave: Symbisend",
+    "changePin": "Puuduta PIN-koodi muutmiseks",
+    "chooseFolder": "Vali kaust...",
+    "createChecksumsHint": "Suurte failide puhul aeglasem algus",
+    "restore": "Taasta",
+    "restoreDefaults": "Taasta vaikeseaded",
+    "restoreDefaultsContent": "Kõik seadistused lähevad tagasi vaikeväärtustele ja PIN-kood eemaldatakse. Seadme nimi, lemmikud ja ajalugu säilivad.",
+    "serverRunning": "Töötab",
+    "serverStopped": "Peatatud",
+    "useDefaultFolder": "Kasuta vaikimisi"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian का लागि LocalSend क्लाइन्ट।\nLocalSend (प्रोटोकल v2) सँग मिल्दो।"
+  },
+  "deviceTypes": {
+    "desktop": "डेस्कटप",
+    "headless": "हेडलेस",
+    "mobile": "मोबाइल",
+    "server": "सर्भर",
+    "web": "वेब"
+  },
+  "errors": {
+    "andMore": "र थप {n}",
+    "cancelledBy": "{name} ले स्थानान्तरण रद्द गर्यो",
+    "cannotCreateFile": "फाइल सिर्जना गर्न सकिएन",
+    "cannotCreateFolder": "फोल्डर {folder} सिर्जना गर्न सकिएन",
+    "cannotRead": "फाइल पढ्न सकिएन",
+    "cannotWrite": "फाइल लेख्न सकिएन (मेमोरी भरिएको?)",
+    "certificateChanged": "यो भेटिएको {name} होइन (यसको प्रमाणपत्र फरक छ)",
+    "certificateRejected": "{ip} को प्रमाणपत्र अस्वीकार गरियो",
+    "checksum": "चेकसम मिलेन",
+    "connectionBroke": "जडान टुट्यो",
+    "connectionLost": "जडान गुम्यो",
+    "deviceGone": "उपकरण उपलब्ध छैन",
+    "httpError": "{name} ले त्रुटि {status} सहित जवाफ दियो",
+    "invalidAnswer": "प्राप्तकर्ताले अमान्य जवाफ पठायो",
+    "largerThanAnnounced": "घोषणा गरिएभन्दा ठुलो",
+    "noDeviceAt": "{ip} मा कुनै LocalSend उपकरण भेटिएन",
+    "notConnected": "जडान भएको छैन",
+    "notSaved": "सेभ गरिएन:",
+    "notSent": "पठाइएन:",
+    "ownAddress": "यो यस फोनको ठेगाना हो",
+    "stoppedResponding": "{name} ले जवाफ दिन छोड्यो",
+    "stoppedSending": "{name} ले पठाउन छोड्यो",
+    "stoppedSendingSome": "{name} ले पठाउन छोड्यो। सेभ भएका फाइलहरू: {curr} / {n}।"
+  },
+  "favorites": {
+    "addFailed": "मनपर्नेहरूमा थप्न सकिएन",
+    "saveFailed": "मनपर्ने सेभ गर्न सकिएन"
+  },
+  "general": {
+    "clear": "खाली गर्नुहोस्",
+    "invalidIp": "अमान्य IP ठेगाना",
+    "transferCancelled": "स्थानान्तरण रद्द गरियो",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "फोल्डर खोल्न सकिएन",
+    "cannotOpenFolderContent": "डाउनलोड फोल्डर खोल्न सकिएन:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "फोल्डर देखाउन सकिएन।"
+  },
+  "picker": {
+    "selectFile": "फाइल छान्नुहोस्",
+    "selectFiles": "फाइलहरू छान्नुहोस्",
+    "selectFolder": "फोल्डर छान्नुहोस्"
+  },
+  "receive": {
+    "message": "सन्देश",
+    "saved": {
+      "one": "{name} बाट १ फाइल सेभ गरियो",
+      "other": "{name} बाट सेभ गरिएका फाइलहरू: {n}"
+    },
+    "savedTo": "{folder} मा",
+    "waitingFor": "{name} को प्रतीक्षा गर्दै..."
+  },
+  "receiveLink": {
+    "connect": "जडान गर्नुहोस्",
+    "noNetwork": "नेटवर्कमा जडान भएको छैन।",
+    "serverStopped": "सर्भर रोकिएको छ।",
+    "startServer": "सर्भर सुरु गर्नुहोस्"
+  },
+  "selection": {
+    "textItem": "पाठ, {size} - सम्पादन गर्न ट्याप गर्नुहोस्"
+  },
+  "send": {
+    "asksForPin": "{name} ले पिन माग्दैछ",
+    "connecting": "जडान गर्दै",
+    "connectingTo": "{name} सँग जडान गर्दै...",
+    "editText": "पाठ सम्पादन",
+    "folderTruncated": "फोल्डरका पहिलो {n} फाइल मात्र थपियो",
+    "images": "तस्बिरहरू",
+    "noDevices": "कुनै उपकरण भेटिएन",
+    "preparing": "तयारी गर्दै",
+    "searching": "खोज्दै...",
+    "sentSome": "{name} लाई पठाइएका फाइलहरू: {curr} / {n}",
+    "sentTo": "{name} लाई पठाइयो",
+    "totalProgress": "कुल प्रगति",
+    "videos": "भिडियोहरू"
+  },
+  "settings": {
+    "about": "Symbisend बारेमा",
+    "changePin": "पिन परिवर्तन गर्न ट्याप गर्नुहोस्",
+    "chooseFolder": "फोल्डर छान्नुहोस्...",
+    "createChecksumsHint": "ठुला फाइलमा सुरु ढिलो हुन्छ",
+    "restore": "पुनर्स्थापित गर्नुहोस्",
+    "restoreDefaults": "पूर्वनिर्धारित पुनर्स्थापना",
+    "restoreDefaultsContent": "सबै सेटिङ पूर्वनिर्धारितमा फर्कन्छन् र पिन हटाइन्छ। तपाईंको उपकरणको नाम, मनपर्नेहरू र इतिहास रहन्छन्।",
+    "serverRunning": "चलिरहेको",
+    "serverStopped": "रोकिएको",
+    "useDefaultFolder": "पूर्वनिर्धारित प्रयोग गर्नुहोस्"
+  }
+}

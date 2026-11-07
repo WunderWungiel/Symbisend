@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Klien LocalSend untuk Symbian.\nSerasi dengan LocalSend (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Desktop",
+    "headless": "Headless",
+    "mobile": "Mudah alih",
+    "server": "Pelayan",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "dan {n} lagi",
+    "cancelledBy": "{name} membatalkan pemindahan",
+    "cannotCreateFile": "Tidak dapat mencipta fail",
+    "cannotCreateFolder": "Tidak dapat mencipta folder {folder}",
+    "cannotRead": "Tidak dapat membaca fail",
+    "cannotWrite": "Tidak dapat menulis fail (memori penuh?)",
+    "certificateChanged": "Ini bukan {name} yang ditemui (sijilnya berbeza)",
+    "certificateRejected": "Sijil {ip} ditolak",
+    "checksum": "Checksum tidak sepadan",
+    "connectionBroke": "Sambungan terputus",
+    "connectionLost": "Sambungan hilang",
+    "deviceGone": "Peranti sudah tiada",
+    "httpError": "{name} menjawab dengan ralat {status}",
+    "invalidAnswer": "Penerima menghantar jawapan yang tidak sah",
+    "largerThanAnnounced": "Lebih besar daripada yang diumumkan",
+    "noDeviceAt": "Tiada peranti LocalSend ditemui di {ip}",
+    "notConnected": "Tidak bersambung",
+    "notSaved": "Tidak disimpan:",
+    "notSent": "Tidak dihantar:",
+    "ownAddress": "Ini ialah alamat telefon ini",
+    "stoppedResponding": "{name} berhenti bertindak balas",
+    "stoppedSending": "{name} berhenti menghantar",
+    "stoppedSendingSome": "{name} berhenti menghantar. Fail disimpan: {curr} daripada {n}."
+  },
+  "favorites": {
+    "addFailed": "Tidak dapat menambah ke kegemaran",
+    "saveFailed": "Tidak dapat menyimpan kegemaran"
+  },
+  "general": {
+    "clear": "Kosongkan",
+    "invalidIp": "Alamat IP tidak sah",
+    "transferCancelled": "Pemindahan dibatalkan",
+    "xOfY": "{curr} daripada {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Tidak dapat membuka folder",
+    "cannotOpenFolderContent": "Folder muat turun tidak dapat dibuka:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Folder tidak dapat dipaparkan."
+  },
+  "picker": {
+    "selectFile": "Pilih fail",
+    "selectFiles": "Pilih fail",
+    "selectFolder": "Pilih folder"
+  },
+  "receive": {
+    "message": "Mesej",
+    "saved": {
+      "one": "1 fail disimpan daripada {name}",
+      "other": "{n} fail disimpan daripada {name}"
+    },
+    "savedTo": "ke {folder}",
+    "waitingFor": "Menunggu {name}..."
+  },
+  "receiveLink": {
+    "connect": "Sambung",
+    "noNetwork": "Tidak bersambung ke rangkaian.",
+    "serverStopped": "Pelayan dihentikan.",
+    "startServer": "Mulakan pelayan"
+  },
+  "selection": {
+    "textItem": "Teks, {size} - ketik untuk edit"
+  },
+  "send": {
+    "asksForPin": "{name} meminta PIN",
+    "connecting": "Menyambung",
+    "connectingTo": "Menyambung ke {name}...",
+    "editText": "Edit teks",
+    "folderTruncated": "Hanya {n} fail pertama folder ditambah",
+    "images": "Imej",
+    "noDevices": "Tiada peranti ditemui",
+    "preparing": "Menyediakan",
+    "searching": "Mencari...",
+    "sentSome": "Dihantar ke {name}: {curr} daripada {n} fail",
+    "sentTo": "Dihantar ke {name}",
+    "totalProgress": "Jumlah kemajuan",
+    "videos": "Video"
+  },
+  "settings": {
+    "about": "Perihal Symbisend",
+    "changePin": "Ketik untuk menukar PIN",
+    "chooseFolder": "Pilih folder...",
+    "createChecksumsHint": "Permulaan lebih perlahan dengan fail besar",
+    "restore": "Pulihkan",
+    "restoreDefaults": "Pulihkan lalai",
+    "restoreDefaultsContent": "Semua tetapan kembali kepada lalai dan PIN dibuang. Nama peranti, kegemaran dan sejarah kekal.",
+    "serverRunning": "Berjalan",
+    "serverStopped": "Dihentikan",
+    "useDefaultFolder": "Guna lalai"
+  }
+}

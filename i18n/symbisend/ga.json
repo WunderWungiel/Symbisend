@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Cliant LocalSend le haghaidh Symbian.\nComhoiriúnach le LocalSend (prótacal v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Deasc",
+    "headless": "Gan scáileán",
+    "mobile": "Gluaiseach",
+    "server": "Freastalaí",
+    "web": "Gréasán"
+  },
+  "errors": {
+    "andMore": "agus {n} eile",
+    "cancelledBy": "Chealaigh {name} an aistriú",
+    "cannotCreateFile": "Ní féidir an comhad a chruthú",
+    "cannotCreateFolder": "Ní féidir an fillteán {folder} a chruthú",
+    "cannotRead": "Ní féidir an comhad a léamh",
+    "cannotWrite": "Ní féidir an comhad a scríobh (cuimhne lán?)",
+    "certificateChanged": "Ní hé seo an {name} a aimsíodh (tá a theastas difriúil)",
+    "certificateRejected": "Diúltaíodh do theastas {ip}",
+    "checksum": "Ní hionann an seicsum",
+    "connectionBroke": "Briseadh an nasc",
+    "connectionLost": "Cailleadh an nasc",
+    "deviceGone": "Tá an gléas imithe",
+    "httpError": "D'fhreagair {name} le earráid {status}",
+    "invalidAnswer": "Sheol an glacadóir freagra neamhbhailí",
+    "largerThanAnnounced": "Níos mó ná mar a fógraíodh",
+    "noDeviceAt": "Níor aimsíodh aon ghléas LocalSend ag {ip}",
+    "notConnected": "Gan nasc",
+    "notSaved": "Gan sábháil:",
+    "notSent": "Gan seoladh:",
+    "ownAddress": "Seo seoladh an fhóin seo",
+    "stoppedResponding": "Stop {name} de fhreagairt",
+    "stoppedSending": "Stop {name} de sheoladh",
+    "stoppedSendingSome": "Stop {name} de sheoladh. Sábháladh {curr} as {n} comhad."
+  },
+  "favorites": {
+    "addFailed": "Níorbh fhéidir é a chur leis na ceanáin",
+    "saveFailed": "Níorbh fhéidir an ceanán a shábháil"
+  },
+  "general": {
+    "clear": "Glan",
+    "invalidIp": "Seoladh IP neamhbhailí",
+    "transferCancelled": "Cealaíodh an t-aistriú",
+    "xOfY": "{curr} as {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Ní féidir an fillteán a oscailt",
+    "cannotOpenFolderContent": "Níorbh fhéidir an fillteán íoslódála a oscailt:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Ní féidir an fillteán a thaispeáint."
+  },
+  "picker": {
+    "selectFile": "Roghnaigh comhad",
+    "selectFiles": "Roghnaigh comhaid",
+    "selectFolder": "Roghnaigh fillteán"
+  },
+  "receive": {
+    "message": "Teachtaireacht",
+    "saved": {
+      "one": "Sábháladh 1 chomhad ó {name}",
+      "other": "Comhaid sábháilte ó {name}: {n}"
+    },
+    "savedTo": "i {folder}",
+    "waitingFor": "Ag fanacht le {name}..."
+  },
+  "receiveLink": {
+    "connect": "Ceangail",
+    "noNetwork": "Gan nasc le líonra.",
+    "serverStopped": "Tá an freastalaí stoptha.",
+    "startServer": "Tosaigh an freastalaí"
+  },
+  "selection": {
+    "textItem": "Téacs, {size} - tapáil chun in eagar"
+  },
+  "send": {
+    "asksForPin": "Iarrann {name} UAP",
+    "connecting": "Ag ceangal",
+    "connectingTo": "Ag ceangal le {name}...",
+    "editText": "Cuir téacs in eagar",
+    "folderTruncated": "Níor cuireadh ach na chéad {n} comhad den fhillteán leis",
+    "images": "Íomhánna",
+    "noDevices": "Níor aimsíodh aon ghléas",
+    "preparing": "Ag ullmhú",
+    "searching": "Ag cuardach...",
+    "sentSome": "Comhaid seolta chuig {name}: {curr} as {n}",
+    "sentTo": "Seolta chuig {name}",
+    "totalProgress": "Dul chun cinn iomlán",
+    "videos": "Físeáin"
+  },
+  "settings": {
+    "about": "Maidir le Symbisend",
+    "changePin": "Tapáil chun an UAP a athrú",
+    "chooseFolder": "Roghnaigh fillteán...",
+    "createChecksumsHint": "Tús níos moille le comhaid mhóra",
+    "restore": "Athchóirigh",
+    "restoreDefaults": "Athchóirigh na réamhshocruithe",
+    "restoreDefaultsContent": "Filleann gach socrú ar a réamhshocrú agus baintear an UAP. Fanann ainm do ghléis, do cheanáin agus do stair.",
+    "serverRunning": "Ag rith",
+    "serverStopped": "Stoptha",
+    "useDefaultFolder": "Úsáid an réamhshocrú"
+  }
+}

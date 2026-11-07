@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Un client de LocalSend per a Symbian.\nCompatible amb LocalSend (protocol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Ordinador",
+    "headless": "Sense pantalla",
+    "mobile": "Mòbil",
+    "server": "Servidor",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "i {n} més",
+    "cancelledBy": "{name} ha cancel·lat la transferència",
+    "cannotCreateFile": "No es pot crear el fitxer",
+    "cannotCreateFolder": "No es pot crear la carpeta {folder}",
+    "cannotRead": "No es pot llegir el fitxer",
+    "cannotWrite": "No es pot escriure el fitxer (memòria plena?)",
+    "certificateChanged": "Aquest no és el dispositiu {name} que s'havia trobat (el certificat és diferent)",
+    "certificateRejected": "S'ha rebutjat el certificat de {ip}",
+    "checksum": "La suma de verificació no coincideix",
+    "connectionBroke": "La connexió s'ha interromput",
+    "connectionLost": "Connexió perduda",
+    "deviceGone": "El dispositiu ha desaparegut",
+    "httpError": "{name} ha respost amb l'error {status}",
+    "invalidAnswer": "El receptor ha enviat una resposta no vàlida",
+    "largerThanAnnounced": "Més gran del que s'havia anunciat",
+    "noDeviceAt": "No s'ha trobat cap dispositiu LocalSend a {ip}",
+    "notConnected": "Sense connexió",
+    "notSaved": "No desat:",
+    "notSent": "No enviat:",
+    "ownAddress": "Aquesta és l'adreça d'aquest telèfon",
+    "stoppedResponding": "{name} ha deixat de respondre",
+    "stoppedSending": "{name} ha deixat d'enviar",
+    "stoppedSendingSome": "{name} ha deixat d'enviar. S'han desat {curr} de {n} fitxers."
+  },
+  "favorites": {
+    "addFailed": "No s'ha pogut afegir als preferits",
+    "saveFailed": "No s'ha pogut desar el preferit"
+  },
+  "general": {
+    "clear": "Neteja",
+    "invalidIp": "Adreça IP no vàlida",
+    "transferCancelled": "S'ha cancel·lat la transferència",
+    "xOfY": "{curr} de {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "No es pot obrir la carpeta",
+    "cannotOpenFolderContent": "No s'ha pogut obrir la carpeta de baixades:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "No es pot mostrar la carpeta."
+  },
+  "picker": {
+    "selectFile": "Selecciona un fitxer",
+    "selectFiles": "Selecciona fitxers",
+    "selectFolder": "Selecciona una carpeta"
+  },
+  "receive": {
+    "message": "Missatge",
+    "saved": {
+      "one": "S'ha desat 1 fitxer de {name}",
+      "other": "Fitxers desats de {name}: {n}"
+    },
+    "savedTo": "a {folder}",
+    "waitingFor": "S'està esperant {name}..."
+  },
+  "receiveLink": {
+    "connect": "Connecta",
+    "noNetwork": "Sense connexió a cap xarxa.",
+    "serverStopped": "El servidor està aturat.",
+    "startServer": "Inicia el servidor"
+  },
+  "selection": {
+    "textItem": "Text, {size} - toqueu per editar"
+  },
+  "send": {
+    "asksForPin": "{name} demana un PIN",
+    "connecting": "Connectant",
+    "connectingTo": "Connectant amb {name}...",
+    "editText": "Edita el text",
+    "folderTruncated": "Només s'han afegit els primers {n} fitxers de la carpeta",
+    "images": "Imatges",
+    "noDevices": "No s'ha trobat cap dispositiu",
+    "preparing": "Preparant",
+    "searching": "Cercant...",
+    "sentSome": "Fitxers enviats a {name}: {curr} de {n}",
+    "sentTo": "Enviat a {name}",
+    "totalProgress": "Progrés total",
+    "videos": "Vídeos"
+  },
+  "settings": {
+    "about": "Quant al Symbisend",
+    "changePin": "Toqueu per canviar el PIN",
+    "chooseFolder": "Tria una carpeta...",
+    "createChecksumsHint": "Inici més lent amb fitxers grans",
+    "restore": "Restaura",
+    "restoreDefaults": "Restaura els valors per defecte",
+    "restoreDefaultsContent": "Tots els paràmetres tornen als valors per defecte i s'elimina el PIN. El nom del dispositiu, els preferits i l'historial es mantenen.",
+    "serverRunning": "En execució",
+    "serverStopped": "Aturat",
+    "useDefaultFolder": "Usa la predeterminada"
+  }
+}

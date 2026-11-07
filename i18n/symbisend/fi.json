@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSend-asiakas Symbianille.\nYhteensopiva LocalSendin (protokolla v2) kanssa."
+  },
+  "deviceTypes": {
+    "desktop": "Tietokone",
+    "headless": "Ilman näyttöä",
+    "mobile": "Matkapuhelin",
+    "server": "Palvelin",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "ja {n} muuta",
+    "cancelledBy": "{name} peruutti siirron",
+    "cannotCreateFile": "Tiedostoa ei voi luoda",
+    "cannotCreateFolder": "Kansiota {folder} ei voi luoda",
+    "cannotRead": "Tiedostoa ei voi lukea",
+    "cannotWrite": "Tiedostoa ei voi kirjoittaa (muisti täynnä?)",
+    "certificateChanged": "Laite ei ole {name}: sen varmenne on eri",
+    "certificateRejected": "Laitteen {ip} varmenne hylättiin",
+    "checksum": "Tarkistussumma ei täsmää",
+    "connectionBroke": "Yhteys katkesi",
+    "connectionLost": "Yhteys menetettiin",
+    "deviceGone": "Laite on poissa",
+    "httpError": "{name} vastasi virheellä {status}",
+    "invalidAnswer": "Vastaanottaja lähetti virheellisen vastauksen",
+    "largerThanAnnounced": "Ilmoitettua suurempi",
+    "noDeviceAt": "LocalSend-laitetta ei löytynyt osoitteesta {ip}",
+    "notConnected": "Ei yhteyttä",
+    "notSaved": "Ei tallennettu:",
+    "notSent": "Ei lähetetty:",
+    "ownAddress": "Tämä on tämän puhelimen osoite",
+    "stoppedResponding": "{name} ei enää vastaa",
+    "stoppedSending": "{name} lopetti lähettämisen",
+    "stoppedSendingSome": "{name} lopetti lähettämisen. Tiedostoja tallennettiin {curr}/{n}."
+  },
+  "favorites": {
+    "addFailed": "Suosikkeihin lisääminen epäonnistui",
+    "saveFailed": "Suosikin tallentaminen epäonnistui"
+  },
+  "general": {
+    "clear": "Tyhjennä",
+    "invalidIp": "Virheellinen IP-osoite",
+    "transferCancelled": "Siirto peruutettiin",
+    "xOfY": "{curr}/{n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Kansiota ei voi avata",
+    "cannotOpenFolderContent": "Latauskansiota ei voitu avata:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Kansiota ei voi näyttää."
+  },
+  "picker": {
+    "selectFile": "Valitse tiedosto",
+    "selectFiles": "Valitse tiedostot",
+    "selectFolder": "Valitse kansio"
+  },
+  "receive": {
+    "message": "Viesti",
+    "saved": {
+      "one": "Tallennettiin 1 tiedosto lähettäjältä {name}",
+      "other": "Tallennettiin {n} tiedostoa lähettäjältä {name}"
+    },
+    "savedTo": "kansioon {folder}",
+    "waitingFor": "Odotetaan laitetta {name}..."
+  },
+  "receiveLink": {
+    "connect": "Yhdistä",
+    "noNetwork": "Ei yhteyttä verkkoon.",
+    "serverStopped": "Palvelin on pysäytetty.",
+    "startServer": "Käynnistä palvelin"
+  },
+  "selection": {
+    "textItem": "Teksti, {size} - muokkaa napauttamalla"
+  },
+  "send": {
+    "asksForPin": "{name} pyytää PIN-koodia",
+    "connecting": "Yhdistetään",
+    "connectingTo": "Yhdistetään laitteeseen {name}...",
+    "editText": "Muokkaa tekstiä",
+    "folderTruncated": "Vain kansion {n} ensimmäistä tiedostoa lisättiin",
+    "images": "Kuvat",
+    "noDevices": "Laitteita ei löytynyt",
+    "preparing": "Valmistellaan",
+    "searching": "Etsitään...",
+    "sentSome": "Lähetettiin {curr}/{n} tiedostoa laitteeseen {name}",
+    "sentTo": "Lähetetty laitteeseen {name}",
+    "totalProgress": "Kokonaisedistyminen",
+    "videos": "Videot"
+  },
+  "settings": {
+    "about": "Tietoja: Symbisend",
+    "changePin": "Vaihda PIN-koodi napauttamalla",
+    "chooseFolder": "Valitse kansio...",
+    "createChecksumsHint": "Hitaampi aloitus suurilla tiedostoilla",
+    "restore": "Palauta",
+    "restoreDefaults": "Palauta oletukset",
+    "restoreDefaultsContent": "Kaikki asetukset palautetaan oletusarvoihin ja PIN-koodi poistetaan. Laitteen nimi, suosikit ja historia säilyvät.",
+    "serverRunning": "Käynnissä",
+    "serverStopped": "Pysäytetty",
+    "useDefaultFolder": "Käytä oletusta"
+  }
+}

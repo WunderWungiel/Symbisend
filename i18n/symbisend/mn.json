@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian-д зориулсан LocalSend клиент.\nLocalSend-тэй нийцтэй (v2 протокол)."
+  },
+  "deviceTypes": {
+    "desktop": "Компьютер",
+    "headless": "Дэлгэцгүй",
+    "mobile": "Гар утас",
+    "server": "Сервер",
+    "web": "Вэб"
+  },
+  "errors": {
+    "andMore": "болон өөр {n}",
+    "cancelledBy": "{name} дамжуулалтыг цуцаллаа",
+    "cannotCreateFile": "Файл үүсгэж чадсангүй",
+    "cannotCreateFolder": "{folder} хавтас үүсгэж чадсангүй",
+    "cannotRead": "Файлыг уншиж чадсангүй",
+    "cannotWrite": "Файлыг бичиж чадсангүй (санах ой дүүрсэн үү?)",
+    "certificateChanged": "Энэ нь олдсон {name} биш байна (сертификат нь өөр)",
+    "certificateRejected": "{ip}-ийн сертификатыг татгалзлаа",
+    "checksum": "Шалгах нийлбэр таарсангүй",
+    "connectionBroke": "Холболт таслагдлаа",
+    "connectionLost": "Холболт тасарлаа",
+    "deviceGone": "Төхөөрөмж хүрэх боломжгүй байна",
+    "httpError": "{name} {status} алдаа буцаалаа",
+    "invalidAnswer": "Хүлээн авагч буруу хариу илгээлээ",
+    "largerThanAnnounced": "Зарласнаас том байна",
+    "noDeviceAt": "{ip} хаягаас LocalSend төхөөрөмж олдсонгүй",
+    "notConnected": "Холбогдоогүй",
+    "notSaved": "Хадгалаагүй:",
+    "notSent": "Илгээгээгүй:",
+    "ownAddress": "Энэ бол энэ утасны хаяг",
+    "stoppedResponding": "{name} хариу өгөхөө больсон",
+    "stoppedSending": "{name} илгээхээ зогсоосон",
+    "stoppedSendingSome": "{name} илгээхээ зогсоосон. Хадгалсан файл: {curr}/{n}."
+  },
+  "favorites": {
+    "addFailed": "Дуртайд нэмж чадсангүй",
+    "saveFailed": "Дуртайг хадгалж чадсангүй"
+  },
+  "general": {
+    "clear": "Цэвэрлэх",
+    "invalidIp": "IP хаяг буруу байна",
+    "transferCancelled": "Дамжуулалтыг цуцаллаа",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Хавтас нээж чадсангүй",
+    "cannotOpenFolderContent": "Татаж авсан файлын хавтсыг нээж чадсангүй:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Хавтсыг харуулж чадсангүй."
+  },
+  "picker": {
+    "selectFile": "Файл сонгох",
+    "selectFiles": "Файлууд сонгох",
+    "selectFolder": "Хавтас сонгох"
+  },
+  "receive": {
+    "message": "Мессеж",
+    "saved": {
+      "one": "{name}-ийн файлыг хадгаллаа",
+      "other": "{name}-ийн файлуудыг хадгаллаа: {n}"
+    },
+    "savedTo": "хавтас: {folder}",
+    "waitingFor": "{name}-ийг хүлээж байна..."
+  },
+  "receiveLink": {
+    "connect": "Холбогдох",
+    "noNetwork": "Сүлжээнд холбогдоогүй.",
+    "serverStopped": "Сервер зогссон.",
+    "startServer": "Сервер эхлүүлэх"
+  },
+  "selection": {
+    "textItem": "Бичвэр, {size} - засахын тулд товшино уу"
+  },
+  "send": {
+    "asksForPin": "{name} PIN код асууж байна",
+    "connecting": "Холбогдож байна",
+    "connectingTo": "{name}-д холбогдож байна...",
+    "editText": "Бичвэр засах",
+    "folderTruncated": "Хавтасны эхний {n} файлыг л нэмлээ",
+    "images": "Зургууд",
+    "noDevices": "Төхөөрөмж олдсонгүй",
+    "preparing": "Бэлтгэж байна",
+    "searching": "Хайж байна...",
+    "sentSome": "{name}-д илгээсэн: {curr}/{n} файл",
+    "sentTo": "{name}-д илгээлээ",
+    "totalProgress": "Нийт явц",
+    "videos": "Бичлэгүүд"
+  },
+  "settings": {
+    "about": "Symbisend-ийн тухай",
+    "changePin": "PIN кодыг өөрчлөхийн тулд товшино уу",
+    "chooseFolder": "Хавтас сонгох...",
+    "createChecksumsHint": "Том файлд эхлэх нь удаан",
+    "restore": "Буцаах",
+    "restoreDefaults": "Үндсэн тохиргоо",
+    "restoreDefaultsContent": "Бүх тохиргоо үндсэн утгадаа буцаж, PIN код устгагдана. Төхөөрөмжийн нэр, дуртай болон түүх хэвээр үлдэнэ.",
+    "serverRunning": "Ажиллаж байна",
+    "serverStopped": "Зогссон",
+    "useDefaultFolder": "Үндсэн"
+  }
+}

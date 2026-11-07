@@ -14,6 +14,10 @@ over these files, and list new languages in `i18n.qrc` and
   pickers, error texts, ...), looked up as `symbisend.<key>`. Translations of
   it go in `symbisend/<code>.json` (same code as the upstream file, e.g.
   `pt-BR.json`) and into `i18n.qrc`; missing keys fall back to English.
+  The translations for every LocalSend language were machine-made (and
+  machine-reviewed) and have not been checked by native speakers yet:
+  corrections are welcome. Fixes to the official strings in `i18n/*.json`
+  belong on LocalSend's Weblate instead.
 - `languages.json` — every language with the name the official app shows for
   it (`getLocaleName()` in `app/lib/util/i18n.dart`), in that order.
 

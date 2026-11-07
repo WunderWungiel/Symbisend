@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "适用于 Symbian 的 LocalSend 客户端。\n兼容 LocalSend（协议 v2）。"
+  },
+  "deviceTypes": {
+    "desktop": "桌面设备",
+    "headless": "无界面设备",
+    "mobile": "移动设备",
+    "server": "服务器",
+    "web": "网页"
+  },
+  "errors": {
+    "andMore": "另有 {n} 个",
+    "cancelledBy": "{name} 取消了传输",
+    "cannotCreateFile": "无法创建文件",
+    "cannotCreateFolder": "无法创建文件夹 {folder}",
+    "cannotRead": "无法读取文件",
+    "cannotWrite": "无法写入文件（存储空间已满？）",
+    "certificateChanged": "这不是之前找到的 {name}（证书不同）",
+    "certificateRejected": "{ip} 的证书被拒绝",
+    "checksum": "校验和不匹配",
+    "connectionBroke": "连接已中断",
+    "connectionLost": "连接已断开",
+    "deviceGone": "设备已不可用",
+    "httpError": "{name} 返回错误 {status}",
+    "invalidAnswer": "接收者返回了无效的响应",
+    "largerThanAnnounced": "大于声明的大小",
+    "noDeviceAt": "在 {ip} 未找到 LocalSend 设备",
+    "notConnected": "未连接",
+    "notSaved": "未保存：",
+    "notSent": "未发送：",
+    "ownAddress": "这是本机的地址",
+    "stoppedResponding": "{name} 已停止响应",
+    "stoppedSending": "{name} 已停止发送",
+    "stoppedSendingSome": "{name} 已停止发送。已保存 {curr} / {n} 个文件。"
+  },
+  "favorites": {
+    "addFailed": "无法添加到收藏夹",
+    "saveFailed": "无法保存收藏"
+  },
+  "general": {
+    "clear": "清除",
+    "invalidIp": "IP 地址无效",
+    "transferCancelled": "传输已取消",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "无法打开文件夹",
+    "cannotOpenFolderContent": "无法打开下载文件夹：\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "无法显示该文件夹。"
+  },
+  "picker": {
+    "selectFile": "选择文件",
+    "selectFiles": "选择文件",
+    "selectFolder": "选择文件夹"
+  },
+  "receive": {
+    "message": "消息",
+    "saved": {
+      "one": "已保存来自 {name} 的 1 个文件",
+      "other": "已保存来自 {name} 的 {n} 个文件"
+    },
+    "savedTo": "位置：{folder}",
+    "waitingFor": "正在等待 {name}……"
+  },
+  "receiveLink": {
+    "connect": "连接",
+    "noNetwork": "未连接到网络。",
+    "serverStopped": "服务器已停止。",
+    "startServer": "启动服务器"
+  },
+  "selection": {
+    "textItem": "文本，{size} - 点按以编辑"
+  },
+  "send": {
+    "asksForPin": "{name} 需要 PIN",
+    "connecting": "正在连接",
+    "connectingTo": "正在连接 {name}……",
+    "editText": "编辑文本",
+    "folderTruncated": "仅添加了文件夹中的前 {n} 个文件",
+    "images": "图片",
+    "noDevices": "未找到设备",
+    "preparing": "准备中",
+    "searching": "正在搜索……",
+    "sentSome": "已向 {name} 发送 {curr} / {n} 个文件",
+    "sentTo": "已发送给 {name}",
+    "totalProgress": "总进度",
+    "videos": "视频"
+  },
+  "settings": {
+    "about": "关于 Symbisend",
+    "changePin": "点按以更改 PIN",
+    "chooseFolder": "选择文件夹……",
+    "createChecksumsHint": "大文件的启动会较慢",
+    "restore": "恢复",
+    "restoreDefaults": "恢复默认设置",
+    "restoreDefaultsContent": "所有设置将恢复为默认值，PIN 将被移除。设备名称、收藏夹和历史记录将保留。",
+    "serverRunning": "运行中",
+    "serverStopped": "已停止",
+    "useDefaultFolder": "使用默认"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian用のLocalSendクライアント\nLocalSend（プロトコルv2）互換"
+  },
+  "deviceTypes": {
+    "desktop": "デスクトップ",
+    "headless": "ヘッドレス",
+    "mobile": "モバイル",
+    "server": "サーバー",
+    "web": "ウェブ"
+  },
+  "errors": {
+    "andMore": "ほか{n}件",
+    "cancelledBy": "{name}が転送をキャンセルしました",
+    "cannotCreateFile": "ファイルを作成できません",
+    "cannotCreateFolder": "フォルダー{folder}を作成できません",
+    "cannotRead": "ファイルを読み込めません",
+    "cannotWrite": "ファイルを書き込めません（空き容量不足？）",
+    "certificateChanged": "見つかった{name}とは別のデバイスです（証明書が異なります）",
+    "certificateRejected": "{ip}の証明書は拒否されました",
+    "checksum": "チェックサムが一致しません",
+    "connectionBroke": "接続が途切れました",
+    "connectionLost": "接続が切断されました",
+    "deviceGone": "デバイスが見つかりません",
+    "httpError": "{name}がエラー{status}を返しました",
+    "invalidAnswer": "受信者から無効な応答がありました",
+    "largerThanAnnounced": "通知されたサイズより大きいです",
+    "noDeviceAt": "{ip}にLocalSendデバイスが見つかりません",
+    "notConnected": "未接続",
+    "notSaved": "保存できませんでした:",
+    "notSent": "送信できませんでした:",
+    "ownAddress": "これはこの端末のアドレスです",
+    "stoppedResponding": "{name}が応答しなくなりました",
+    "stoppedSending": "{name}が送信を停止しました",
+    "stoppedSendingSome": "{name}が送信を停止しました。{curr} / {n} 件のファイルを保存しました。"
+  },
+  "favorites": {
+    "addFailed": "お気に入りに追加できませんでした",
+    "saveFailed": "お気に入りを保存できませんでした"
+  },
+  "general": {
+    "clear": "クリア",
+    "invalidIp": "IPアドレスが無効です",
+    "transferCancelled": "転送がキャンセルされました",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "フォルダーを開けません",
+    "cannotOpenFolderContent": "ダウンロードフォルダーを開けませんでした:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "フォルダーを表示できません。"
+  },
+  "picker": {
+    "selectFile": "ファイルを選択",
+    "selectFiles": "ファイルを選択",
+    "selectFolder": "フォルダーを選択"
+  },
+  "receive": {
+    "message": "メッセージ",
+    "saved": {
+      "one": "{name}からファイルを1件保存しました",
+      "other": "{name}からファイルを{n}件保存しました"
+    },
+    "savedTo": "保存先: {folder}",
+    "waitingFor": "{name}を待っています..."
+  },
+  "receiveLink": {
+    "connect": "接続",
+    "noNetwork": "ネットワークに接続されていません。",
+    "serverStopped": "サーバーは停止しています。",
+    "startServer": "サーバーを開始"
+  },
+  "selection": {
+    "textItem": "テキスト、{size} - タップして編集"
+  },
+  "send": {
+    "asksForPin": "{name}がPINコードを要求しています",
+    "connecting": "接続中",
+    "connectingTo": "{name}に接続しています...",
+    "editText": "テキストを編集",
+    "folderTruncated": "フォルダー内の最初の{n}件のファイルのみ追加されました",
+    "images": "画像",
+    "noDevices": "デバイスが見つかりません",
+    "preparing": "準備中",
+    "searching": "検索中...",
+    "sentSome": "{name}に{curr} / {n}件のファイルを送信しました",
+    "sentTo": "{name}に送信しました",
+    "totalProgress": "総進捗",
+    "videos": "動画"
+  },
+  "settings": {
+    "about": "Symbisendについて",
+    "changePin": "タップしてPINコードを変更",
+    "chooseFolder": "フォルダーを選択...",
+    "createChecksumsHint": "大きなファイルでは開始が遅くなります",
+    "restore": "戻す",
+    "restoreDefaults": "初期設定に戻す",
+    "restoreDefaultsContent": "すべての設定が初期値に戻り、PINコードは削除されます。デバイス名、お気に入り、履歴は保持されます。",
+    "serverRunning": "実行中",
+    "serverStopped": "停止中",
+    "useDefaultFolder": "デフォルトを使用"
+  }
+}

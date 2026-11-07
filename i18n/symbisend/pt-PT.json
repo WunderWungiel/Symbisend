@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Um cliente LocalSend para Symbian.\nCompatível com LocalSend (protocolo v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Computador",
+    "headless": "Sem ecrã",
+    "mobile": "Telemóvel",
+    "server": "Servidor",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "e mais {n}",
+    "cancelledBy": "{name} cancelou a transferência",
+    "cannotCreateFile": "Não é possível criar o ficheiro",
+    "cannotCreateFolder": "Não é possível criar a pasta {folder}",
+    "cannotRead": "Não é possível ler o ficheiro",
+    "cannotWrite": "Não é possível escrever o ficheiro (memória cheia?)",
+    "certificateChanged": "Este não é o {name} que foi encontrado (o certificado é diferente)",
+    "certificateRejected": "O certificado de {ip} foi rejeitado",
+    "checksum": "A soma de verificação não corresponde",
+    "connectionBroke": "A ligação foi interrompida",
+    "connectionLost": "Ligação perdida",
+    "deviceGone": "O dispositivo desapareceu",
+    "httpError": "{name} respondeu com o erro {status}",
+    "invalidAnswer": "O recetor enviou uma resposta inválida",
+    "largerThanAnnounced": "Maior do que o anunciado",
+    "noDeviceAt": "Nenhum dispositivo LocalSend encontrado em {ip}",
+    "notConnected": "Sem ligação",
+    "notSaved": "Não guardado:",
+    "notSent": "Não enviado:",
+    "ownAddress": "Este é o endereço deste telemóvel",
+    "stoppedResponding": "{name} deixou de responder",
+    "stoppedSending": "{name} parou de enviar",
+    "stoppedSendingSome": "{name} parou de enviar. {curr} de {n} ficheiros foram guardados."
+  },
+  "favorites": {
+    "addFailed": "Não foi possível adicionar aos favoritos",
+    "saveFailed": "Não foi possível guardar o favorito"
+  },
+  "general": {
+    "clear": "Limpar",
+    "invalidIp": "Endereço IP inválido",
+    "transferCancelled": "A transferência foi cancelada",
+    "xOfY": "{curr} de {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Não é possível abrir a pasta",
+    "cannotOpenFolderContent": "Não foi possível abrir a pasta de transferências:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Não é possível mostrar a pasta."
+  },
+  "picker": {
+    "selectFile": "Selecionar ficheiro",
+    "selectFiles": "Selecionar ficheiros",
+    "selectFolder": "Selecionar pasta"
+  },
+  "receive": {
+    "message": "Mensagem",
+    "saved": {
+      "one": "1 ficheiro de {name} guardado",
+      "other": "Ficheiros de {name} guardados: {n}"
+    },
+    "savedTo": "em {folder}",
+    "waitingFor": "A aguardar {name}..."
+  },
+  "receiveLink": {
+    "connect": "Ligar",
+    "noNetwork": "Sem ligação a uma rede.",
+    "serverStopped": "O servidor está parado.",
+    "startServer": "Iniciar servidor"
+  },
+  "selection": {
+    "textItem": "Texto, {size} - toque para editar"
+  },
+  "send": {
+    "asksForPin": "{name} pede um PIN",
+    "connecting": "A ligar",
+    "connectingTo": "A ligar a {name}...",
+    "editText": "Editar texto",
+    "folderTruncated": "Apenas os primeiros {n} ficheiros da pasta foram adicionados",
+    "images": "Imagens",
+    "noDevices": "Nenhum dispositivo encontrado",
+    "preparing": "A preparar",
+    "searching": "A procurar...",
+    "sentSome": "Ficheiros enviados para {name}: {curr} de {n}",
+    "sentTo": "Enviado para {name}",
+    "totalProgress": "Progresso total",
+    "videos": "Vídeos"
+  },
+  "settings": {
+    "about": "Acerca do Symbisend",
+    "changePin": "Toque para alterar o PIN",
+    "chooseFolder": "Escolher pasta...",
+    "createChecksumsHint": "Arranque mais lento com ficheiros grandes",
+    "restore": "Repor",
+    "restoreDefaults": "Repor predefinições",
+    "restoreDefaultsContent": "Todas as definições voltam aos valores predefinidos e o PIN é removido. O nome do dispositivo, os favoritos e o histórico mantêm-se.",
+    "serverRunning": "Em execução",
+    "serverStopped": "Parado",
+    "useDefaultFolder": "Usar predefinida"
+  }
+}

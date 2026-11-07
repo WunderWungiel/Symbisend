@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian کے لیے LocalSend کلائنٹ۔\nLocalSend (پروٹوکول v2) کے ساتھ ہم آہنگ۔"
+  },
+  "deviceTypes": {
+    "desktop": "ڈیسک ٹاپ",
+    "headless": "بغیر اسکرین",
+    "mobile": "موبائل",
+    "server": "سرور",
+    "web": "ویب"
+  },
+  "errors": {
+    "andMore": "اور {n} مزید",
+    "cancelledBy": "{name} نے منتقلی منسوخ کر دی",
+    "cannotCreateFile": "فائل نہیں بن سکی",
+    "cannotCreateFolder": "فولڈر {folder} نہیں بن سکا",
+    "cannotRead": "فائل نہیں پڑھی جا سکی",
+    "cannotWrite": "فائل نہیں لکھی جا سکی (میموری بھر گئی؟)",
+    "certificateChanged": "یہ وہ {name} نہیں ہے جو ملا تھا (اس کا سرٹیفکیٹ مختلف ہے)",
+    "certificateRejected": "{ip} کا سرٹیفکیٹ مسترد کر دیا گیا",
+    "checksum": "چیک سم مماثل نہیں",
+    "connectionBroke": "کنکشن ٹوٹ گیا",
+    "connectionLost": "کنکشن ختم ہو گیا",
+    "deviceGone": "آلہ دستیاب نہیں",
+    "httpError": "{name} نے خرابی {status} کے ساتھ جواب دیا",
+    "invalidAnswer": "وصول کنندہ نے غلط جواب بھیجا",
+    "largerThanAnnounced": "بتائے گئے سائز سے بڑی",
+    "noDeviceAt": "{ip} پر کوئی LocalSend آلہ نہیں ملا",
+    "notConnected": "منسلک نہیں",
+    "notSaved": "محفوظ نہیں ہوئی:",
+    "notSent": "بھیجی نہیں گئی:",
+    "ownAddress": "یہ اسی فون کا پتہ ہے",
+    "stoppedResponding": "{name} نے جواب دینا بند کر دیا",
+    "stoppedSending": "{name} نے بھیجنا بند کر دیا",
+    "stoppedSendingSome": "{name} نے بھیجنا بند کر دیا۔ {n} میں سے {curr} فائلیں محفوظ ہوئیں۔"
+  },
+  "favorites": {
+    "addFailed": "پسندیدہ میں شامل نہیں ہو سکا",
+    "saveFailed": "پسندیدہ محفوظ نہیں ہو سکا"
+  },
+  "general": {
+    "clear": "صاف کریں",
+    "invalidIp": "غلط IP پتہ",
+    "transferCancelled": "منتقلی منسوخ کر دی گئی",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "فولڈر نہیں کھل سکا",
+    "cannotOpenFolderContent": "ڈاؤن لوڈ فولڈر نہیں کھل سکا:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "فولڈر نہیں دکھایا جا سکتا۔"
+  },
+  "picker": {
+    "selectFile": "فائل منتخب کریں",
+    "selectFiles": "فائلیں منتخب کریں",
+    "selectFolder": "فولڈر منتخب کریں"
+  },
+  "receive": {
+    "message": "پیغام",
+    "saved": {
+      "one": "{name} سے ایک فائل محفوظ ہوئی",
+      "other": "{name} سے محفوظ شدہ فائلیں: {n}"
+    },
+    "savedTo": "بمقام {folder}",
+    "waitingFor": "{name} کا انتظار ہے..."
+  },
+  "receiveLink": {
+    "connect": "منسلک کریں",
+    "noNetwork": "نیٹ ورک سے منسلک نہیں۔",
+    "serverStopped": "سرور بند ہے۔",
+    "startServer": "سرور شروع کریں"
+  },
+  "selection": {
+    "textItem": "ٹیکسٹ، {size} - ترمیم کے لیے ٹیپ کریں"
+  },
+  "send": {
+    "asksForPin": "{name} کو PIN درکار ہے",
+    "connecting": "منسلک ہو رہا ہے",
+    "connectingTo": "{name} سے منسلک ہو رہا ہے...",
+    "editText": "ٹیکسٹ میں ترمیم",
+    "folderTruncated": "فولڈر کی صرف ابتدائی فائلیں شامل ہوئیں: {n}",
+    "images": "تصاویر",
+    "noDevices": "کوئی آلہ نہیں ملا",
+    "preparing": "تیاری جاری ہے",
+    "searching": "تلاش جاری ہے...",
+    "sentSome": "{n} میں سے {curr} فائلیں {name} کو بھیجی گئیں",
+    "sentTo": "{name} کو بھیج دیا گیا",
+    "totalProgress": "کل پیش رفت",
+    "videos": "ویڈیوز"
+  },
+  "settings": {
+    "about": "Symbisend کے بارے میں",
+    "changePin": "PIN تبدیل کرنے کے لیے ٹیپ کریں",
+    "chooseFolder": "فولڈر منتخب کریں...",
+    "createChecksumsHint": "بڑی فائلوں کے ساتھ آغاز سست",
+    "restore": "بحال کریں",
+    "restoreDefaults": "ڈیفالٹ بحال کریں",
+    "restoreDefaultsContent": "تمام ترتیبات ڈیفالٹ پر واپس آ جائیں گی اور PIN ہٹ جائے گا۔ آپ کے آلے کا نام، پسندیدہ اور تاریخ برقرار رہیں گے۔",
+    "serverRunning": "چل رہا ہے",
+    "serverStopped": "بند",
+    "useDefaultFolder": "ڈیفالٹ استعمال کریں"
+  }
+}

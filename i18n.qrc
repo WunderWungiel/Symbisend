@@ -60,6 +60,63 @@
         <file>i18n/zh-HK.json</file>
         <file>i18n/zh-TW.json</file>
         <file>i18n/symbisend/en.json</file>
+        <file>i18n/symbisend/ar.json</file>
+        <file>i18n/symbisend/az.json</file>
+        <file>i18n/symbisend/be.json</file>
+        <file>i18n/symbisend/bg.json</file>
+        <file>i18n/symbisend/bn.json</file>
+        <file>i18n/symbisend/ca.json</file>
+        <file>i18n/symbisend/cs.json</file>
+        <file>i18n/symbisend/da.json</file>
+        <file>i18n/symbisend/de.json</file>
+        <file>i18n/symbisend/el.json</file>
+        <file>i18n/symbisend/es-ES.json</file>
+        <file>i18n/symbisend/et.json</file>
+        <file>i18n/symbisend/eu.json</file>
+        <file>i18n/symbisend/fa.json</file>
+        <file>i18n/symbisend/fi.json</file>
+        <file>i18n/symbisend/fil-PH.json</file>
+        <file>i18n/symbisend/fr.json</file>
+        <file>i18n/symbisend/ga.json</file>
+        <file>i18n/symbisend/gl.json</file>
+        <file>i18n/symbisend/gu.json</file>
+        <file>i18n/symbisend/he.json</file>
+        <file>i18n/symbisend/hi.json</file>
+        <file>i18n/symbisend/hu.json</file>
+        <file>i18n/symbisend/hy.json</file>
+        <file>i18n/symbisend/id.json</file>
+        <file>i18n/symbisend/it.json</file>
+        <file>i18n/symbisend/ja.json</file>
+        <file>i18n/symbisend/km.json</file>
+        <file>i18n/symbisend/ko.json</file>
+        <file>i18n/symbisend/ky.json</file>
+        <file>i18n/symbisend/lo.json</file>
+        <file>i18n/symbisend/ml.json</file>
+        <file>i18n/symbisend/mn.json</file>
+        <file>i18n/symbisend/ms.json</file>
+        <file>i18n/symbisend/ne.json</file>
+        <file>i18n/symbisend/nl.json</file>
+        <file>i18n/symbisend/pl.json</file>
+        <file>i18n/symbisend/pt-BR.json</file>
+        <file>i18n/symbisend/pt-PT.json</file>
+        <file>i18n/symbisend/ro.json</file>
+        <file>i18n/symbisend/ru.json</file>
+        <file>i18n/symbisend/si.json</file>
+        <file>i18n/symbisend/sk.json</file>
+        <file>i18n/symbisend/sl.json</file>
+        <file>i18n/symbisend/sr-Cyrl.json</file>
+        <file>i18n/symbisend/sr.json</file>
+        <file>i18n/symbisend/sv.json</file>
+        <file>i18n/symbisend/ta.json</file>
+        <file>i18n/symbisend/th.json</file>
+        <file>i18n/symbisend/tr.json</file>
+        <file>i18n/symbisend/uk.json</file>
+        <file>i18n/symbisend/ur.json</file>
+        <file>i18n/symbisend/uz.json</file>
+        <file>i18n/symbisend/vi.json</file>
+        <file>i18n/symbisend/zh-CN.json</file>
+        <file>i18n/symbisend/zh-HK.json</file>
+        <file>i18n/symbisend/zh-TW.json</file>
         <file>i18n/symbisend/languages.json</file>
     </qresource>
 </RCC>

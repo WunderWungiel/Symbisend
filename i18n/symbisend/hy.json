@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSend-ի հաճախորդ Symbian-ի համար։\nՀամատեղելի է LocalSend-ի հետ (արձանագրություն v2)։"
+  },
+  "deviceTypes": {
+    "desktop": "Համակարգիչ",
+    "headless": "Առանց էկրանի",
+    "mobile": "Բջջային",
+    "server": "Սերվեր",
+    "web": "Վեբ"
+  },
+  "errors": {
+    "andMore": "և ևս {n}",
+    "cancelledBy": "{name}-ը չեղարկեց փոխանցումը",
+    "cannotCreateFile": "Չհաջողվեց ստեղծել ֆայլը",
+    "cannotCreateFolder": "Չհաջողվեց ստեղծել {folder} պանակը",
+    "cannotRead": "Չհաջողվեց կարդալ ֆայլը",
+    "cannotWrite": "Չհաջողվեց գրել ֆայլը (հիշողությունը լի՞ է)",
+    "certificateChanged": "Սա գտնված {name}-ը չէ (նրա վկայականը տարբեր է)",
+    "certificateRejected": "{ip}-ի վկայականը մերժվեց",
+    "checksum": "Ստուգվող գումարը չի համընկնում",
+    "connectionBroke": "Կապը խզվեց",
+    "connectionLost": "Կապը կորավ",
+    "deviceGone": "Սարքը հասանելի չէ",
+    "httpError": "{name}-ը պատասխանեց {status} սխալով",
+    "invalidAnswer": "Ստացողը ուղարկեց անվավեր պատասխան",
+    "largerThanAnnounced": "Հայտարարվածից մեծ է",
+    "noDeviceAt": "{ip} հասցեում LocalSend սարք չի գտնվել",
+    "notConnected": "Միացված չէ",
+    "notSaved": "Չպահվեց՝",
+    "notSent": "Չուղարկվեց՝",
+    "ownAddress": "Սա այս հեռախոսի հասցեն է",
+    "stoppedResponding": "{name}-ը դադարեց պատասխանել",
+    "stoppedSending": "{name}-ը դադարեցրեց ուղարկումը",
+    "stoppedSendingSome": "{name}-ը դադարեցրեց ուղարկումը։ Պահվել է {curr}/{n} ֆայլ։"
+  },
+  "favorites": {
+    "addFailed": "Չհաջողվեց ավելացնել սիրվածներում",
+    "saveFailed": "Չհաջողվեց պահել սիրվածը"
+  },
+  "general": {
+    "clear": "Մաքրել",
+    "invalidIp": "Անվավեր IP հասցե",
+    "transferCancelled": "Փոխանցումը չեղարկվեց",
+    "xOfY": "{curr}/{n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Չհաջողվեց բացել պանակը",
+    "cannotOpenFolderContent": "Ներբեռնումների պանակը չհաջողվեց բացել՝\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Չհաջողվեց ցույց տալ պանակը։"
+  },
+  "picker": {
+    "selectFile": "Ընտրել ֆայլ",
+    "selectFiles": "Ընտրել ֆայլեր",
+    "selectFolder": "Ընտրել պանակ"
+  },
+  "receive": {
+    "message": "Հաղորդագրություն",
+    "saved": {
+      "one": "Պահվել է 1 ֆայլ {name}-ից",
+      "other": "Պահվել են ֆայլեր {name}-ից՝ {n}"
+    },
+    "savedTo": "պանակ՝ {folder}",
+    "waitingFor": "Սպասում ենք {name}-ին..."
+  },
+  "receiveLink": {
+    "connect": "Միացնել",
+    "noNetwork": "Ցանցին միացված չէ։",
+    "serverStopped": "Սերվերը կանգնեցված է։",
+    "startServer": "Գործարկել սերվերը"
+  },
+  "selection": {
+    "textItem": "Տեքստ, {size} - հպեք՝ խմբագրելու համար"
+  },
+  "send": {
+    "asksForPin": "{name}-ը PIN է պահանջում",
+    "connecting": "Միանում է",
+    "connectingTo": "Միանում է {name}-ին...",
+    "editText": "Խմբագրել տեքստը",
+    "folderTruncated": "Ավելացվել են պանակի միայն առաջին ֆայլերը՝ {n}",
+    "images": "Պատկերներ",
+    "noDevices": "Սարքեր չեն գտնվել",
+    "preparing": "Պատրաստվում է",
+    "searching": "Որոնվում է...",
+    "sentSome": "{name}-ին ուղարկվել է {curr}/{n} ֆայլ",
+    "sentTo": "Ուղարկվեց {name}-ին",
+    "totalProgress": "Ընդհանուր ընթացքը",
+    "videos": "Տեսանյութեր"
+  },
+  "settings": {
+    "about": "Symbisend-ի մասին",
+    "changePin": "Հպեք՝ PIN-ը փոխելու համար",
+    "chooseFolder": "Ընտրել պանակ...",
+    "createChecksumsHint": "Մեծ ֆայլերի դեպքում սկիզբն ավելի դանդաղ է",
+    "restore": "Վերականգնել",
+    "restoreDefaults": "Վերականգնել լռելյայնը",
+    "restoreDefaultsContent": "Բոլոր կարգավորումները կվերադառնան լռելյայն արժեքներին, իսկ PIN-ը կհեռացվի։ Սարքի անունը, սիրվածները և պատմությունը կմնան։",
+    "serverRunning": "Աշխատում է",
+    "serverStopped": "Կանգնեցված է",
+    "useDefaultFolder": "Օգտագործել լռելյայնը"
+  }
+}

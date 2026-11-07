@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Ứng dụng LocalSend cho Symbian.\nTương thích với LocalSend (giao thức v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Máy tính",
+    "headless": "Headless",
+    "mobile": "Di động",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "và {n} tệp nữa",
+    "cancelledBy": "{name} đã hủy quá trình chuyển",
+    "cannotCreateFile": "Không thể tạo tệp",
+    "cannotCreateFolder": "Không thể tạo thư mục {folder}",
+    "cannotRead": "Không thể đọc tệp",
+    "cannotWrite": "Không thể ghi tệp (đầy bộ nhớ?)",
+    "certificateChanged": "Đây không phải {name} đã tìm thấy (chứng chỉ khác)",
+    "certificateRejected": "Chứng chỉ của {ip} đã bị từ chối",
+    "checksum": "Checksum không khớp",
+    "connectionBroke": "Kết nối bị ngắt",
+    "connectionLost": "Mất kết nối",
+    "deviceGone": "Thiết bị không còn nữa",
+    "httpError": "{name} phản hồi với lỗi {status}",
+    "invalidAnswer": "Bên nhận gửi phản hồi không hợp lệ",
+    "largerThanAnnounced": "Lớn hơn đã báo",
+    "noDeviceAt": "Không tìm thấy thiết bị LocalSend tại {ip}",
+    "notConnected": "Chưa kết nối",
+    "notSaved": "Chưa lưu:",
+    "notSent": "Chưa gửi:",
+    "ownAddress": "Đây là địa chỉ của điện thoại này",
+    "stoppedResponding": "{name} đã ngừng phản hồi",
+    "stoppedSending": "{name} đã ngừng gửi",
+    "stoppedSendingSome": "{name} đã ngừng gửi. Đã lưu {curr}/{n} tệp."
+  },
+  "favorites": {
+    "addFailed": "Không thể thêm vào mục yêu thích",
+    "saveFailed": "Không thể lưu mục yêu thích"
+  },
+  "general": {
+    "clear": "Xóa",
+    "invalidIp": "Địa chỉ IP không hợp lệ",
+    "transferCancelled": "Đã hủy quá trình chuyển",
+    "xOfY": "{curr}/{n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Không thể mở thư mục",
+    "cannotOpenFolderContent": "Không thể mở thư mục tải xuống:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Không thể hiển thị thư mục."
+  },
+  "picker": {
+    "selectFile": "Chọn tệp",
+    "selectFiles": "Chọn tệp",
+    "selectFolder": "Chọn thư mục"
+  },
+  "receive": {
+    "message": "Tin nhắn",
+    "saved": {
+      "one": "Đã lưu 1 tệp từ {name}",
+      "other": "Đã lưu {n} tệp từ {name}"
+    },
+    "savedTo": "vào {folder}",
+    "waitingFor": "Đang chờ {name}..."
+  },
+  "receiveLink": {
+    "connect": "Kết nối",
+    "noNetwork": "Chưa kết nối mạng.",
+    "serverStopped": "Server đã dừng.",
+    "startServer": "Bật server"
+  },
+  "selection": {
+    "textItem": "Văn bản, {size} - chạm để sửa"
+  },
+  "send": {
+    "asksForPin": "{name} yêu cầu mã PIN",
+    "connecting": "Đang kết nối",
+    "connectingTo": "Đang kết nối tới {name}...",
+    "editText": "Sửa văn bản",
+    "folderTruncated": "Chỉ thêm {n} tệp đầu tiên của thư mục",
+    "images": "Hình ảnh",
+    "noDevices": "Không tìm thấy thiết bị",
+    "preparing": "Đang chuẩn bị",
+    "searching": "Đang tìm kiếm...",
+    "sentSome": "Đã gửi {curr}/{n} tệp tới {name}",
+    "sentTo": "Đã gửi tới {name}",
+    "totalProgress": "Tiến độ chung",
+    "videos": "Video"
+  },
+  "settings": {
+    "about": "Giới thiệu Symbisend",
+    "changePin": "Chạm để đổi mã PIN",
+    "chooseFolder": "Chọn thư mục...",
+    "createChecksumsHint": "Bắt đầu chậm hơn với tệp lớn",
+    "restore": "Khôi phục",
+    "restoreDefaults": "Khôi phục mặc định",
+    "restoreDefaultsContent": "Mọi cài đặt trở về mặc định và mã PIN bị xóa. Tên thiết bị, mục yêu thích và lịch sử được giữ lại.",
+    "serverRunning": "Đang chạy",
+    "serverStopped": "Đã dừng",
+    "useDefaultFolder": "Dùng mặc định"
+  }
+}

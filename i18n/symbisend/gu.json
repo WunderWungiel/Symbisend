@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian માટે LocalSend ક્લાયન્ટ.\nLocalSend (પ્રોટોકોલ v2) સાથે સુસંગત."
+  },
+  "deviceTypes": {
+    "desktop": "ડેસ્કટોપ",
+    "headless": "હેડલેસ",
+    "mobile": "મોબાઇલ",
+    "server": "સર્વર",
+    "web": "વેબ"
+  },
+  "errors": {
+    "andMore": "અને બીજી {n}",
+    "cancelledBy": "{name} એ ટ્રાન્સફર રદ કર્યું",
+    "cannotCreateFile": "ફાઇલ બનાવી શકાતી નથી",
+    "cannotCreateFolder": "ફોલ્ડર {folder} બનાવી શકાતું નથી",
+    "cannotRead": "ફાઇલ વાંચી શકાતી નથી",
+    "cannotWrite": "ફાઇલ લખી શકાતી નથી (મેમરી ભરાઈ ગઈ?)",
+    "certificateChanged": "આ તે {name} નથી જે મળ્યું હતું (તેનું સર્ટિફિકેટ અલગ છે)",
+    "certificateRejected": "{ip} નું સર્ટિફિકેટ નકારવામાં આવ્યું",
+    "checksum": "ચેકસમ મેળ ખાતો નથી",
+    "connectionBroke": "કનેક્શન તૂટી ગયું",
+    "connectionLost": "કનેક્શન ગુમાવ્યું",
+    "deviceGone": "ડિવાઇસ ઉપલબ્ધ નથી",
+    "httpError": "{name} એ ભૂલ {status} સાથે જવાબ આપ્યો",
+    "invalidAnswer": "પ્રાપ્તકર્તાએ અમાન્ય જવાબ મોકલ્યો",
+    "largerThanAnnounced": "જણાવેલા કદ કરતાં મોટી",
+    "noDeviceAt": "{ip} પર કોઈ LocalSend ડિવાઇસ મળ્યું નથી",
+    "notConnected": "કનેક્ટ થયેલ નથી",
+    "notSaved": "સેવ થઈ નથી:",
+    "notSent": "મોકલાઈ નથી:",
+    "ownAddress": "આ સરનામું આ ફોનનું છે",
+    "stoppedResponding": "{name} એ જવાબ આપવાનું બંધ કર્યું",
+    "stoppedSending": "{name} એ મોકલવાનું બંધ કર્યું",
+    "stoppedSendingSome": "{name} એ મોકલવાનું બંધ કર્યું. સેવ થયેલી ફાઇલો: {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "મનપસંદમાં ઉમેરી શકાયું નથી",
+    "saveFailed": "મનપસંદ સેવ કરી શકાયું નથી"
+  },
+  "general": {
+    "clear": "સાફ કરો",
+    "invalidIp": "અમાન્ય IP સરનામું",
+    "transferCancelled": "ટ્રાન્સફર રદ કરવામાં આવ્યું",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "ફોલ્ડર ખોલી શકાતું નથી",
+    "cannotOpenFolderContent": "ડાઉનલોડ ફોલ્ડર ખોલી શકાયું નથી:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "ફોલ્ડર બતાવી શકાતું નથી."
+  },
+  "picker": {
+    "selectFile": "ફાઇલ પસંદ કરો",
+    "selectFiles": "ફાઇલો પસંદ કરો",
+    "selectFolder": "ફોલ્ડર પસંદ કરો"
+  },
+  "receive": {
+    "message": "સંદેશ",
+    "saved": {
+      "one": "{name} તરફથી 1 ફાઇલ સેવ થઈ",
+      "other": "{name} તરફથી સેવ થયેલી ફાઇલો: {n}"
+    },
+    "savedTo": "{folder} માં",
+    "waitingFor": "{name} ની રાહ જોવાય છે..."
+  },
+  "receiveLink": {
+    "connect": "કનેક્ટ કરો",
+    "noNetwork": "નેટવર્ક સાથે કનેક્ટ થયેલ નથી.",
+    "serverStopped": "સર્વર બંધ છે.",
+    "startServer": "સર્વર શરૂ કરો"
+  },
+  "selection": {
+    "textItem": "ટેક્સ્ટ, {size} - ફેરફાર કરવા ટેપ કરો"
+  },
+  "send": {
+    "asksForPin": "{name} પિન માંગે છે",
+    "connecting": "કનેક્ટ થઈ રહ્યું છે",
+    "connectingTo": "{name} સાથે કનેક્ટ થઈ રહ્યું છે...",
+    "editText": "ટેક્સ્ટ બદલો",
+    "folderTruncated": "ફોલ્ડરની માત્ર પહેલી {n} ફાઇલો ઉમેરાઈ",
+    "images": "છબીઓ",
+    "noDevices": "કોઈ ડિવાઇસ મળ્યું નથી",
+    "preparing": "તૈયારી ચાલુ છે",
+    "searching": "શોધી રહ્યા છીએ...",
+    "sentSome": "{name} ને મોકલેલી ફાઇલો: {curr} / {n}",
+    "sentTo": "{name} ને મોકલ્યું",
+    "totalProgress": "કુલ પ્રગતિ",
+    "videos": "વિડિઓ"
+  },
+  "settings": {
+    "about": "Symbisend વિશે",
+    "changePin": "પિન બદલવા ટેપ કરો",
+    "chooseFolder": "ફોલ્ડર પસંદ કરો...",
+    "createChecksumsHint": "મોટી ફાઇલોમાં શરૂઆત ધીમી થાય છે",
+    "restore": "પુનઃસ્થાપિત કરો",
+    "restoreDefaults": "ડિફોલ્ટ પુનઃસ્થાપિત કરો",
+    "restoreDefaultsContent": "બધી સેટિંગ્સ ડિફોલ્ટ પર પાછી જશે અને પિન દૂર થશે. તમારું ડિવાઇસ નામ, મનપસંદ અને ઇતિહાસ રહેશે.",
+    "serverRunning": "ચાલુ છે",
+    "serverStopped": "બંધ છે",
+    "useDefaultFolder": "ડિફોલ્ટ વાપરો"
+  }
+}

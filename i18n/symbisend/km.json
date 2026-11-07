@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "កម្មវិធី LocalSend សម្រាប់ Symbian។\nត្រូវគ្នាជាមួយ LocalSend (protocol v2)។"
+  },
+  "deviceTypes": {
+    "desktop": "កុំព្យូទ័រ",
+    "headless": "Headless",
+    "mobile": "ទូរសព្ទ",
+    "server": "Server",
+    "web": "គេហទំព័រ"
+  },
+  "errors": {
+    "andMore": "និងទៀត {n}",
+    "cancelledBy": "{name} បានបោះបង់ការផ្ទេរ",
+    "cannotCreateFile": "មិនអាចបង្កើតឯកសារបានទេ",
+    "cannotCreateFolder": "មិនអាចបង្កើតថត {folder} បានទេ",
+    "cannotRead": "មិនអាចអានឯកសារបានទេ",
+    "cannotWrite": "មិនអាចសរសេរឯកសារបានទេ (ពេញអង្គចងចាំឬ?)",
+    "certificateChanged": "នេះមិនមែនជា {name} ដែលបានរកឃើញទេ (វិញ្ញាបនបត្រខុសគ្នា)",
+    "certificateRejected": "វិញ្ញាបនបត្ររបស់ {ip} ត្រូវបានបដិសេធ",
+    "checksum": "checksum មិនត្រូវគ្នា",
+    "connectionBroke": "ការតភ្ជាប់ដាច់",
+    "connectionLost": "បាត់ការតភ្ជាប់",
+    "deviceGone": "រកមិនឃើញឧបករណ៍ទៀតទេ",
+    "httpError": "{name} ឆ្លើយតបដោយមានបញ្ហា {status}",
+    "invalidAnswer": "អ្នកទទួលបានផ្ញើចម្លើយមិនត្រឹមត្រូវ",
+    "largerThanAnnounced": "ធំជាងដែលបានប្រកាស",
+    "noDeviceAt": "រកមិនឃើញឧបករណ៍ LocalSend នៅ {ip} ទេ",
+    "notConnected": "មិនបានតភ្ជាប់",
+    "notSaved": "មិនបានរក្សាទុក៖",
+    "notSent": "មិនបានផ្ញើ៖",
+    "ownAddress": "នេះជាអាសយដ្ឋានរបស់ទូរសព្ទនេះ",
+    "stoppedResponding": "{name} ឈប់ឆ្លើយតប",
+    "stoppedSending": "{name} ឈប់ផ្ញើ",
+    "stoppedSendingSome": "{name} ឈប់ផ្ញើ។ បានរក្សាទុកឯកសារ {curr} / {n}។"
+  },
+  "favorites": {
+    "addFailed": "មិនអាចបន្ថែមទៅសំណព្វបានទេ",
+    "saveFailed": "មិនអាចរក្សាទុកសំណព្វបានទេ"
+  },
+  "general": {
+    "clear": "សម្អាត",
+    "invalidIp": "អាសយដ្ឋាន IP មិនត្រឹមត្រូវ",
+    "transferCancelled": "ការផ្ទេរត្រូវបានបោះបង់",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "មិនអាចបើកថតបានទេ",
+    "cannotOpenFolderContent": "មិនអាចបើកថតទាញយកបានទេ៖\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "មិនអាចបង្ហាញថតបានទេ។"
+  },
+  "picker": {
+    "selectFile": "ជ្រើសរើសឯកសារ",
+    "selectFiles": "ជ្រើសរើសឯកសារ",
+    "selectFolder": "ជ្រើសរើសថត"
+  },
+  "receive": {
+    "message": "សារ",
+    "saved": {
+      "one": "បានរក្សាទុកឯកសារ 1 ពី {name}",
+      "other": "បានរក្សាទុកឯកសារពី {name}៖ {n}"
+    },
+    "savedTo": "ទៅកាន់ {folder}",
+    "waitingFor": "កំពុងរង់ចាំ {name}..."
+  },
+  "receiveLink": {
+    "connect": "តភ្ជាប់",
+    "noNetwork": "មិនបានតភ្ជាប់បណ្តាញទេ។",
+    "serverStopped": "Server ត្រូវបានបញ្ឈប់។",
+    "startServer": "ចាប់ផ្តើម server"
+  },
+  "selection": {
+    "textItem": "អត្ថបទ {size} - ចុចដើម្បីកែ"
+  },
+  "send": {
+    "asksForPin": "{name} ស្នើសុំលេខកូដ PIN",
+    "connecting": "កំពុងតភ្ជាប់",
+    "connectingTo": "កំពុងតភ្ជាប់ទៅ {name}...",
+    "editText": "កែអត្ថបទ",
+    "folderTruncated": "បានបន្ថែមតែឯកសារ {n} ដំបូងនៃថត",
+    "images": "រូបភាព",
+    "noDevices": "រកមិនឃើញឧបករណ៍",
+    "preparing": "កំពុងរៀបចំ",
+    "searching": "កំពុងស្វែងរក...",
+    "sentSome": "បានផ្ញើឯកសារទៅ {name} {curr} / {n}",
+    "sentTo": "បានផ្ញើទៅ {name}",
+    "totalProgress": "វឌ្ឍនភាពសរុប",
+    "videos": "វីដេអូ"
+  },
+  "settings": {
+    "about": "អំពី Symbisend",
+    "changePin": "ចុចដើម្បីប្តូរ PIN",
+    "chooseFolder": "ជ្រើសរើសថត...",
+    "createChecksumsHint": "ចាប់ផ្តើមយឺតជាងមុនជាមួយឯកសារធំ",
+    "restore": "ស្តារ",
+    "restoreDefaults": "ស្តារលំនាំដើម",
+    "restoreDefaultsContent": "ការកំណត់ទាំងអស់នឹងត្រឡប់ទៅលំនាំដើម ហើយ PIN នឹងត្រូវលុប។ ឈ្មោះឧបករណ៍ សំណព្វ និងប្រវត្តិនៅដដែល។",
+    "serverRunning": "កំពុងដំណើរការ",
+    "serverStopped": "បានបញ្ឈប់",
+    "useDefaultFolder": "ប្រើលំនាំដើម"
+  }
+}

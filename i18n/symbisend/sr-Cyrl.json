@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSend клијент за Symbian.\nКомпатибилан са LocalSend-ом (протокол v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Рачунар",
+    "headless": "Без екрана",
+    "mobile": "Мобилни уређај",
+    "server": "Сервер",
+    "web": "Веб"
+  },
+  "errors": {
+    "andMore": "и још {n}",
+    "cancelledBy": "Уређај {name} је отказао пренос",
+    "cannotCreateFile": "Фајл се не може направити",
+    "cannotCreateFolder": "Фолдер {folder} се не може направити",
+    "cannotRead": "Фајл се не може прочитати",
+    "cannotWrite": "Фајл се не може уписати (пуна меморија?)",
+    "certificateChanged": "Ово није пронађени уређај {name} (сертификат је другачији)",
+    "certificateRejected": "Сертификат адресе {ip} је одбијен",
+    "checksum": "Контролна сума се не поклапа",
+    "connectionBroke": "Веза је прекинута",
+    "connectionLost": "Веза је изгубљена",
+    "deviceGone": "Уређај више није доступан",
+    "httpError": "Уређај {name} је одговорио грешком {status}",
+    "invalidAnswer": "Прималац је послао неисправан одговор",
+    "largerThanAnnounced": "Већи од најављеног",
+    "noDeviceAt": "Ниједан LocalSend уређај није пронађен на адреси {ip}",
+    "notConnected": "Није повезано",
+    "notSaved": "Није сачувано:",
+    "notSent": "Није послато:",
+    "ownAddress": "Ово је адреса овог телефона",
+    "stoppedResponding": "Уређај {name} је престао да одговара",
+    "stoppedSending": "Уређај {name} је престао да шаље",
+    "stoppedSendingSome": "Уређај {name} је престао да шаље. Сачувано фајлова: {curr} од {n}."
+  },
+  "favorites": {
+    "addFailed": "Додавање у омиљене није успело",
+    "saveFailed": "Чување омиљеног није успело"
+  },
+  "general": {
+    "clear": "Обриши",
+    "invalidIp": "Неисправна IP адреса",
+    "transferCancelled": "Пренос је отказан",
+    "xOfY": "{curr} од {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Фолдер се не може отворити",
+    "cannotOpenFolderContent": "Фолдер за преузимање се није могао отворити:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Фолдер се не може приказати."
+  },
+  "picker": {
+    "selectFile": "Изабери фајл",
+    "selectFiles": "Изабери фајлове",
+    "selectFolder": "Изабери фолдер"
+  },
+  "receive": {
+    "message": "Порука",
+    "saved": {
+      "one": "Сачуван 1 фајл од {name}",
+      "other": "Сачувани фајлови од {name}: {n}"
+    },
+    "savedTo": "у {folder}",
+    "waitingFor": "Чекање на {name}..."
+  },
+  "receiveLink": {
+    "connect": "Повежи се",
+    "noNetwork": "Није повезано са мрежом.",
+    "serverStopped": "Сервер је заустављен.",
+    "startServer": "Покрени сервер"
+  },
+  "selection": {
+    "textItem": "Текст, {size} - додирните за измену"
+  },
+  "send": {
+    "asksForPin": "{name} тражи PIN",
+    "connecting": "Повезивање",
+    "connectingTo": "Повезивање са {name}...",
+    "editText": "Измени текст",
+    "folderTruncated": "Додати су само први фајлови из фолдера: {n}",
+    "images": "Слике",
+    "noDevices": "Нема пронађених уређаја",
+    "preparing": "Припрема",
+    "searching": "Претрага...",
+    "sentSome": "Послато фајлова на {name}: {curr} од {n}",
+    "sentTo": "Послато на {name}",
+    "totalProgress": "Укупан напредак",
+    "videos": "Видео снимци"
+  },
+  "settings": {
+    "about": "О апликацији Symbisend",
+    "changePin": "Додирните да промените PIN",
+    "chooseFolder": "Изабери фолдер...",
+    "createChecksumsHint": "Спорији почетак код великих фајлова",
+    "restore": "Врати",
+    "restoreDefaults": "Врати подразумевано",
+    "restoreDefaultsContent": "Сва подешавања се враћају на подразумевана, а PIN се уклања. Назив уређаја, омиљени и историја остају.",
+    "serverRunning": "Ради",
+    "serverStopped": "Заустављен",
+    "useDefaultFolder": "Подразумевани"
+  }
+}

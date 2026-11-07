@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "適用於 Symbian 的 LocalSend 用戶端。\n相容於 LocalSend（協定 v2）。"
+  },
+  "deviceTypes": {
+    "desktop": "桌面裝置",
+    "headless": "無介面裝置",
+    "mobile": "行動裝置",
+    "server": "伺服器",
+    "web": "網頁"
+  },
+  "errors": {
+    "andMore": "另有 {n} 個",
+    "cancelledBy": "{name} 已取消傳輸",
+    "cannotCreateFile": "無法建立檔案",
+    "cannotCreateFolder": "無法建立資料夾 {folder}",
+    "cannotRead": "無法讀取檔案",
+    "cannotWrite": "無法寫入檔案（儲存空間已滿？）",
+    "certificateChanged": "這不是先前找到的 {name}（憑證不同）",
+    "certificateRejected": "{ip} 的憑證已遭拒絕",
+    "checksum": "校驗碼不相符",
+    "connectionBroke": "連線已中斷",
+    "connectionLost": "連線已斷開",
+    "deviceGone": "裝置已無法使用",
+    "httpError": "{name} 回應錯誤 {status}",
+    "invalidAnswer": "接收者回傳了無效的回應",
+    "largerThanAnnounced": "大於宣告的大小",
+    "noDeviceAt": "在 {ip} 找不到 LocalSend 裝置",
+    "notConnected": "未連線",
+    "notSaved": "未儲存：",
+    "notSent": "未傳送：",
+    "ownAddress": "這是本機的位址",
+    "stoppedResponding": "{name} 已停止回應",
+    "stoppedSending": "{name} 已停止傳送",
+    "stoppedSendingSome": "{name} 已停止傳送。已儲存 {curr} / {n} 個檔案。"
+  },
+  "favorites": {
+    "addFailed": "無法加入最愛",
+    "saveFailed": "無法儲存最愛"
+  },
+  "general": {
+    "clear": "清除",
+    "invalidIp": "IP 位址無效",
+    "transferCancelled": "傳輸已取消",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "無法開啟資料夾",
+    "cannotOpenFolderContent": "無法開啟下載資料夾：\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "無法顯示該資料夾。"
+  },
+  "picker": {
+    "selectFile": "選擇檔案",
+    "selectFiles": "選擇檔案",
+    "selectFolder": "選擇資料夾"
+  },
+  "receive": {
+    "message": "訊息",
+    "saved": {
+      "one": "已儲存來自 {name} 的 1 個檔案",
+      "other": "已儲存來自 {name} 的 {n} 個檔案"
+    },
+    "savedTo": "位置：{folder}",
+    "waitingFor": "正在等候 {name}…"
+  },
+  "receiveLink": {
+    "connect": "連線",
+    "noNetwork": "未連線至網路。",
+    "serverStopped": "伺服器已停止。",
+    "startServer": "啟動伺服器"
+  },
+  "selection": {
+    "textItem": "文字，{size} - 點選以編輯"
+  },
+  "send": {
+    "asksForPin": "{name} 需要 PIN 碼",
+    "connecting": "正在連線",
+    "connectingTo": "正在連線至 {name}…",
+    "editText": "編輯文字",
+    "folderTruncated": "僅加入資料夾中的前 {n} 個檔案",
+    "images": "圖片",
+    "noDevices": "找不到裝置",
+    "preparing": "準備中",
+    "searching": "正在搜尋…",
+    "sentSome": "已向 {name} 傳送 {curr} / {n} 個檔案",
+    "sentTo": "已傳送給 {name}",
+    "totalProgress": "整體進度",
+    "videos": "影片"
+  },
+  "settings": {
+    "about": "關於 Symbisend",
+    "changePin": "點選以變更 PIN 碼",
+    "chooseFolder": "選擇資料夾…",
+    "createChecksumsHint": "大型檔案的啟動會較慢",
+    "restore": "還原",
+    "restoreDefaults": "還原預設值",
+    "restoreDefaultsContent": "所有設定將還原為預設值，PIN 碼將被移除。裝置名稱、最愛與歷史記錄會保留。",
+    "serverRunning": "執行中",
+    "serverStopped": "已停止",
+    "useDefaultFolder": "使用預設值"
+  }
+}

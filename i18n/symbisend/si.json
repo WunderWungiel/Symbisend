@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian සඳහා LocalSend යෙදුමක්.\nLocalSend (protocol v2) සමඟ ගැළපේ."
+  },
+  "deviceTypes": {
+    "desktop": "ඩෙස්ක්ටොප්",
+    "headless": "Headless",
+    "mobile": "ජංගම",
+    "server": "සේවාදායකය",
+    "web": "වෙබ්"
+  },
+  "errors": {
+    "andMore": "තවත් {n}ක්",
+    "cancelledBy": "{name} මාරුව අවලංගු කළා",
+    "cannotCreateFile": "ගොනුව සෑදිය නොහැක",
+    "cannotCreateFolder": "{folder} ෆෝල්ඩරය සෑදිය නොහැක",
+    "cannotRead": "ගොනුව කියවිය නොහැක",
+    "cannotWrite": "ගොනුව ලිවිය නොහැක (මතකය පිරී ඇතිද?)",
+    "certificateChanged": "මෙය සොයාගත් {name} නොවේ (එහි සහතිකය වෙනස්)",
+    "certificateRejected": "{ip} හි සහතිකය ප්‍රතික්ෂේප කළා",
+    "checksum": "Checksum නොගැළපේ",
+    "connectionBroke": "සම්බන්ධතාවය විසන්ධි විය",
+    "connectionLost": "සම්බන්ධතාවය නැති විය",
+    "deviceGone": "උපාංගය නැත",
+    "httpError": "{name} දෝෂ {status} ලෙස පිළිතුරු දුන්නා",
+    "invalidAnswer": "ලබන්නා වලංගු නොවන පිළිතුරක් එවා ඇත",
+    "largerThanAnnounced": "ප්‍රකාශ කළ ප්‍රමාණයට වඩා විශාලයි",
+    "noDeviceAt": "{ip} හි LocalSend උපාංගයක් හමු නොවීය",
+    "notConnected": "සම්බන්ධ නැත",
+    "notSaved": "සුරකින ලද්දේ නැත:",
+    "notSent": "යවන ලද්දේ නැත:",
+    "ownAddress": "මෙය මෙම දුරකථනයේ ලිපිනයයි",
+    "stoppedResponding": "{name} ප්‍රතිචාර දැක්වීම නතර කළා",
+    "stoppedSending": "{name} යැවීම නතර කළා",
+    "stoppedSendingSome": "{name} යැවීම නතර කළා. ගොනු {n} න් {curr} ක් සුරකින ලදී."
+  },
+  "favorites": {
+    "addFailed": "ප්‍රියතමයට එක් කළ නොහැකි විය",
+    "saveFailed": "ප්‍රියතම සුරැකිය නොහැකි විය"
+  },
+  "general": {
+    "clear": "හිස් කරන්න",
+    "invalidIp": "වලංගු නොවන IP ලිපිනයකි",
+    "transferCancelled": "මාරුව අවලංගු කරන ලදී",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "ෆෝල්ඩරය විවෘත කළ නොහැක",
+    "cannotOpenFolderContent": "බාගත කිරීමේ ෆෝල්ඩරය විවෘත කළ නොහැකි විය:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "ෆෝල්ඩරය පෙන්විය නොහැක."
+  },
+  "picker": {
+    "selectFile": "ගොනුව තෝරන්න",
+    "selectFiles": "ගොනු තෝරන්න",
+    "selectFolder": "ෆෝල්ඩරය තෝරන්න"
+  },
+  "receive": {
+    "message": "පණිවිඩය",
+    "saved": {
+      "one": "{name} වෙතින් ගොනුවක් සුරකින ලදී",
+      "other": "{name} වෙතින් ගොනු සුරකින ලදී: {n}"
+    },
+    "savedTo": "{folder} වෙත",
+    "waitingFor": "{name} සඳහා රැඳී සිටිමින්..."
+  },
+  "receiveLink": {
+    "connect": "සම්බන්ධ වන්න",
+    "noNetwork": "ජාලයකට සම්බන්ධ වී නැත.",
+    "serverStopped": "සේවාදායකය නතර කර ඇත.",
+    "startServer": "සේවාදායකය අරඹන්න"
+  },
+  "selection": {
+    "textItem": "පෙළ, {size} - සංස්කරණයට තට්ටු කරන්න"
+  },
+  "send": {
+    "asksForPin": "{name} PIN එකක් ඉල්ලයි",
+    "connecting": "සම්බන්ධ වෙමින්",
+    "connectingTo": "{name} වෙත සම්බන්ධ වෙමින්...",
+    "editText": "පෙළ සංස්කරණය",
+    "folderTruncated": "ෆෝල්ඩරයේ පළමු ගොනු {n} පමණක් එක් කරන ලදී",
+    "images": "රූප",
+    "noDevices": "උපාංග හමු නොවීය",
+    "preparing": "සූදානම් කරමින්",
+    "searching": "සොයමින්...",
+    "sentSome": "{name} වෙත ගොනු යවන ලදී: {curr} / {n}",
+    "sentTo": "{name} වෙත යවන ලදී",
+    "totalProgress": "සමස්ත ප්‍රගතිය",
+    "videos": "වීඩියෝ"
+  },
+  "settings": {
+    "about": "Symbisend ගැන",
+    "changePin": "PIN වෙනස් කිරීමට තට්ටු කරන්න",
+    "chooseFolder": "ෆෝල්ඩරය තෝරන්න...",
+    "createChecksumsHint": "විශාල ගොනු සමඟ ආරම්භය මන්දගාමීයි",
+    "restore": "යළි පිහිටුවන්න",
+    "restoreDefaults": "පෙරනිමි යළි පිහිටුවන්න",
+    "restoreDefaultsContent": "සියලු සැකසුම් පෙරනිමියට පෙරළෙන අතර PIN ඉවත් වේ. ඔබගේ උපාංග නම, ප්‍රියතම සහ ඉතිහාසය ඉතිරි වේ.",
+    "serverRunning": "ධාවනය වේ",
+    "serverStopped": "නතර කර ඇත",
+    "useDefaultFolder": "පෙරනිමිය භාවිත කරන්න"
+  }
+}

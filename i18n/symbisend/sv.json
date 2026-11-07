@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "En LocalSend-klient för Symbian.\nKompatibel med LocalSend (protokoll v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Dator",
+    "headless": "Utan skärm",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Webb"
+  },
+  "errors": {
+    "andMore": "och {n} till",
+    "cancelledBy": "{name} avbröt överföringen",
+    "cannotCreateFile": "Det går inte att skapa filen",
+    "cannotCreateFolder": "Det går inte att skapa mappen {folder}",
+    "cannotRead": "Det går inte att läsa filen",
+    "cannotWrite": "Det går inte att skriva filen (fullt minne?)",
+    "certificateChanged": "Enheten är inte {name} – certifikatet skiljer sig",
+    "certificateRejected": "Certifikatet från {ip} avvisades",
+    "checksum": "Kontrollsumman stämmer inte",
+    "connectionBroke": "Anslutningen bröts",
+    "connectionLost": "Anslutningen förlorades",
+    "deviceGone": "Enheten är borta",
+    "httpError": "{name} svarade med fel {status}",
+    "invalidAnswer": "Mottagaren skickade ett ogiltigt svar",
+    "largerThanAnnounced": "Större än angivet",
+    "noDeviceAt": "Ingen LocalSend-enhet hittades på {ip}",
+    "notConnected": "Inte ansluten",
+    "notSaved": "Inte sparade:",
+    "notSent": "Inte skickade:",
+    "ownAddress": "Det här är adressen till den här telefonen",
+    "stoppedResponding": "{name} svarar inte längre",
+    "stoppedSending": "{name} slutade skicka",
+    "stoppedSendingSome": "{name} slutade skicka. {curr} av {n} filer sparades."
+  },
+  "favorites": {
+    "addFailed": "Det gick inte att lägga till i favoriter",
+    "saveFailed": "Det gick inte att spara favoriten"
+  },
+  "general": {
+    "clear": "Rensa",
+    "invalidIp": "Ogiltig IP-adress",
+    "transferCancelled": "Överföringen avbröts",
+    "xOfY": "{curr} av {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Det går inte att öppna mappen",
+    "cannotOpenFolderContent": "Nedladdningsmappen kunde inte öppnas:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Mappen kan inte visas."
+  },
+  "picker": {
+    "selectFile": "Välj fil",
+    "selectFiles": "Välj filer",
+    "selectFolder": "Välj mapp"
+  },
+  "receive": {
+    "message": "Meddelande",
+    "saved": {
+      "one": "Sparade 1 fil från {name}",
+      "other": "Sparade {n} filer från {name}"
+    },
+    "savedTo": "i {folder}",
+    "waitingFor": "Väntar på {name}..."
+  },
+  "receiveLink": {
+    "connect": "Anslut",
+    "noNetwork": "Inte ansluten till ett nätverk.",
+    "serverStopped": "Servern är stoppad.",
+    "startServer": "Starta server"
+  },
+  "selection": {
+    "textItem": "Text, {size} - tryck för att redigera"
+  },
+  "send": {
+    "asksForPin": "{name} ber om en PIN-kod",
+    "connecting": "Ansluter",
+    "connectingTo": "Ansluter till {name}...",
+    "editText": "Redigera text",
+    "folderTruncated": "Bara de första {n} filerna i mappen lades till",
+    "images": "Bilder",
+    "noDevices": "Inga enheter hittades",
+    "preparing": "Förbereder",
+    "searching": "Söker...",
+    "sentSome": "Skickade {curr} av {n} filer till {name}",
+    "sentTo": "Skickat till {name}",
+    "totalProgress": "Totalt förlopp",
+    "videos": "Videor"
+  },
+  "settings": {
+    "about": "Om Symbisend",
+    "changePin": "Tryck för att ändra PIN-koden",
+    "chooseFolder": "Välj mapp...",
+    "createChecksumsHint": "Långsammare start med stora filer",
+    "restore": "Återställ",
+    "restoreDefaults": "Återställ standardvärden",
+    "restoreDefaultsContent": "Alla inställningar återgår till standardvärdena och PIN-koden tas bort. Enhetsnamn, favoriter och historik behålls.",
+    "serverRunning": "Körs",
+    "serverStopped": "Stoppad",
+    "useDefaultFolder": "Använd standard"
+  }
+}

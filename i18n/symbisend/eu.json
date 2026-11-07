@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSend bezero bat Symbianentzat.\nLocalSend-ekin bateragarria (v2 protokoloa)."
+  },
+  "deviceTypes": {
+    "desktop": "Mahaigainekoa",
+    "headless": "Pantailarik gabe",
+    "mobile": "Mugikorra",
+    "server": "Zerbitzaria",
+    "web": "Weba"
+  },
+  "errors": {
+    "andMore": "eta {n} gehiago",
+    "cancelledBy": "{name} gailuak transferentzia bertan behera utzi du",
+    "cannotCreateFile": "Ezin da fitxategia sortu",
+    "cannotCreateFolder": "Ezin da {folder} direktorioa sortu",
+    "cannotRead": "Ezin da fitxategia irakurri",
+    "cannotWrite": "Ezin da fitxategia idatzi (memoria beteta?)",
+    "certificateChanged": "Hau ez da aurkitutako {name} gailua (ziurtagiria desberdina da)",
+    "certificateRejected": "{ip} gailuaren ziurtagiria baztertu da",
+    "checksum": "Kontrol-batura ez dator bat",
+    "connectionBroke": "Konexioa eten da",
+    "connectionLost": "Konexioa galdu da",
+    "deviceGone": "Gailua desagertu da",
+    "httpError": "{name} gailuak {status} errorearekin erantzun du",
+    "invalidAnswer": "Hartzaileak baliogabeko erantzuna bidali du",
+    "largerThanAnnounced": "Iragarritakoa baino handiagoa",
+    "noDeviceAt": "Ez da LocalSend gailurik aurkitu hemen: {ip}",
+    "notConnected": "Konektatu gabe",
+    "notSaved": "Gorde gabe:",
+    "notSent": "Bidali gabe:",
+    "ownAddress": "Hau telefono honen helbidea da",
+    "stoppedResponding": "{name} gailuak erantzuteari utzi dio",
+    "stoppedSending": "{name} gailuak bidaltzeari utzi dio",
+    "stoppedSendingSome": "{name} gailuak bidaltzeari utzi dio. {curr}/{n} fitxategi gorde dira."
+  },
+  "favorites": {
+    "addFailed": "Ezin izan da gogokoetara gehitu",
+    "saveFailed": "Ezin izan da gogokoa gorde"
+  },
+  "general": {
+    "clear": "Garbitu",
+    "invalidIp": "IP helbide baliogabea",
+    "transferCancelled": "Transferentzia bertan behera utzi da",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Ezin da direktorioa ireki",
+    "cannotOpenFolderContent": "Ezin izan da deskargen direktorioa ireki:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Ezin da direktorioa erakutsi."
+  },
+  "picker": {
+    "selectFile": "Aukeratu fitxategia",
+    "selectFiles": "Aukeratu fitxategiak",
+    "selectFolder": "Aukeratu direktorioa"
+  },
+  "receive": {
+    "message": "Mezua",
+    "saved": {
+      "one": "Fitxategi 1 gorde da {name} gailutik",
+      "other": "{name} gailutik gordetako fitxategiak: {n}"
+    },
+    "savedTo": "hemen: {folder}",
+    "waitingFor": "{name} gailuaren zain..."
+  },
+  "receiveLink": {
+    "connect": "Konektatu",
+    "noNetwork": "Ez dago sare batera konektatuta.",
+    "serverStopped": "Zerbitzaria geldituta dago.",
+    "startServer": "Hasieratu zerbitzaria"
+  },
+  "selection": {
+    "textItem": "Testua, {size} - ukitu editatzeko"
+  },
+  "send": {
+    "asksForPin": "{name} gailuak PINa eskatzen du",
+    "connecting": "Konektatzen",
+    "connectingTo": "{name} gailura konektatzen...",
+    "editText": "Editatu testua",
+    "folderTruncated": "Direktorioko lehen {n} fitxategiak bakarrik gehitu dira",
+    "images": "Irudiak",
+    "noDevices": "Ez da gailurik aurkitu",
+    "preparing": "Prestatzen",
+    "searching": "Bilatzen...",
+    "sentSome": "{name} gailura bidalitako fitxategiak: {curr}/{n}",
+    "sentTo": "{name} gailura bidali da",
+    "totalProgress": "Aurrerapena guztira",
+    "videos": "Bideoak"
+  },
+  "settings": {
+    "about": "Symbisend-i buruz",
+    "changePin": "Ukitu PINa aldatzeko",
+    "chooseFolder": "Aukeratu direktorioa...",
+    "createChecksumsHint": "Hasiera motelagoa fitxategi handiekin",
+    "restore": "Berrezarri",
+    "restoreDefaults": "Berrezarri lehenespenak",
+    "restoreDefaultsContent": "Ezarpen guztiak lehenetsitako balioetara itzuliko dira eta PINa kenduko da. Gailuaren izena, gogokoak eta historia mantentzen dira.",
+    "serverRunning": "Martxan",
+    "serverStopped": "Geldituta",
+    "useDefaultFolder": "Erabili lehenetsia"
+  }
+}

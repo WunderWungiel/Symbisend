@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "適用於 Symbian 嘅 LocalSend 客戶端。\n相容 LocalSend（協定 v2）。"
+  },
+  "deviceTypes": {
+    "desktop": "桌面裝置",
+    "headless": "無介面裝置",
+    "mobile": "流動裝置",
+    "server": "Server",
+    "web": "網頁"
+  },
+  "errors": {
+    "andMore": "仲有 {n} 個",
+    "cancelledBy": "{name} 取消咗傳輸",
+    "cannotCreateFile": "建立唔到檔案",
+    "cannotCreateFolder": "建立唔到資料夾 {folder}",
+    "cannotRead": "讀取唔到檔案",
+    "cannotWrite": "寫入唔到檔案（記憶體滿咗？）",
+    "certificateChanged": "呢個唔係之前搵到嘅 {name}（證書唔同）",
+    "certificateRejected": "{ip} 嘅證書被拒絕",
+    "checksum": "checksum 對唔上",
+    "connectionBroke": "連線中斷咗",
+    "connectionLost": "連線斷咗",
+    "deviceGone": "個裝置用唔到喇",
+    "httpError": "{name} 回覆錯誤 {status}",
+    "invalidAnswer": "接收者回覆咗無效嘅回應",
+    "largerThanAnnounced": "大過原本講明嘅大小",
+    "noDeviceAt": "喺 {ip} 搵唔到 LocalSend 裝置",
+    "notConnected": "未連線",
+    "notSaved": "未儲存：",
+    "notSent": "未傳送：",
+    "ownAddress": "呢個係本機嘅地址",
+    "stoppedResponding": "{name} 冇再回應",
+    "stoppedSending": "{name} 停止咗傳送",
+    "stoppedSendingSome": "{name} 停止咗傳送。已儲存 {curr} / {n} 個檔案。"
+  },
+  "favorites": {
+    "addFailed": "加入唔到收藏",
+    "saveFailed": "儲存唔到收藏"
+  },
+  "general": {
+    "clear": "清除",
+    "invalidIp": "IP 地址無效",
+    "transferCancelled": "傳輸已取消",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "開唔到資料夾",
+    "cannotOpenFolderContent": "開唔到下載資料夾：\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "顯示唔到個資料夾。"
+  },
+  "picker": {
+    "selectFile": "揀選檔案",
+    "selectFiles": "揀選檔案",
+    "selectFolder": "揀選資料夾"
+  },
+  "receive": {
+    "message": "訊息",
+    "saved": {
+      "one": "已儲存 {name} 傳嚟嘅 1 個檔案",
+      "other": "已儲存 {name} 傳嚟嘅 {n} 個檔案"
+    },
+    "savedTo": "位置：{folder}",
+    "waitingFor": "等緊 {name}……"
+  },
+  "receiveLink": {
+    "connect": "連線",
+    "noNetwork": "未連接到網絡。",
+    "serverStopped": "Server 已停止。",
+    "startServer": "啟動 Server"
+  },
+  "selection": {
+    "textItem": "文字，{size} - 點一下就可以編輯"
+  },
+  "send": {
+    "asksForPin": "{name} 要求輸入密碼",
+    "connecting": "連線緊",
+    "connectingTo": "連線緊 {name}……",
+    "editText": "編輯文字",
+    "folderTruncated": "只加入咗資料夾入面頭 {n} 個檔案",
+    "images": "圖片",
+    "noDevices": "搵唔到裝置",
+    "preparing": "準備緊",
+    "searching": "搜尋緊……",
+    "sentSome": "已傳送 {curr} / {n} 個檔案畀 {name}",
+    "sentTo": "已傳送畀 {name}",
+    "totalProgress": "整體進度",
+    "videos": "影片"
+  },
+  "settings": {
+    "about": "關於 Symbisend",
+    "changePin": "點一下可以更改密碼",
+    "chooseFolder": "揀選資料夾……",
+    "createChecksumsHint": "大檔案會慢啲開始",
+    "restore": "還原",
+    "restoreDefaults": "還原預設值",
+    "restoreDefaultsContent": "所有設定都會還原做預設值，密碼會被移除。裝置名稱、收藏同歷史記錄會保留。",
+    "serverRunning": "運行緊",
+    "serverStopped": "已停止",
+    "useDefaultFolder": "用預設值"
+  }
+}

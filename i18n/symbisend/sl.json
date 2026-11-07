@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Odjemalec LocalSend za Symbian.\nZdružljiv z LocalSend (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Računalnik",
+    "headless": "Brez zaslona",
+    "mobile": "Mobilna",
+    "server": "Strežnik",
+    "web": "Splet"
+  },
+  "errors": {
+    "andMore": "in še: {n}",
+    "cancelledBy": "{name}: prenos preklican",
+    "cannotCreateFile": "Datoteke ni mogoče ustvariti",
+    "cannotCreateFolder": "Mape {folder} ni mogoče ustvariti",
+    "cannotRead": "Datoteke ni mogoče prebrati",
+    "cannotWrite": "Datoteke ni mogoče zapisati (poln pomnilnik?)",
+    "certificateChanged": "To ni naprava {name}, ki je bila najdena (ima drugačno potrdilo)",
+    "certificateRejected": "Potrdilo naprave {ip} je bilo zavrnjeno",
+    "checksum": "Kontrolna vsota se ne ujema",
+    "connectionBroke": "Povezava je bila prekinjena",
+    "connectionLost": "Povezava izgubljena",
+    "deviceGone": "Naprava ni več dosegljiva",
+    "httpError": "{name}: odgovor z napako {status}",
+    "invalidAnswer": "Prejemnik je poslal neveljaven odgovor",
+    "largerThanAnnounced": "Večja od napovedane",
+    "noDeviceAt": "Na naslovu {ip} ni najdene naprave LocalSend",
+    "notConnected": "Ni povezave",
+    "notSaved": "Ni shranjeno:",
+    "notSent": "Ni poslano:",
+    "ownAddress": "To je naslov tega telefona",
+    "stoppedResponding": "{name} se ne odziva več",
+    "stoppedSending": "{name}: pošiljanje prekinjeno",
+    "stoppedSendingSome": "{name}: pošiljanje prekinjeno. Shranjene datoteke: {curr} od {n}."
+  },
+  "favorites": {
+    "addFailed": "Dodajanje med priljubljene ni uspelo",
+    "saveFailed": "Shranjevanje priljubljene naprave ni uspelo"
+  },
+  "general": {
+    "clear": "Počisti",
+    "invalidIp": "Neveljaven naslov IP",
+    "transferCancelled": "Prenos je bil preklican",
+    "xOfY": "{curr} od {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Mape ni mogoče odpreti",
+    "cannotOpenFolderContent": "Mape za prenose ni bilo mogoče odpreti:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Mape ni mogoče prikazati."
+  },
+  "picker": {
+    "selectFile": "Izberite datoteko",
+    "selectFiles": "Izberite datoteke",
+    "selectFolder": "Izberite mapo"
+  },
+  "receive": {
+    "message": "Sporočilo",
+    "saved": {
+      "one": "Shranjena 1 datoteka od {name}",
+      "other": "Shranjene datoteke od {name}: {n}"
+    },
+    "savedTo": "v: {folder}",
+    "waitingFor": "Čakanje na {name}..."
+  },
+  "receiveLink": {
+    "connect": "Poveži",
+    "noNetwork": "Ni povezave z omrežjem.",
+    "serverStopped": "Strežnik je ustavljen.",
+    "startServer": "Zaženi strežnik"
+  },
+  "selection": {
+    "textItem": "Besedilo, {size} - tapnite za urejanje"
+  },
+  "send": {
+    "asksForPin": "{name} zahteva PIN",
+    "connecting": "Povezovanje",
+    "connectingTo": "Povezovanje z {name}...",
+    "editText": "Uredi besedilo",
+    "folderTruncated": "Dodane so bile le prve datoteke iz mape (največ {n})",
+    "images": "Slike",
+    "noDevices": "Ni najdenih naprav",
+    "preparing": "Priprava",
+    "searching": "Iskanje...",
+    "sentSome": "Poslane datoteke za {name}: {curr} od {n}",
+    "sentTo": "Poslano napravi {name}",
+    "totalProgress": "Skupni napredek",
+    "videos": "Videoposnetki"
+  },
+  "settings": {
+    "about": "O aplikaciji Symbisend",
+    "changePin": "Tapnite za spremembo PIN",
+    "chooseFolder": "Izberi mapo...",
+    "createChecksumsHint": "Počasnejši začetek pri velikih datotekah",
+    "restore": "Obnovi",
+    "restoreDefaults": "Obnovi privzeto",
+    "restoreDefaultsContent": "Vse nastavitve se vrnejo na privzete vrednosti, PIN pa se odstrani. Ime naprave, priljubljene in zgodovina ostanejo.",
+    "serverRunning": "Teče",
+    "serverStopped": "Ustavljen",
+    "useDefaultFolder": "Uporabi privzeto"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Ένας πελάτης LocalSend για Symbian.\nΣυμβατός με το LocalSend (πρωτόκολλο v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Υπολογιστής",
+    "headless": "Χωρίς οθόνη",
+    "mobile": "Κινητό",
+    "server": "Διακομιστής",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "και άλλα {n}",
+    "cancelledBy": "Η συσκευή {name} ακύρωσε τη μεταφορά",
+    "cannotCreateFile": "Αδυναμία δημιουργίας του αρχείου",
+    "cannotCreateFolder": "Αδυναμία δημιουργίας του φακέλου {folder}",
+    "cannotRead": "Αδυναμία ανάγνωσης του αρχείου",
+    "cannotWrite": "Αδυναμία εγγραφής του αρχείου (γεμάτη μνήμη;)",
+    "certificateChanged": "Η συσκευή δεν είναι η {name}: το πιστοποιητικό διαφέρει",
+    "certificateRejected": "Το πιστοποιητικό του {ip} απορρίφθηκε",
+    "checksum": "Το άθροισμα ελέγχου δεν ταιριάζει",
+    "connectionBroke": "Η σύνδεση διακόπηκε",
+    "connectionLost": "Η σύνδεση χάθηκε",
+    "deviceGone": "Η συσκευή δεν είναι διαθέσιμη",
+    "httpError": "Η συσκευή {name} απάντησε με σφάλμα {status}",
+    "invalidAnswer": "Ο παραλήπτης έστειλε μη έγκυρη απάντηση",
+    "largerThanAnnounced": "Μεγαλύτερο από το δηλωμένο",
+    "noDeviceAt": "Δεν βρέθηκε συσκευή LocalSend στη διεύθυνση {ip}",
+    "notConnected": "Χωρίς σύνδεση",
+    "notSaved": "Δεν αποθηκεύτηκαν:",
+    "notSent": "Δεν στάλθηκαν:",
+    "ownAddress": "Αυτή είναι η διεύθυνση αυτού του τηλεφώνου",
+    "stoppedResponding": "Η συσκευή {name} δεν ανταποκρίνεται πια",
+    "stoppedSending": "Η συσκευή {name} σταμάτησε την αποστολή",
+    "stoppedSendingSome": "Η συσκευή {name} σταμάτησε την αποστολή. Αποθηκεύτηκαν αρχεία: {curr} από {n}."
+  },
+  "favorites": {
+    "addFailed": "Αποτυχία προσθήκης στα αγαπημένα",
+    "saveFailed": "Αποτυχία αποθήκευσης του αγαπημένου"
+  },
+  "general": {
+    "clear": "Εκκαθάριση",
+    "invalidIp": "Μη έγκυρη διεύθυνση IP",
+    "transferCancelled": "Η μεταφορά ακυρώθηκε",
+    "xOfY": "{curr} από {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Αδυναμία ανοίγματος φακέλου",
+    "cannotOpenFolderContent": "Δεν ήταν δυνατό το άνοιγμα του φακέλου λήψεων:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Δεν είναι δυνατή η εμφάνιση του φακέλου."
+  },
+  "picker": {
+    "selectFile": "Επιλογή αρχείου",
+    "selectFiles": "Επιλογή αρχείων",
+    "selectFolder": "Επιλογή φακέλου"
+  },
+  "receive": {
+    "message": "Μήνυμα",
+    "saved": {
+      "one": "Αποθηκεύτηκε 1 αρχείο από τη συσκευή {name}",
+      "other": "Αποθηκεύτηκαν αρχεία από τη συσκευή {name}: {n}"
+    },
+    "savedTo": "στο {folder}",
+    "waitingFor": "Αναμονή για τη συσκευή {name}..."
+  },
+  "receiveLink": {
+    "connect": "Σύνδεση",
+    "noNetwork": "Δεν υπάρχει σύνδεση σε δίκτυο.",
+    "serverStopped": "Ο διακομιστής έχει σταματήσει.",
+    "startServer": "Εκκίνηση διακομιστή"
+  },
+  "selection": {
+    "textItem": "Κείμενο, {size} - πατήστε για επεξεργασία"
+  },
+  "send": {
+    "asksForPin": "Η συσκευή {name} ζητά PIN",
+    "connecting": "Σύνδεση",
+    "connectingTo": "Σύνδεση με τη συσκευή {name}...",
+    "editText": "Επεξεργασία κειμένου",
+    "folderTruncated": "Προστέθηκαν μόνο τα πρώτα {n} αρχεία του φακέλου",
+    "images": "Εικόνες",
+    "noDevices": "Δεν βρέθηκαν συσκευές",
+    "preparing": "Προετοιμασία",
+    "searching": "Αναζήτηση...",
+    "sentSome": "Στάλθηκαν αρχεία στη συσκευή {name}: {curr} από {n}",
+    "sentTo": "Στάλθηκε στη συσκευή {name}",
+    "totalProgress": "Συνολική πρόοδος",
+    "videos": "Βίντεο"
+  },
+  "settings": {
+    "about": "Σχετικά με το Symbisend",
+    "changePin": "Πατήστε για αλλαγή του PIN",
+    "chooseFolder": "Επιλογή φακέλου...",
+    "createChecksumsHint": "Πιο αργή εκκίνηση με μεγάλα αρχεία",
+    "restore": "Επαναφορά",
+    "restoreDefaults": "Επαναφορά προεπιλογών",
+    "restoreDefaultsContent": "Όλες οι ρυθμίσεις επανέρχονται στις προεπιλογές και το PIN αφαιρείται. Το όνομα συσκευής, τα αγαπημένα και το ιστορικό διατηρούνται.",
+    "serverRunning": "Εκτελείται",
+    "serverStopped": "Σταματημένος",
+    "useDefaultFolder": "Χρήση προεπιλογής"
+  }
+}

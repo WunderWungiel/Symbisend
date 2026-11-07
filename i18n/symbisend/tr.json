@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian için bir LocalSend istemcisi.\nLocalSend ile uyumlu (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Masaüstü",
+    "headless": "Ekransız",
+    "mobile": "Mobil",
+    "server": "Sunucu",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "ve {n} tane daha",
+    "cancelledBy": "{name} aktarımı iptal etti",
+    "cannotCreateFile": "Dosya oluşturulamıyor",
+    "cannotCreateFolder": "{folder} klasörü oluşturulamıyor",
+    "cannotRead": "Dosya okunamıyor",
+    "cannotWrite": "Dosya yazılamıyor (bellek dolu mu?)",
+    "certificateChanged": "Bu cihaz {name} değil (sertifikası farklı)",
+    "certificateRejected": "{ip} sertifikası reddedildi",
+    "checksum": "Sağlama toplamı uyuşmuyor",
+    "connectionBroke": "Bağlantı koptu",
+    "connectionLost": "Bağlantı kesildi",
+    "deviceGone": "Cihaz artık yok",
+    "httpError": "{name} şu hatayla yanıt verdi: {status}",
+    "invalidAnswer": "Alıcı geçersiz bir yanıt gönderdi",
+    "largerThanAnnounced": "Bildirilenden büyük",
+    "noDeviceAt": "{ip} adresinde LocalSend cihazı bulunamadı",
+    "notConnected": "Bağlı değil",
+    "notSaved": "Kaydedilmedi:",
+    "notSent": "Gönderilmedi:",
+    "ownAddress": "Bu, bu telefonun adresi",
+    "stoppedResponding": "{name} yanıt vermeyi bıraktı",
+    "stoppedSending": "{name} göndermeyi bıraktı",
+    "stoppedSendingSome": "{name} göndermeyi bıraktı. Kaydedilen dosya: {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "Favorilere eklenemedi",
+    "saveFailed": "Favori kaydedilemedi"
+  },
+  "general": {
+    "clear": "Temizle",
+    "invalidIp": "Geçersiz IP adresi",
+    "transferCancelled": "Aktarım iptal edildi",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Klasör açılamıyor",
+    "cannotOpenFolderContent": "İndirme klasörü açılamadı:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Klasör gösterilemiyor."
+  },
+  "picker": {
+    "selectFile": "Dosya seç",
+    "selectFiles": "Dosyaları seç",
+    "selectFolder": "Klasör seç"
+  },
+  "receive": {
+    "message": "Mesaj",
+    "saved": {
+      "one": "{name} cihazından 1 dosya kaydedildi",
+      "other": "{name} cihazından kaydedilen dosya: {n}"
+    },
+    "savedTo": "Klasör: {folder}",
+    "waitingFor": "{name} bekleniyor..."
+  },
+  "receiveLink": {
+    "connect": "Bağlan",
+    "noNetwork": "Bir ağa bağlı değil.",
+    "serverStopped": "Sunucu durduruldu.",
+    "startServer": "Sunucuyu başlat"
+  },
+  "selection": {
+    "textItem": "Metin, {size} - düzenlemek için dokunun"
+  },
+  "send": {
+    "asksForPin": "{name} PIN istiyor",
+    "connecting": "Bağlanılıyor",
+    "connectingTo": "{name} cihazına bağlanılıyor...",
+    "editText": "Metni düzenle",
+    "folderTruncated": "Klasörün yalnızca ilk {n} dosyası eklendi",
+    "images": "Resimler",
+    "noDevices": "Cihaz bulunamadı",
+    "preparing": "Hazırlanıyor",
+    "searching": "Aranıyor...",
+    "sentSome": "{name} cihazına gönderilen dosya: {curr} / {n}",
+    "sentTo": "{name} cihazına gönderildi",
+    "totalProgress": "Toplam ilerleme",
+    "videos": "Videolar"
+  },
+  "settings": {
+    "about": "Symbisend hakkında",
+    "changePin": "PIN'i değiştirmek için dokunun",
+    "chooseFolder": "Klasör seç...",
+    "createChecksumsHint": "Büyük dosyalarda daha yavaş başlar",
+    "restore": "Geri yükle",
+    "restoreDefaults": "Varsayılanlara dön",
+    "restoreDefaultsContent": "Tüm ayarlar varsayılanlara döner ve PIN kaldırılır. Cihaz adınız, favorileriniz ve geçmişiniz kalır.",
+    "serverRunning": "Çalışıyor",
+    "serverStopped": "Durduruldu",
+    "useDefaultFolder": "Varsayılanı kullan"
+  }
+}

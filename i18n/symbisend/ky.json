@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian үчүн LocalSend клиенти.\nLocalSend менен шайкеш (v2 протоколу)."
+  },
+  "deviceTypes": {
+    "desktop": "Компьютер",
+    "headless": "Экранысыз",
+    "mobile": "Мобилдик",
+    "server": "Сервер",
+    "web": "Веб"
+  },
+  "errors": {
+    "andMore": "жана дагы {n}",
+    "cancelledBy": "{name} өткөрүүнү жокко чыгарды",
+    "cannotCreateFile": "Файл түзүлгөн жок",
+    "cannotCreateFolder": "{folder} папкасы түзүлгөн жок",
+    "cannotRead": "Файл окулган жок",
+    "cannotWrite": "Файл жазылган жок (эс тутум толдубу?)",
+    "certificateChanged": "Бул табылган {name} эмес (сертификаты башка)",
+    "certificateRejected": "{ip} сертификаты четке кагылды",
+    "checksum": "Текшерүү суммасы дал келген жок",
+    "connectionBroke": "Байланыш үзгүлтүккө учурады",
+    "connectionLost": "Байланыш үзүлдү",
+    "deviceGone": "Түзмөк жеткиликсиз",
+    "httpError": "{name} {status} катасын кайтарды",
+    "invalidAnswer": "Алуучу жараксыз жооп жөнөттү",
+    "largerThanAnnounced": "Жарыяланганынан чоңураак",
+    "noDeviceAt": "{ip} дарегинде LocalSend түзмөгү табылган жок",
+    "notConnected": "Туташкан жок",
+    "notSaved": "Сакталган жок:",
+    "notSent": "Жөнөтүлгөн жок:",
+    "ownAddress": "Бул ушул телефондун дареги",
+    "stoppedResponding": "{name} жооп бербей калды",
+    "stoppedSending": "{name} жөнөтүүнү токтотту",
+    "stoppedSendingSome": "{name} жөнөтүүнү токтотту. Сакталган файлдар: {curr}/{n}."
+  },
+  "favorites": {
+    "addFailed": "Тандалмаларга кошулган жок",
+    "saveFailed": "Тандалма сакталган жок"
+  },
+  "general": {
+    "clear": "Тазалоо",
+    "invalidIp": "IP-дарек туура эмес",
+    "transferCancelled": "Өткөрүү жокко чыгарылды",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Папка ачылган жок",
+    "cannotOpenFolderContent": "Жүктөөлөр папкасы ачылган жок:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Папка көрсөтүлгөн жок."
+  },
+  "picker": {
+    "selectFile": "Файл тандоо",
+    "selectFiles": "Файлдарды тандоо",
+    "selectFolder": "Папка тандоо"
+  },
+  "receive": {
+    "message": "Билдирүү",
+    "saved": {
+      "one": "{name} жөнөткөн файл сакталды",
+      "other": "{name} жөнөткөн файлдар сакталды: {n}"
+    },
+    "savedTo": "папка: {folder}",
+    "waitingFor": "{name} күтүлүүдө..."
+  },
+  "receiveLink": {
+    "connect": "Туташуу",
+    "noNetwork": "Тармакка туташкан жок.",
+    "serverStopped": "Сервер токтотулган.",
+    "startServer": "Серверди иштетүү"
+  },
+  "selection": {
+    "textItem": "Текст, {size} - түзөтүү үчүн таптаңыз"
+  },
+  "send": {
+    "asksForPin": "{name} PIN-код сурайт",
+    "connecting": "Туташуу",
+    "connectingTo": "{name} түзмөгүнө туташууда...",
+    "editText": "Текстти түзөтүү",
+    "folderTruncated": "Папканын биринчи {n} файлы гана кошулду",
+    "images": "Сүрөттөр",
+    "noDevices": "Түзмөктөр табылган жок",
+    "preparing": "Даярдалууда",
+    "searching": "Изделүүдө...",
+    "sentSome": "{name} түзмөгүнө жөнөтүлдү: {curr}/{n} файл",
+    "sentTo": "{name} түзмөгүнө жөнөтүлдү",
+    "totalProgress": "Жалпы прогресс",
+    "videos": "Видеолор"
+  },
+  "settings": {
+    "about": "Symbisend жөнүндө",
+    "changePin": "PIN-кодду өзгөртүү үчүн таптаңыз",
+    "chooseFolder": "Папка тандоо...",
+    "createChecksumsHint": "Чоң файлдар менен жай башталат",
+    "restore": "Калыбына келтирүү",
+    "restoreDefaults": "Демейки жөндөөлөр",
+    "restoreDefaultsContent": "Бардык жөндөөлөр демейкиге кайтат, PIN-код өчүрүлөт. Түзмөктүн аты, тандалмалар жана таржымал сакталат.",
+    "serverRunning": "Иштеп жатат",
+    "serverStopped": "Токтотулган",
+    "useDefaultFolder": "Демейки"
+  }
+}

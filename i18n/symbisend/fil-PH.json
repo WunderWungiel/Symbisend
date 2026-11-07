@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Isang LocalSend client para sa Symbian.\nCompatible sa LocalSend (protocol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Desktop",
+    "headless": "Headless",
+    "mobile": "Mobile",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "at {n} pa",
+    "cancelledBy": "Kinansela ni {name} ang paglilipat",
+    "cannotCreateFile": "Hindi magawa ang file",
+    "cannotCreateFolder": "Hindi magawa ang folder na {folder}",
+    "cannotRead": "Hindi mabasa ang file",
+    "cannotWrite": "Hindi maisulat ang file (puno na ang memory?)",
+    "certificateChanged": "Hindi ito ang {name} na nahanap (iba ang certificate nito)",
+    "certificateRejected": "Tinanggihan ang certificate ng {ip}",
+    "checksum": "Hindi tugma ang checksum",
+    "connectionBroke": "Naputol ang koneksyon",
+    "connectionLost": "Nawala ang koneksyon",
+    "deviceGone": "Wala na ang device",
+    "httpError": "Sumagot ang {name} ng error {status}",
+    "invalidAnswer": "Nagpadala ang receiver ng di-wastong sagot",
+    "largerThanAnnounced": "Mas malaki kaysa sa inanunsyo",
+    "noDeviceAt": "Walang nahanap na LocalSend device sa {ip}",
+    "notConnected": "Hindi nakakonekta",
+    "notSaved": "Hindi na-save:",
+    "notSent": "Hindi naipadala:",
+    "ownAddress": "Ito ang address ng teleponong ito",
+    "stoppedResponding": "Tumigil sa pagtugon ang {name}",
+    "stoppedSending": "Tumigil sa pagpapadala ang {name}",
+    "stoppedSendingSome": "Tumigil sa pagpapadala ang {name}. Na-save ang {curr} sa {n} file."
+  },
+  "favorites": {
+    "addFailed": "Hindi maidagdag sa mga paborito",
+    "saveFailed": "Hindi ma-save ang paborito"
+  },
+  "general": {
+    "clear": "I-clear",
+    "invalidIp": "Di-wastong IP address",
+    "transferCancelled": "Kinansela ang paglilipat",
+    "xOfY": "{curr} sa {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Hindi mabuksan ang folder",
+    "cannotOpenFolderContent": "Hindi mabuksan ang download folder:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Hindi maipakita ang folder."
+  },
+  "picker": {
+    "selectFile": "Pumili ng file",
+    "selectFiles": "Pumili ng mga file",
+    "selectFolder": "Pumili ng folder"
+  },
+  "receive": {
+    "message": "Mensahe",
+    "saved": {
+      "one": "Na-save ang 1 file mula kay {name}",
+      "other": "Mga file na na-save mula kay {name}: {n}"
+    },
+    "savedTo": "sa {folder}",
+    "waitingFor": "Naghihintay kay {name}..."
+  },
+  "receiveLink": {
+    "connect": "Kumonekta",
+    "noNetwork": "Hindi nakakonekta sa network.",
+    "serverStopped": "Nakahinto ang server.",
+    "startServer": "Simulan ang server"
+  },
+  "selection": {
+    "textItem": "Teksto, {size} - i-tap para i-edit"
+  },
+  "send": {
+    "asksForPin": "Humihingi ng PIN si {name}",
+    "connecting": "Kumokonekta",
+    "connectingTo": "Kumokonekta kay {name}...",
+    "editText": "I-edit ang teksto",
+    "folderTruncated": "Ang unang {n} file lang ng folder ang naidagdag",
+    "images": "Mga larawan",
+    "noDevices": "Walang nahanap na device",
+    "preparing": "Inihahanda",
+    "searching": "Naghahanap...",
+    "sentSome": "Mga file na naipadala kay {name}: {curr} sa {n}",
+    "sentTo": "Naipadala kay {name}",
+    "totalProgress": "Kabuuang progreso",
+    "videos": "Mga video"
+  },
+  "settings": {
+    "about": "Tungkol sa Symbisend",
+    "changePin": "I-tap para palitan ang PIN",
+    "chooseFolder": "Pumili ng folder...",
+    "createChecksumsHint": "Mas mabagal ang simula sa malalaking file",
+    "restore": "I-restore",
+    "restoreDefaults": "I-restore ang mga default",
+    "restoreDefaultsContent": "Babalik sa default ang lahat ng setting at aalisin ang PIN. Mananatili ang pangalan ng device, mga paborito, at history.",
+    "serverRunning": "Tumatakbo",
+    "serverStopped": "Nakahinto",
+    "useDefaultFolder": "Gamitin ang default"
+  }
+}

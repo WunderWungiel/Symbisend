@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Ein LocalSend-Client für Symbian.\nKompatibel mit LocalSend (Protokoll v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Desktop",
+    "headless": "Headless",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "und {n} weitere",
+    "cancelledBy": "{name} hat die Übertragung abgebrochen",
+    "cannotCreateFile": "Datei kann nicht erstellt werden",
+    "cannotCreateFolder": "Ordner {folder} kann nicht erstellt werden",
+    "cannotRead": "Datei kann nicht gelesen werden",
+    "cannotWrite": "Datei kann nicht geschrieben werden (Speicher voll?)",
+    "certificateChanged": "Das ist nicht das gefundene Gerät {name} (sein Zertifikat ist anders)",
+    "certificateRejected": "Das Zertifikat von {ip} wurde abgelehnt",
+    "checksum": "Die Prüfsumme stimmt nicht überein",
+    "connectionBroke": "Die Verbindung wurde unterbrochen",
+    "connectionLost": "Verbindung verloren",
+    "deviceGone": "Das Gerät ist nicht mehr erreichbar",
+    "httpError": "{name} antwortete mit Fehler {status}",
+    "invalidAnswer": "Der Empfänger hat eine ungültige Antwort gesendet",
+    "largerThanAnnounced": "Größer als angekündigt",
+    "noDeviceAt": "Kein LocalSend-Gerät unter {ip} gefunden",
+    "notConnected": "Nicht verbunden",
+    "notSaved": "Nicht gespeichert:",
+    "notSent": "Nicht gesendet:",
+    "ownAddress": "Das ist die Adresse dieses Telefons",
+    "stoppedResponding": "{name} antwortet nicht mehr",
+    "stoppedSending": "{name} hat das Senden beendet",
+    "stoppedSendingSome": "{name} hat das Senden beendet. Gespeicherte Dateien: {curr} von {n}."
+  },
+  "favorites": {
+    "addFailed": "Zu Favoriten hinzufügen fehlgeschlagen",
+    "saveFailed": "Favorit konnte nicht gespeichert werden"
+  },
+  "general": {
+    "clear": "Leeren",
+    "invalidIp": "Ungültige IP-Adresse",
+    "transferCancelled": "Die Übertragung wurde abgebrochen",
+    "xOfY": "{curr} von {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Ordner kann nicht geöffnet werden",
+    "cannotOpenFolderContent": "Der Download-Ordner konnte nicht geöffnet werden:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Der Ordner kann nicht angezeigt werden."
+  },
+  "picker": {
+    "selectFile": "Datei auswählen",
+    "selectFiles": "Dateien auswählen",
+    "selectFolder": "Ordner auswählen"
+  },
+  "receive": {
+    "message": "Nachricht",
+    "saved": {
+      "one": "1 Datei von {name} gespeichert",
+      "other": "Dateien von {name} gespeichert: {n}"
+    },
+    "savedTo": "in {folder}",
+    "waitingFor": "Warte auf {name}..."
+  },
+  "receiveLink": {
+    "connect": "Verbinden",
+    "noNetwork": "Nicht mit einem Netzwerk verbunden.",
+    "serverStopped": "Der Server ist gestoppt.",
+    "startServer": "Server starten"
+  },
+  "selection": {
+    "textItem": "Text, {size} - zum Bearbeiten tippen"
+  },
+  "send": {
+    "asksForPin": "{name} fragt nach einer PIN",
+    "connecting": "Verbinden",
+    "connectingTo": "Verbinde mit {name}...",
+    "editText": "Text bearbeiten",
+    "folderTruncated": "Nur die ersten {n} Dateien des Ordners wurden hinzugefügt",
+    "images": "Bilder",
+    "noDevices": "Keine Geräte gefunden",
+    "preparing": "Vorbereiten",
+    "searching": "Suche...",
+    "sentSome": "Dateien an {name} gesendet: {curr} von {n}",
+    "sentTo": "An {name} gesendet",
+    "totalProgress": "Gesamtfortschritt",
+    "videos": "Videos"
+  },
+  "settings": {
+    "about": "Über Symbisend",
+    "changePin": "Zum Ändern der PIN tippen",
+    "chooseFolder": "Ordner wählen...",
+    "createChecksumsHint": "Langsamerer Start bei großen Dateien",
+    "restore": "Zurücksetzen",
+    "restoreDefaults": "Auf Standard zurücksetzen",
+    "restoreDefaultsContent": "Alle Einstellungen werden auf die Standardwerte zurückgesetzt und die PIN wird entfernt. Gerätename, Favoriten und Verlauf bleiben erhalten.",
+    "serverRunning": "Läuft",
+    "serverStopped": "Gestoppt",
+    "useDefaultFolder": "Standard verwenden"
+  }
+}

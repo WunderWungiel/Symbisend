@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "کلاینت LocalSend برای Symbian.\nسازگار با LocalSend (پروتکل v2)."
+  },
+  "deviceTypes": {
+    "desktop": "رایانه رومیزی",
+    "headless": "بدون صفحه‌نمایش",
+    "mobile": "موبایل",
+    "server": "سرور",
+    "web": "وب"
+  },
+  "errors": {
+    "andMore": "و {n} مورد دیگر",
+    "cancelledBy": "{name} انتقال را لغو کرد",
+    "cannotCreateFile": "ایجاد فایل ممکن نیست",
+    "cannotCreateFolder": "ایجاد پوشه {folder} ممکن نیست",
+    "cannotRead": "خواندن فایل ممکن نیست",
+    "cannotWrite": "نوشتن فایل ممکن نیست (حافظه پر است؟)",
+    "certificateChanged": "این همان «{name}» که پیدا شد نیست (گواهی آن متفاوت است)",
+    "certificateRejected": "گواهی {ip} رد شد",
+    "checksum": "کد سلامت فایل مطابقت ندارد",
+    "connectionBroke": "اتصال قطع شد",
+    "connectionLost": "اتصال از دست رفت",
+    "deviceGone": "دستگاه در دسترس نیست",
+    "httpError": "{name} با خطای {status} پاسخ داد",
+    "invalidAnswer": "گیرنده پاسخ نامعتبری فرستاد",
+    "largerThanAnnounced": "بزرگ‌تر از اندازه اعلام‌شده",
+    "noDeviceAt": "دستگاه LocalSend در {ip} پیدا نشد",
+    "notConnected": "متصل نیست",
+    "notSaved": "ذخیره نشد:",
+    "notSent": "ارسال نشد:",
+    "ownAddress": "این آدرس همین تلفن است",
+    "stoppedResponding": "{name} پاسخ نمی‌دهد",
+    "stoppedSending": "{name} ارسال را متوقف کرد",
+    "stoppedSendingSome": "{name} ارسال را متوقف کرد. {curr} از {n} فایل ذخیره شد."
+  },
+  "favorites": {
+    "addFailed": "افزودن به علاقه‌مندی‌ها ناموفق بود",
+    "saveFailed": "ذخیره علاقه‌مندی ناموفق بود"
+  },
+  "general": {
+    "clear": "پاک کردن",
+    "invalidIp": "آدرس آی‌پی نامعتبر",
+    "transferCancelled": "انتقال لغو شد",
+    "xOfY": "{curr} از {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "باز کردن پوشه ممکن نیست",
+    "cannotOpenFolderContent": "پوشه دانلود باز نشد:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "نمایش پوشه ممکن نیست."
+  },
+  "picker": {
+    "selectFile": "انتخاب فایل",
+    "selectFiles": "انتخاب فایل‌ها",
+    "selectFolder": "انتخاب پوشه"
+  },
+  "receive": {
+    "message": "پیام",
+    "saved": {
+      "one": "یک فایل از {name} ذخیره شد",
+      "other": "فایل‌های ذخیره‌شده از {name}: {n}"
+    },
+    "savedTo": "در {folder}",
+    "waitingFor": "در انتظار {name}..."
+  },
+  "receiveLink": {
+    "connect": "اتصال",
+    "noNetwork": "به شبکه متصل نیست.",
+    "serverStopped": "سرور متوقف است.",
+    "startServer": "شروع سرور"
+  },
+  "selection": {
+    "textItem": "متن، {size} - برای ویرایش لمس کنید"
+  },
+  "send": {
+    "asksForPin": "{name} رمز PIN می‌خواهد",
+    "connecting": "در حال اتصال",
+    "connectingTo": "در حال اتصال به {name}...",
+    "editText": "ویرایش متن",
+    "folderTruncated": "فقط اولین فایل‌های پوشه اضافه شد: {n}",
+    "images": "تصاویر",
+    "noDevices": "دستگاهی پیدا نشد",
+    "preparing": "در حال آماده‌سازی",
+    "searching": "در حال جستجو...",
+    "sentSome": "{curr} از {n} فایل به {name} ارسال شد",
+    "sentTo": "به {name} ارسال شد",
+    "totalProgress": "پیشرفت کل",
+    "videos": "ویدیوها"
+  },
+  "settings": {
+    "about": "درباره Symbisend",
+    "changePin": "برای تغییر PIN لمس کنید",
+    "chooseFolder": "انتخاب پوشه...",
+    "createChecksumsHint": "شروع کندتر با فایل‌های بزرگ",
+    "restore": "بازنشانی",
+    "restoreDefaults": "بازنشانی به پیش‌فرض",
+    "restoreDefaultsContent": "همه تنظیمات به حالت پیش‌فرض برمی‌گردند و PIN حذف می‌شود. نام دستگاه، علاقه‌مندی‌ها و تاریخچه می‌مانند.",
+    "serverRunning": "در حال اجرا",
+    "serverStopped": "متوقف",
+    "useDefaultFolder": "استفاده از پیش‌فرض"
+  }
+}

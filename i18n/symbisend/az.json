@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian üçün LocalSend klienti.\nLocalSend ilə uyğundur (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Masaüstü",
+    "headless": "Ekransız",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Veb"
+  },
+  "errors": {
+    "andMore": "və daha {n} fayl",
+    "cancelledBy": "{name} köçürməni ləğv etdi",
+    "cannotCreateFile": "Fayl yaradıla bilmədi",
+    "cannotCreateFolder": "{folder} qovluğu yaradıla bilmədi",
+    "cannotRead": "Fayl oxuna bilmədi",
+    "cannotWrite": "Fayl yazıla bilmədi (yaddaş doludur?)",
+    "certificateChanged": "Bu, tapılmış {name} deyil (sertifikatı fərqlidir)",
+    "certificateRejected": "{ip} sertifikatı rədd edildi",
+    "checksum": "Yoxlama məbləği uyğun gəlmir",
+    "connectionBroke": "Bağlantı kəsildi",
+    "connectionLost": "Bağlantı itdi",
+    "deviceGone": "Cihaz əlçatan deyil",
+    "httpError": "{name} {status} xətası ilə cavab verdi",
+    "invalidAnswer": "Qəbul edən etibarsız cavab göndərdi",
+    "largerThanAnnounced": "Elan edilən ölçüdən böyükdür",
+    "noDeviceAt": "{ip} ünvanında LocalSend cihazı tapılmadı",
+    "notConnected": "Qoşulmayıb",
+    "notSaved": "Saxlanılmadı:",
+    "notSent": "Göndərilmədi:",
+    "ownAddress": "Bu, telefonun öz ünvanıdır",
+    "stoppedResponding": "{name} cavab verməyi dayandırdı",
+    "stoppedSending": "{name} göndərməyi dayandırdı",
+    "stoppedSendingSome": "{name} göndərməyi dayandırdı. Saxlanılan fayllar: {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "Sevimlilərə əlavə etmək alınmadı",
+    "saveFailed": "Sevimlini saxlamaq alınmadı"
+  },
+  "general": {
+    "clear": "Təmizlə",
+    "invalidIp": "Etibarsız IP ünvan",
+    "transferCancelled": "Köçürmə ləğv edildi",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Qovluq açıla bilmir",
+    "cannotOpenFolderContent": "Yükləmə qovluğu açıla bilmədi:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Qovluq göstərilə bilmir."
+  },
+  "picker": {
+    "selectFile": "Fayl seç",
+    "selectFiles": "Faylları seç",
+    "selectFolder": "Qovluq seç"
+  },
+  "receive": {
+    "message": "Mesaj",
+    "saved": {
+      "one": "{name} cihazından 1 fayl saxlanıldı",
+      "other": "{name} cihazından {n} fayl saxlanıldı"
+    },
+    "savedTo": "yer: {folder}",
+    "waitingFor": "{name} gözlənilir..."
+  },
+  "receiveLink": {
+    "connect": "Qoşul",
+    "noNetwork": "Şəbəkəyə qoşulmayıb.",
+    "serverStopped": "Server dayandırılıb.",
+    "startServer": "Serveri başlat"
+  },
+  "selection": {
+    "textItem": "Mətn, {size} - redaktə üçün toxunun"
+  },
+  "send": {
+    "asksForPin": "{name} PIN tələb edir",
+    "connecting": "Qoşulur",
+    "connectingTo": "{name} cihazına qoşulur...",
+    "editText": "Mətni redaktə et",
+    "folderTruncated": "Qovluqdan yalnız ilk {n} fayl əlavə edildi",
+    "images": "Şəkillər",
+    "noDevices": "Cihaz tapılmadı",
+    "preparing": "Hazırlanır",
+    "searching": "Axtarılır...",
+    "sentSome": "{name} cihazına {curr} / {n} fayl göndərildi",
+    "sentTo": "{name} cihazına göndərildi",
+    "totalProgress": "Ümumi irəliləyiş",
+    "videos": "Videolar"
+  },
+  "settings": {
+    "about": "Symbisend haqqında",
+    "changePin": "PIN-i dəyişmək üçün toxunun",
+    "chooseFolder": "Qovluq seç...",
+    "createChecksumsHint": "Böyük fayllarda başlanğıc daha yavaşdır",
+    "restore": "Bərpa et",
+    "restoreDefaults": "Susmaya görə parametrləri bərpa et",
+    "restoreDefaultsContent": "Bütün parametrlər susmaya görə dəyərlərə qayıdır və PIN silinir. Cihazın adı, sevimlilər və tarixçə qalır.",
+    "serverRunning": "İşləyir",
+    "serverStopped": "Dayandırılıb",
+    "useDefaultFolder": "Susmaya görəni işlət"
+  }
+}

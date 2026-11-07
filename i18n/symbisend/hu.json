@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSend kliens Symbianhoz.\nKompatibilis a LocalSenddel (v2 protokoll)."
+  },
+  "deviceTypes": {
+    "desktop": "Számítógép",
+    "headless": "Képernyő nélküli",
+    "mobile": "Mobil",
+    "server": "Szerver",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "és még {n}",
+    "cancelledBy": "{name} megszakította az átvitelt",
+    "cannotCreateFile": "A fájl nem hozható létre",
+    "cannotCreateFolder": "A(z) {folder} mappa nem hozható létre",
+    "cannotRead": "A fájl nem olvasható",
+    "cannotWrite": "A fájl nem írható (megtelt a memória?)",
+    "certificateChanged": "Ez nem a megtalált {name} (a tanúsítvány más)",
+    "certificateRejected": "{ip} tanúsítványa elutasítva",
+    "checksum": "Az ellenőrzőösszeg nem egyezik",
+    "connectionBroke": "A kapcsolat megszakadt",
+    "connectionLost": "A kapcsolat elveszett",
+    "deviceGone": "Az eszköz nem érhető el",
+    "httpError": "{name} hibával válaszolt: {status}",
+    "invalidAnswer": "A fogadó érvénytelen választ küldött",
+    "largerThanAnnounced": "Nagyobb a bejelentettnél",
+    "noDeviceAt": "Nem található LocalSend eszköz itt: {ip}",
+    "notConnected": "Nincs kapcsolat",
+    "notSaved": "Nem mentett:",
+    "notSent": "Nem elküldött:",
+    "ownAddress": "Ez ennek a telefonnak a címe",
+    "stoppedResponding": "{name} nem válaszol többé",
+    "stoppedSending": "{name} leállt a küldéssel",
+    "stoppedSendingSome": "{name} leállt a küldéssel. Mentett fájlok: {curr} / {n}."
+  },
+  "favorites": {
+    "addFailed": "Nem sikerült a kedvencekhez adni",
+    "saveFailed": "Nem sikerült menteni a kedvencet"
+  },
+  "general": {
+    "clear": "Törlés",
+    "invalidIp": "Érvénytelen IP-cím",
+    "transferCancelled": "Az átvitel megszakítva",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "A mappa nem nyitható meg",
+    "cannotOpenFolderContent": "A letöltési mappa nem nyitható meg:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "A mappa nem jeleníthető meg."
+  },
+  "picker": {
+    "selectFile": "Fájl kiválasztása",
+    "selectFiles": "Fájlok kiválasztása",
+    "selectFolder": "Mappa kiválasztása"
+  },
+  "receive": {
+    "message": "Üzenet",
+    "saved": {
+      "one": "1 fájl mentve tőle: {name}",
+      "other": "{n} fájl mentve tőle: {name}"
+    },
+    "savedTo": "ide: {folder}",
+    "waitingFor": "Várakozás: {name}..."
+  },
+  "receiveLink": {
+    "connect": "Csatlakozás",
+    "noNetwork": "Nincs hálózati kapcsolat.",
+    "serverStopped": "A szerver leállt.",
+    "startServer": "Szerver indítása"
+  },
+  "selection": {
+    "textItem": "Szöveg, {size} - koppintson a szerkesztéshez"
+  },
+  "send": {
+    "asksForPin": "{name} PIN kódot kér",
+    "connecting": "Csatlakozás",
+    "connectingTo": "Csatlakozás: {name}...",
+    "editText": "Szöveg szerkesztése",
+    "folderTruncated": "A mappából csak az első {n} fájl lett hozzáadva",
+    "images": "Képek",
+    "noDevices": "Nem található eszköz",
+    "preparing": "Előkészítés",
+    "searching": "Keresés...",
+    "sentSome": "{curr} / {n} fájl elküldve ide: {name}",
+    "sentTo": "Elküldve ide: {name}",
+    "totalProgress": "Teljes folyamat",
+    "videos": "Videók"
+  },
+  "settings": {
+    "about": "A Symbisend névjegye",
+    "changePin": "Koppintson a PIN kód módosításához",
+    "chooseFolder": "Mappa kiválasztása...",
+    "createChecksumsHint": "Lassabb indulás nagy fájloknál",
+    "restore": "Visszaállítás",
+    "restoreDefaults": "Alapértékek visszaállítása",
+    "restoreDefaultsContent": "Minden beállítás visszaáll az alapértékre, a PIN kód törlődik. Az eszköz neve, a kedvencek és az előzmények megmaradnak.",
+    "serverRunning": "Fut",
+    "serverStopped": "Leállítva",
+    "useDefaultFolder": "Alapértelmezett"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Een LocalSend-client voor Symbian.\nCompatibel met LocalSend (protocol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Desktop",
+    "headless": "Headless",
+    "mobile": "Mobiel",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "en {n} meer",
+    "cancelledBy": "{name} heeft de overdracht geannuleerd",
+    "cannotCreateFile": "Bestand kan niet worden gemaakt",
+    "cannotCreateFolder": "Map {folder} kan niet worden gemaakt",
+    "cannotRead": "Bestand kan niet worden gelezen",
+    "cannotWrite": "Bestand kan niet worden geschreven (geheugen vol?)",
+    "certificateChanged": "Dit is niet het gevonden apparaat {name} (het certificaat is anders)",
+    "certificateRejected": "Het certificaat van {ip} is geweigerd",
+    "checksum": "De controlesom komt niet overeen",
+    "connectionBroke": "De verbinding is verbroken",
+    "connectionLost": "Verbinding verloren",
+    "deviceGone": "Het apparaat is niet meer bereikbaar",
+    "httpError": "{name} antwoordde met fout {status}",
+    "invalidAnswer": "De ontvanger stuurde een ongeldig antwoord",
+    "largerThanAnnounced": "Groter dan aangekondigd",
+    "noDeviceAt": "Geen LocalSend-apparaat gevonden op {ip}",
+    "notConnected": "Niet verbonden",
+    "notSaved": "Niet opgeslagen:",
+    "notSent": "Niet verzonden:",
+    "ownAddress": "Dit is het adres van deze telefoon",
+    "stoppedResponding": "{name} reageert niet meer",
+    "stoppedSending": "{name} is gestopt met verzenden",
+    "stoppedSendingSome": "{name} is gestopt met verzenden. Opgeslagen bestanden: {curr} van {n}."
+  },
+  "favorites": {
+    "addFailed": "Toevoegen aan favorieten mislukt",
+    "saveFailed": "Favoriet opslaan mislukt"
+  },
+  "general": {
+    "clear": "Wissen",
+    "invalidIp": "Ongeldig IP-adres",
+    "transferCancelled": "De overdracht is geannuleerd",
+    "xOfY": "{curr} van {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Map kan niet worden geopend",
+    "cannotOpenFolderContent": "De downloadmap kon niet worden geopend:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "De map kan niet worden getoond."
+  },
+  "picker": {
+    "selectFile": "Bestand kiezen",
+    "selectFiles": "Bestanden kiezen",
+    "selectFolder": "Map kiezen"
+  },
+  "receive": {
+    "message": "Bericht",
+    "saved": {
+      "one": "1 bestand van {name} opgeslagen",
+      "other": "Bestanden van {name} opgeslagen: {n}"
+    },
+    "savedTo": "in {folder}",
+    "waitingFor": "Wachten op {name}..."
+  },
+  "receiveLink": {
+    "connect": "Verbinden",
+    "noNetwork": "Niet verbonden met een netwerk.",
+    "serverStopped": "De server is gestopt.",
+    "startServer": "Server starten"
+  },
+  "selection": {
+    "textItem": "Tekst, {size} - tik om te bewerken"
+  },
+  "send": {
+    "asksForPin": "{name} vraagt om een PIN",
+    "connecting": "Verbinden",
+    "connectingTo": "Verbinden met {name}...",
+    "editText": "Tekst bewerken",
+    "folderTruncated": "Alleen de eerste {n} bestanden van de map zijn toegevoegd",
+    "images": "Afbeeldingen",
+    "noDevices": "Geen apparaten gevonden",
+    "preparing": "Voorbereiden",
+    "searching": "Zoeken...",
+    "sentSome": "Bestanden verzonden naar {name}: {curr} van {n}",
+    "sentTo": "Verzonden naar {name}",
+    "totalProgress": "Totale voortgang",
+    "videos": "Video's"
+  },
+  "settings": {
+    "about": "Over Symbisend",
+    "changePin": "Tik om de PIN te wijzigen",
+    "chooseFolder": "Map kiezen...",
+    "createChecksumsHint": "Tragere start bij grote bestanden",
+    "restore": "Herstellen",
+    "restoreDefaults": "Standaardwaarden herstellen",
+    "restoreDefaultsContent": "Alle instellingen gaan terug naar de standaardwaarden en de PIN wordt verwijderd. Apparaatnaam, favorieten en geschiedenis blijven behouden.",
+    "serverRunning": "Actief",
+    "serverStopped": "Gestopt",
+    "useDefaultFolder": "Standaard gebruiken"
+  }
+}

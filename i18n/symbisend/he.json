@@ -1,0 +1,105 @@
+{
+  "about": {
+    "description": "לקוח LocalSend עבור Symbian.\nתואם ל-LocalSend (פרוטוקול v2)."
+  },
+  "deviceTypes": {
+    "desktop": "מחשב שולחני",
+    "headless": "ללא מסך",
+    "mobile": "נייד",
+    "server": "שרת",
+    "web": "אינטרנט"
+  },
+  "errors": {
+    "andMore": "ועוד {n}",
+    "cancelledBy": "ההעברה בוטלה על ידי {name}",
+    "cannotCreateFile": "לא ניתן ליצור את הקובץ",
+    "cannotCreateFolder": "לא ניתן ליצור את התיקייה {folder}",
+    "cannotRead": "לא ניתן לקרוא את הקובץ",
+    "cannotWrite": "לא ניתן לכתוב את הקובץ (הזיכרון מלא?)",
+    "certificateChanged": "זה לא {name} שנמצא (האישור שלו שונה)",
+    "certificateRejected": "האישור של {ip} נדחה",
+    "checksum": "סכום השלמות אינו תואם",
+    "connectionBroke": "החיבור נותק",
+    "connectionLost": "החיבור אבד",
+    "deviceGone": "המכשיר אינו זמין",
+    "httpError": "שגיאה {status} מ-{name}",
+    "invalidAnswer": "המקבל שלח תשובה לא חוקית",
+    "largerThanAnnounced": "גדול מהמוצהר",
+    "noDeviceAt": "לא נמצא מכשיר LocalSend ב-{ip}",
+    "notConnected": "לא מחובר",
+    "notSaved": "לא נשמר:",
+    "notSent": "לא נשלח:",
+    "ownAddress": "זו הכתובת של הטלפון הזה",
+    "stoppedResponding": "אין תגובה מ-{name}",
+    "stoppedSending": "השליחה מ-{name} הופסקה",
+    "stoppedSendingSome": "השליחה מ-{name} הופסקה. נשמרו {curr} מתוך {n} קבצים."
+  },
+  "favorites": {
+    "addFailed": "ההוספה למועדפים נכשלה",
+    "saveFailed": "שמירת המועדף נכשלה"
+  },
+  "general": {
+    "clear": "נקה",
+    "invalidIp": "כתובת IP לא חוקית",
+    "transferCancelled": "ההעברה בוטלה",
+    "xOfY": "{curr} מתוך {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "לא ניתן לפתוח את התיקייה",
+    "cannotOpenFolderContent": "לא ניתן היה לפתוח את תיקיית ההורדות:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "לא ניתן להציג את התיקייה."
+  },
+  "picker": {
+    "selectFile": "בחר קובץ",
+    "selectFiles": "בחר קבצים",
+    "selectFolder": "בחר תיקייה"
+  },
+  "receive": {
+    "message": "הודעה",
+    "saved": {
+      "one": "נשמר קובץ אחד מ-{name}",
+      "two": "נשמרו שני קבצים מ-{name}",
+      "other": "נשמרו {n} קבצים מ-{name}"
+    },
+    "savedTo": "אל {folder}",
+    "waitingFor": "ממתין ל-{name}..."
+  },
+  "receiveLink": {
+    "connect": "התחבר",
+    "noNetwork": "לא מחובר לרשת.",
+    "serverStopped": "השרת מופסק.",
+    "startServer": "הפעל שרת"
+  },
+  "selection": {
+    "textItem": "טקסט, {size} - הקש לעריכה"
+  },
+  "send": {
+    "asksForPin": "{name}: נדרשת סיסמה",
+    "connecting": "מתחבר",
+    "connectingTo": "מתחבר אל {name}...",
+    "editText": "עריכת טקסט",
+    "folderTruncated": "נוספו רק הקבצים הראשונים של התיקייה: {n}",
+    "images": "תמונות",
+    "noDevices": "לא נמצאו מכשירים",
+    "preparing": "מתכונן",
+    "searching": "מחפש...",
+    "sentSome": "נשלחו {curr} מתוך {n} קבצים אל {name}",
+    "sentTo": "נשלח אל {name}",
+    "totalProgress": "התקדמות כוללת",
+    "videos": "סרטונים"
+  },
+  "settings": {
+    "about": "אודות Symbisend",
+    "changePin": "הקש לשינוי הסיסמה",
+    "chooseFolder": "בחר תיקייה...",
+    "createChecksumsHint": "התחלה איטית יותר עם קבצים גדולים",
+    "restore": "אפס",
+    "restoreDefaults": "איפוס לברירות מחדל",
+    "restoreDefaultsContent": "כל ההגדרות יחזרו לברירות המחדל והסיסמה תוסר. שם המכשיר, המועדפים וההיסטוריה יישארו.",
+    "serverRunning": "פועל",
+    "serverStopped": "מופסק",
+    "useDefaultFolder": "השתמש בברירת מחדל"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Клиент на LocalSend за Symbian.\nСъвместим с LocalSend (протокол v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Компютър",
+    "headless": "Без екран",
+    "mobile": "Мобилно устройство",
+    "server": "Сървър",
+    "web": "Уеб"
+  },
+  "errors": {
+    "andMore": "и още {n}",
+    "cancelledBy": "{name} отмени прехвърлянето",
+    "cannotCreateFile": "Файлът не може да се създаде",
+    "cannotCreateFolder": "Папката {folder} не може да се създаде",
+    "cannotRead": "Файлът не може да се прочете",
+    "cannotWrite": "Файлът не може да се запише (паметта е пълна?)",
+    "certificateChanged": "Това не е намереното устройство {name} (сертификатът е различен)",
+    "certificateRejected": "Сертификатът на {ip} беше отхвърлен",
+    "checksum": "Контролната сума не съвпада",
+    "connectionBroke": "Връзката се прекъсна",
+    "connectionLost": "Връзката е изгубена",
+    "deviceGone": "Устройството вече не е достъпно",
+    "httpError": "{name} отговори с грешка {status}",
+    "invalidAnswer": "Получателят изпрати невалиден отговор",
+    "largerThanAnnounced": "По-голям от обявеното",
+    "noDeviceAt": "На {ip} не е намерено устройство с LocalSend",
+    "notConnected": "Няма връзка",
+    "notSaved": "Незапазени:",
+    "notSent": "Неизпратени:",
+    "ownAddress": "Това е адресът на този телефон",
+    "stoppedResponding": "{name} спря да отговаря",
+    "stoppedSending": "{name} спря да изпраща",
+    "stoppedSendingSome": "{name} спря да изпраща. Запазени файлове: {curr} от {n}."
+  },
+  "favorites": {
+    "addFailed": "Неуспешно добавяне в любими",
+    "saveFailed": "Любимото не можа да се запази"
+  },
+  "general": {
+    "clear": "Изчисти",
+    "invalidIp": "Невалиден IP адрес",
+    "transferCancelled": "Прехвърлянето е отменено",
+    "xOfY": "{curr} от {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Папката не може да се отвори",
+    "cannotOpenFolderContent": "Папката за изтегляния не може да се отвори:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Папката не може да се покаже."
+  },
+  "picker": {
+    "selectFile": "Избор на файл",
+    "selectFiles": "Избор на файлове",
+    "selectFolder": "Избор на папка"
+  },
+  "receive": {
+    "message": "Съобщение",
+    "saved": {
+      "one": "Запазен 1 файл от {name}",
+      "other": "Запазени файлове от {name}: {n}"
+    },
+    "savedTo": "в {folder}",
+    "waitingFor": "Изчакване на {name}..."
+  },
+  "receiveLink": {
+    "connect": "Свързване",
+    "noNetwork": "Няма връзка с мрежа.",
+    "serverStopped": "Сървърът е спрян.",
+    "startServer": "Стартиране на сървъра"
+  },
+  "selection": {
+    "textItem": "Текст, {size} - докоснете за промяна"
+  },
+  "send": {
+    "asksForPin": "{name} иска ПИН код",
+    "connecting": "Свързване",
+    "connectingTo": "Свързване с {name}...",
+    "editText": "Редактиране на текста",
+    "folderTruncated": "Добавени са само първите файлове от папката: {n}",
+    "images": "Изображения",
+    "noDevices": "Не са намерени устройства",
+    "preparing": "Подготовка",
+    "searching": "Търсене...",
+    "sentSome": "Изпратени файлове до {name}: {curr} от {n}",
+    "sentTo": "Изпратено до {name}",
+    "totalProgress": "Общ напредък",
+    "videos": "Видеа"
+  },
+  "settings": {
+    "about": "Относно Symbisend",
+    "changePin": "Докоснете, за да промените ПИН кода",
+    "chooseFolder": "Избор на папка...",
+    "createChecksumsHint": "По-бавен старт при големи файлове",
+    "restore": "Възстанови",
+    "restoreDefaults": "Възстановяване на стандартните",
+    "restoreDefaultsContent": "Всички настройки се връщат към стандартните, а ПИН кодът се премахва. Името на устройството, любимите и историята се запазват.",
+    "serverRunning": "Работи",
+    "serverStopped": "Спрян",
+    "useDefaultFolder": "Стандартна"
+  }
+}

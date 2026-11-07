@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian-এর জন্য একটি LocalSend ক্লায়েন্ট।\nLocalSend (প্রোটোকল v2)-এর সাথে সামঞ্জস্যপূর্ণ।"
+  },
+  "deviceTypes": {
+    "desktop": "ডেস্কটপ",
+    "headless": "হেডলেস",
+    "mobile": "মোবাইল",
+    "server": "সার্ভার",
+    "web": "ওয়েব"
+  },
+  "errors": {
+    "andMore": "আরও {n}টি",
+    "cancelledBy": "{name} ট্রান্সফার ক্যানসেল করেছে",
+    "cannotCreateFile": "ফাইল তৈরি করা যাচ্ছে না",
+    "cannotCreateFolder": "ফোল্ডার {folder} তৈরি করা যাচ্ছে না",
+    "cannotRead": "ফাইল পড়া যাচ্ছে না",
+    "cannotWrite": "ফাইল লেখা যাচ্ছে না (মেমোরি ভর্তি?)",
+    "certificateChanged": "এটি সেই {name} নয় যেটি পাওয়া গিয়েছিল (এর সার্টিফিকেট আলাদা)",
+    "certificateRejected": "{ip}-এর সার্টিফিকেট প্রত্যাখ্যান করা হয়েছে",
+    "checksum": "চেকসাম মিলছে না",
+    "connectionBroke": "সংযোগ বিচ্ছিন্ন হয়ে গেছে",
+    "connectionLost": "সংযোগ হারিয়ে গেছে",
+    "deviceGone": "ডিভাইসটি আর নেই",
+    "httpError": "{name} ত্রুটি {status} দিয়ে উত্তর দিয়েছে",
+    "invalidAnswer": "প্রাপক একটি অবৈধ উত্তর পাঠিয়েছে",
+    "largerThanAnnounced": "জানানো আকারের চেয়ে বড়",
+    "noDeviceAt": "{ip}-এ কোনো LocalSend ডিভাইস পাওয়া যায়নি",
+    "notConnected": "সংযুক্ত নেই",
+    "notSaved": "সেভ হয়নি:",
+    "notSent": "পাঠানো হয়নি:",
+    "ownAddress": "এটি এই ফোনের ঠিকানা",
+    "stoppedResponding": "{name} সাড়া দেওয়া বন্ধ করেছে",
+    "stoppedSending": "{name} পাঠানো বন্ধ করেছে",
+    "stoppedSendingSome": "{name} পাঠানো বন্ধ করেছে। সেভ হওয়া ফাইল: {curr} / {n}।"
+  },
+  "favorites": {
+    "addFailed": "ফেভারিটে যোগ করা যায়নি",
+    "saveFailed": "ফেভারিট সেভ করা যায়নি"
+  },
+  "general": {
+    "clear": "মুছুন",
+    "invalidIp": "অবৈধ IP ঠিকানা",
+    "transferCancelled": "ট্রান্সফার ক্যানসেল করা হয়েছে",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "ফোল্ডার খোলা যাচ্ছে না",
+    "cannotOpenFolderContent": "ডাউনলোড ফোল্ডার খোলা যায়নি:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "ফোল্ডার দেখানো যাচ্ছে না।"
+  },
+  "picker": {
+    "selectFile": "ফাইল বেছে নিন",
+    "selectFiles": "ফাইল বেছে নিন",
+    "selectFolder": "ফোল্ডার বেছে নিন"
+  },
+  "receive": {
+    "message": "বার্তা",
+    "saved": {
+      "one": "{name}-এর কাছ থেকে ১টি ফাইল সেভ হয়েছে",
+      "other": "{name}-এর কাছ থেকে সেভ হওয়া ফাইল: {n}"
+    },
+    "savedTo": "{folder}-এ",
+    "waitingFor": "{name}-এর অপেক্ষায়..."
+  },
+  "receiveLink": {
+    "connect": "সংযুক্ত হন",
+    "noNetwork": "নেটওয়ার্কে সংযুক্ত নেই।",
+    "serverStopped": "সার্ভার বন্ধ আছে।",
+    "startServer": "সার্ভার চালু করুন"
+  },
+  "selection": {
+    "textItem": "টেক্সট, {size} - এডিট করতে ট্যাপ করুন"
+  },
+  "send": {
+    "asksForPin": "{name} পিন চাইছে",
+    "connecting": "সংযুক্ত হচ্ছে",
+    "connectingTo": "{name}-এর সাথে সংযুক্ত হচ্ছে...",
+    "editText": "টেক্সট এডিট করুন",
+    "folderTruncated": "ফোল্ডারের শুধু প্রথম {n}টি ফাইল যোগ করা হয়েছে",
+    "images": "ছবি",
+    "noDevices": "কোনো ডিভাইস পাওয়া যায়নি",
+    "preparing": "প্রস্তুত করা হচ্ছে",
+    "searching": "খোঁজা হচ্ছে...",
+    "sentSome": "{name}-কে পাঠানো ফাইল: {curr} / {n}",
+    "sentTo": "{name}-কে পাঠানো হয়েছে",
+    "totalProgress": "মোট অগ্রগতি",
+    "videos": "ভিডিও"
+  },
+  "settings": {
+    "about": "Symbisend সম্পর্কে",
+    "changePin": "পিন বদলাতে ট্যাপ করুন",
+    "chooseFolder": "ফোল্ডার বেছে নিন...",
+    "createChecksumsHint": "বড় ফাইলে শুরু ধীর হয়",
+    "restore": "রিস্টোর",
+    "restoreDefaults": "ডিফল্ট রিস্টোর করুন",
+    "restoreDefaultsContent": "সব সেটিংস ডিফল্টে ফিরে যাবে এবং পিন মুছে যাবে। আপনার ডিভাইসের নাম, ফেভারিট ও হিস্ট্রি থাকবে।",
+    "serverRunning": "চালু আছে",
+    "serverStopped": "বন্ধ আছে",
+    "useDefaultFolder": "ডিফল্ট ব্যবহার করুন"
+  }
+}

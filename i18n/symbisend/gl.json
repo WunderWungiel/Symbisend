@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Un cliente de LocalSend para Symbian.\nCompatible con LocalSend (protocolo v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Ordenador",
+    "headless": "Sen pantalla",
+    "mobile": "Móbil",
+    "server": "Servidor",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "e {n} máis",
+    "cancelledBy": "{name} cancelou a transferencia",
+    "cannotCreateFile": "Non se pode crear o ficheiro",
+    "cannotCreateFolder": "Non se pode crear o cartafol {folder}",
+    "cannotRead": "Non se pode ler o ficheiro",
+    "cannotWrite": "Non se pode escribir o ficheiro (memoria chea?)",
+    "certificateChanged": "Este non é o {name} que se atopou (o certificado é diferente)",
+    "certificateRejected": "Rexeitouse o certificado de {ip}",
+    "checksum": "A suma de comprobación non coincide",
+    "connectionBroke": "A conexión interrompeuse",
+    "connectionLost": "Conexión perdida",
+    "deviceGone": "O dispositivo desapareceu",
+    "httpError": "{name} respondeu co erro {status}",
+    "invalidAnswer": "O receptor enviou unha resposta non válida",
+    "largerThanAnnounced": "Máis grande do anunciado",
+    "noDeviceAt": "Non se atopou ningún dispositivo LocalSend en {ip}",
+    "notConnected": "Sen conexión",
+    "notSaved": "Non gardado:",
+    "notSent": "Non enviado:",
+    "ownAddress": "Este é o enderezo deste teléfono",
+    "stoppedResponding": "{name} deixou de responder",
+    "stoppedSending": "{name} deixou de enviar",
+    "stoppedSendingSome": "{name} deixou de enviar. Gardáronse {curr} de {n} ficheiros."
+  },
+  "favorites": {
+    "addFailed": "Non se puido engadir aos favoritos",
+    "saveFailed": "Non se puido gardar o favorito"
+  },
+  "general": {
+    "clear": "Limpar",
+    "invalidIp": "Enderezo IP non válido",
+    "transferCancelled": "A transferencia cancelouse",
+    "xOfY": "{curr} de {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Non se pode abrir o cartafol",
+    "cannotOpenFolderContent": "Non se puido abrir o cartafol de descargas:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Non se pode mostrar o cartafol."
+  },
+  "picker": {
+    "selectFile": "Seleccionar ficheiro",
+    "selectFiles": "Seleccionar ficheiros",
+    "selectFolder": "Seleccionar cartafol"
+  },
+  "receive": {
+    "message": "Mensaxe",
+    "saved": {
+      "one": "Gardouse 1 ficheiro de {name}",
+      "other": "Ficheiros gardados de {name}: {n}"
+    },
+    "savedTo": "en {folder}",
+    "waitingFor": "Agardando por {name}..."
+  },
+  "receiveLink": {
+    "connect": "Conectar",
+    "noNetwork": "Sen conexión a unha rede.",
+    "serverStopped": "O servidor está parado.",
+    "startServer": "Iniciar servidor"
+  },
+  "selection": {
+    "textItem": "Texto, {size} - toca para editar"
+  },
+  "send": {
+    "asksForPin": "{name} pide un PIN",
+    "connecting": "Conectando",
+    "connectingTo": "Conectando con {name}...",
+    "editText": "Editar texto",
+    "folderTruncated": "Só se engadiron os primeiros {n} ficheiros do cartafol",
+    "images": "Imaxes",
+    "noDevices": "Non se atopou ningún dispositivo",
+    "preparing": "Preparando",
+    "searching": "Buscando...",
+    "sentSome": "Ficheiros enviados a {name}: {curr} de {n}",
+    "sentTo": "Enviado a {name}",
+    "totalProgress": "Progreso total",
+    "videos": "Vídeos"
+  },
+  "settings": {
+    "about": "Acerca de Symbisend",
+    "changePin": "Toca para cambiar o PIN",
+    "chooseFolder": "Escoller cartafol...",
+    "createChecksumsHint": "Inicio máis lento con ficheiros grandes",
+    "restore": "Restaurar",
+    "restoreDefaults": "Restaurar valores predeterminados",
+    "restoreDefaultsContent": "Todos os axustes volven aos valores predeterminados e elimínase o PIN. O nome do dispositivo, os favoritos e o historial consérvanse.",
+    "serverRunning": "En execución",
+    "serverStopped": "Parado",
+    "useDefaultFolder": "Usar o predeterminado"
+  }
+}

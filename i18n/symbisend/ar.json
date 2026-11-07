@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "عميل LocalSend لنظام Symbian.\nمتوافق مع LocalSend (البروتوكول v2)."
+  },
+  "deviceTypes": {
+    "desktop": "حاسوب مكتبي",
+    "headless": "بلا شاشة",
+    "mobile": "محمول",
+    "server": "خادم",
+    "web": "ويب"
+  },
+  "errors": {
+    "andMore": "و{n} أخرى",
+    "cancelledBy": "ألغى {name} النقل",
+    "cannotCreateFile": "تعذّر إنشاء الملف",
+    "cannotCreateFolder": "تعذّر إنشاء المجلد {folder}",
+    "cannotRead": "تعذّرت قراءة الملف",
+    "cannotWrite": "تعذّرت كتابة الملف (الذاكرة ممتلئة؟)",
+    "certificateChanged": "هذا ليس {name} الذي تم العثور عليه (شهادته مختلفة)",
+    "certificateRejected": "تم رفض شهادة {ip}",
+    "checksum": "المجموع الاختباري غير مطابق",
+    "connectionBroke": "انقطع الاتصال",
+    "connectionLost": "فُقد الاتصال",
+    "deviceGone": "الجهاز غير متاح",
+    "httpError": "ردّ {name} بالخطأ {status}",
+    "invalidAnswer": "أرسل المستلم ردًا غير صالح",
+    "largerThanAnnounced": "أكبر من الحجم المعلن",
+    "noDeviceAt": "لم يُعثر على جهاز LocalSend على {ip}",
+    "notConnected": "غير متصل",
+    "notSaved": "لم يُحفظ:",
+    "notSent": "لم يُرسل:",
+    "ownAddress": "هذا عنوان هذا الهاتف",
+    "stoppedResponding": "توقف {name} عن الاستجابة",
+    "stoppedSending": "توقف {name} عن الإرسال",
+    "stoppedSendingSome": "توقف {name} عن الإرسال. الملفات المحفوظة: {curr} من {n}."
+  },
+  "favorites": {
+    "addFailed": "تعذّرت الإضافة إلى المفضلات",
+    "saveFailed": "تعذّر حفظ المفضلة"
+  },
+  "general": {
+    "clear": "مسح",
+    "invalidIp": "عنوان IP غير صالح",
+    "transferCancelled": "أُلغي النقل",
+    "xOfY": "{curr} من {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "تعذّر فتح المجلد",
+    "cannotOpenFolderContent": "تعذّر فتح مجلد التنزيل:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "تعذّر عرض المجلد."
+  },
+  "picker": {
+    "selectFile": "اختر ملفًا",
+    "selectFiles": "اختر ملفات",
+    "selectFolder": "اختر مجلدًا"
+  },
+  "receive": {
+    "message": "رسالة",
+    "saved": {
+      "one": "تم حفظ ملف واحد من {name}",
+      "other": "تم حفظ ملفات من {name}: {n}"
+    },
+    "savedTo": "في {folder}",
+    "waitingFor": "بانتظار {name}..."
+  },
+  "receiveLink": {
+    "connect": "اتصال",
+    "noNetwork": "غير متصل بشبكة.",
+    "serverStopped": "الخادم متوقف.",
+    "startServer": "تشغيل الخادم"
+  },
+  "selection": {
+    "textItem": "نص، {size} - اضغط للتعديل"
+  },
+  "send": {
+    "asksForPin": "{name} يطلب رمز PIN",
+    "connecting": "جارٍ الاتصال",
+    "connectingTo": "جارٍ الاتصال بـ {name}...",
+    "editText": "تعديل النص",
+    "folderTruncated": "أُضيفت ملفات المجلد الأولى فقط: {n}",
+    "images": "الصور",
+    "noDevices": "لم يُعثر على أجهزة",
+    "preparing": "جارٍ التحضير",
+    "searching": "جارٍ البحث...",
+    "sentSome": "تم الإرسال إلى {name} (الملفات: {curr} من {n})",
+    "sentTo": "تم الإرسال إلى {name}",
+    "totalProgress": "التقدم الكلي",
+    "videos": "الفيديو"
+  },
+  "settings": {
+    "about": "حول Symbisend",
+    "changePin": "اضغط لتغيير PIN",
+    "chooseFolder": "اختر مجلدًا...",
+    "createChecksumsHint": "بدء أبطأ مع الملفات الكبيرة",
+    "restore": "استعادة",
+    "restoreDefaults": "استعادة الافتراضيات",
+    "restoreDefaultsContent": "ستعود جميع الإعدادات إلى قيمها الافتراضية وسيُزال رمز PIN. يبقى اسم جهازك والمفضلات والسجل.",
+    "serverRunning": "يعمل",
+    "serverStopped": "متوقف",
+    "useDefaultFolder": "استخدم الافتراضي"
+  }
+}

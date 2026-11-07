@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Un client LocalSend pour Symbian.\nCompatible avec LocalSend (protocole v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Ordinateur",
+    "headless": "Sans écran",
+    "mobile": "Mobile",
+    "server": "Serveur",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "et {n} de plus",
+    "cancelledBy": "{name} a annulé le transfert",
+    "cannotCreateFile": "Impossible de créer le fichier",
+    "cannotCreateFolder": "Impossible de créer le dossier {folder}",
+    "cannotRead": "Impossible de lire le fichier",
+    "cannotWrite": "Impossible d'écrire le fichier (mémoire pleine ?)",
+    "certificateChanged": "Ce n'est pas l'appareil {name} qui a été trouvé (son certificat est différent)",
+    "certificateRejected": "Le certificat de {ip} a été rejeté",
+    "checksum": "La somme de contrôle ne correspond pas",
+    "connectionBroke": "La connexion a été interrompue",
+    "connectionLost": "Connexion perdue",
+    "deviceGone": "L'appareil n'est plus joignable",
+    "httpError": "{name} a répondu avec l'erreur {status}",
+    "invalidAnswer": "Le destinataire a envoyé une réponse invalide",
+    "largerThanAnnounced": "Plus grand que prévu",
+    "noDeviceAt": "Aucun appareil LocalSend trouvé à l'adresse {ip}",
+    "notConnected": "Non connecté",
+    "notSaved": "Non sauvegardés :",
+    "notSent": "Non envoyés :",
+    "ownAddress": "C'est l'adresse de ce téléphone",
+    "stoppedResponding": "{name} ne répond plus",
+    "stoppedSending": "{name} a arrêté l'envoi",
+    "stoppedSendingSome": "{name} a arrêté l'envoi. Fichiers sauvegardés : {curr} sur {n}."
+  },
+  "favorites": {
+    "addFailed": "Impossible d'ajouter aux favoris",
+    "saveFailed": "Impossible de sauvegarder le favori"
+  },
+  "general": {
+    "clear": "Effacer",
+    "invalidIp": "Adresse IP invalide",
+    "transferCancelled": "Le transfert a été annulé",
+    "xOfY": "{curr} sur {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Impossible d'ouvrir le dossier",
+    "cannotOpenFolderContent": "Le dossier de téléchargement n'a pas pu être ouvert :\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Impossible d'afficher le dossier."
+  },
+  "picker": {
+    "selectFile": "Choisir un fichier",
+    "selectFiles": "Choisir des fichiers",
+    "selectFolder": "Choisir un dossier"
+  },
+  "receive": {
+    "message": "Message",
+    "saved": {
+      "one": "1 fichier de {name} sauvegardé",
+      "other": "Fichiers de {name} sauvegardés : {n}"
+    },
+    "savedTo": "dans {folder}",
+    "waitingFor": "En attente de {name}..."
+  },
+  "receiveLink": {
+    "connect": "Se connecter",
+    "noNetwork": "Non connecté à un réseau.",
+    "serverStopped": "Le serveur est arrêté.",
+    "startServer": "Démarrer le serveur"
+  },
+  "selection": {
+    "textItem": "Texte, {size} - toucher pour modifier"
+  },
+  "send": {
+    "asksForPin": "{name} demande un code PIN",
+    "connecting": "Connexion",
+    "connectingTo": "Connexion à {name}...",
+    "editText": "Modifier le texte",
+    "folderTruncated": "Seuls les {n} premiers fichiers du dossier ont été ajoutés",
+    "images": "Images",
+    "noDevices": "Aucun appareil trouvé",
+    "preparing": "Préparation",
+    "searching": "Recherche...",
+    "sentSome": "Fichiers envoyés à {name} : {curr} sur {n}",
+    "sentTo": "Envoyé à {name}",
+    "totalProgress": "Progression totale",
+    "videos": "Vidéos"
+  },
+  "settings": {
+    "about": "À propos de Symbisend",
+    "changePin": "Toucher pour changer le code PIN",
+    "chooseFolder": "Choisir un dossier...",
+    "createChecksumsHint": "Démarrage plus lent avec les gros fichiers",
+    "restore": "Restaurer",
+    "restoreDefaults": "Rétablir les valeurs par défaut",
+    "restoreDefaultsContent": "Tous les réglages reviennent à leurs valeurs par défaut et le code PIN est supprimé. Le nom de l'appareil, les favoris et l'historique sont conservés.",
+    "serverRunning": "En cours",
+    "serverStopped": "Arrêté",
+    "useDefaultFolder": "Utiliser le dossier par défaut"
+  }
+}

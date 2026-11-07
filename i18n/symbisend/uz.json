@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Symbian uchun LocalSend klienti.\nLocalSend bilan mos (v2 protokoli)."
+  },
+  "deviceTypes": {
+    "desktop": "Kompyuter",
+    "headless": "Ekransiz",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Veb"
+  },
+  "errors": {
+    "andMore": "va yana {n} ta",
+    "cancelledBy": "{name} uzatishni bekor qildi",
+    "cannotCreateFile": "Fayl yaratib boʻlmadi",
+    "cannotCreateFolder": "{folder} papkasini yaratib boʻlmadi",
+    "cannotRead": "Faylni oʻqib boʻlmadi",
+    "cannotWrite": "Faylni yozib boʻlmadi (xotira toʻldimi?)",
+    "certificateChanged": "Bu topilgan {name} emas (sertifikati boshqa)",
+    "certificateRejected": "{ip} sertifikati rad etildi",
+    "checksum": "Nazorat summasi mos kelmadi",
+    "connectionBroke": "Aloqa toʻsatdan uzilib qoldi",
+    "connectionLost": "Aloqa uzildi",
+    "deviceGone": "Qurilmaga ulanib boʻlmaydi",
+    "httpError": "{name} {status} xatosini qaytardi",
+    "invalidAnswer": "Qabul qiluvchi notoʻgʻri javob yubordi",
+    "largerThanAnnounced": "Eʼlon qilinganidan katta",
+    "noDeviceAt": "{ip} manzilida LocalSend qurilmasi topilmadi",
+    "notConnected": "Ulanmagan",
+    "notSaved": "Saqlanmadi:",
+    "notSent": "Yuborilmadi:",
+    "ownAddress": "Bu shu telefonning manzili",
+    "stoppedResponding": "{name} javob bermay qoʻydi",
+    "stoppedSending": "{name} yuborishni toʻxtatdi",
+    "stoppedSendingSome": "{name} yuborishni toʻxtatdi. Saqlangan fayllar: {curr}/{n}."
+  },
+  "favorites": {
+    "addFailed": "Sevimlilarga qoʻshib boʻlmadi",
+    "saveFailed": "Sevimlini saqlab boʻlmadi"
+  },
+  "general": {
+    "clear": "Tozalash",
+    "invalidIp": "IP manzil notoʻgʻri",
+    "transferCancelled": "Uzatish bekor qilindi",
+    "xOfY": "{curr} / {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Papkani ochib boʻlmadi",
+    "cannotOpenFolderContent": "Yuklashlar papkasini ochib boʻlmadi:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Papkani koʻrsatib boʻlmadi."
+  },
+  "picker": {
+    "selectFile": "Fayl tanlash",
+    "selectFiles": "Fayllarni tanlash",
+    "selectFolder": "Papka tanlash"
+  },
+  "receive": {
+    "message": "Xabar",
+    "saved": {
+      "one": "{name} yuborgan fayl saqlandi",
+      "other": "{name} yuborgan fayllar saqlandi: {n} ta"
+    },
+    "savedTo": "papka: {folder}",
+    "waitingFor": "{name} kutilmoqda..."
+  },
+  "receiveLink": {
+    "connect": "Ulanish",
+    "noNetwork": "Tarmoqqa ulanmagan.",
+    "serverStopped": "Server toʻxtatilgan.",
+    "startServer": "Serverni ishga tushirish"
+  },
+  "selection": {
+    "textItem": "Matn, {size} - tahrirlash uchun bosing"
+  },
+  "send": {
+    "asksForPin": "{name} PIN soʻramoqda",
+    "connecting": "Ulanmoqda",
+    "connectingTo": "{name} qurilmasiga ulanmoqda...",
+    "editText": "Matnni tahrirlash",
+    "folderTruncated": "Papkaning faqat dastlabki {n} ta fayli qoʻshildi",
+    "images": "Rasmlar",
+    "noDevices": "Qurilmalar topilmadi",
+    "preparing": "Tayyorlanmoqda",
+    "searching": "Qidirilmoqda...",
+    "sentSome": "{name} qurilmasiga yuborildi: {curr}/{n} fayl",
+    "sentTo": "{name} qurilmasiga yuborildi",
+    "totalProgress": "Umumiy jarayon",
+    "videos": "Videolar"
+  },
+  "settings": {
+    "about": "Symbisend haqida",
+    "changePin": "PINni oʻzgartirish uchun bosing",
+    "chooseFolder": "Papka tanlash...",
+    "createChecksumsHint": "Katta fayllarda boshlanishi sekinroq",
+    "restore": "Tiklash",
+    "restoreDefaults": "Standart sozlamalar",
+    "restoreDefaultsContent": "Barcha sozlamalar standart holatga qaytadi, PIN oʻchiriladi. Qurilma nomi, sevimlilar va tarix saqlanadi.",
+    "serverRunning": "Ishlayapti",
+    "serverStopped": "Toʻxtatilgan",
+    "useDefaultFolder": "Standart"
+  }
+}

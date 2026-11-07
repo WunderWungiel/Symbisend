@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "En LocalSend-klient til Symbian.\nKompatibel med LocalSend (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Computer",
+    "headless": "Uden skærm",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "og {n} flere",
+    "cancelledBy": "{name} afbrød overførslen",
+    "cannotCreateFile": "Filen kan ikke oprettes",
+    "cannotCreateFolder": "Mappen {folder} kan ikke oprettes",
+    "cannotRead": "Filen kan ikke læses",
+    "cannotWrite": "Filen kan ikke skrives (hukommelsen fuld?)",
+    "certificateChanged": "Denne enhed er ikke {name} – certifikatet er et andet",
+    "certificateRejected": "Certifikatet fra {ip} blev afvist",
+    "checksum": "Kontrolsummen stemmer ikke",
+    "connectionBroke": "Forbindelsen blev afbrudt",
+    "connectionLost": "Forbindelsen er mistet",
+    "deviceGone": "Enheden er væk",
+    "httpError": "{name} svarede med fejl {status}",
+    "invalidAnswer": "Modtageren sendte et ugyldigt svar",
+    "largerThanAnnounced": "Større end oplyst",
+    "noDeviceAt": "Ingen LocalSend-enhed fundet på {ip}",
+    "notConnected": "Ikke forbundet",
+    "notSaved": "Ikke gemt:",
+    "notSent": "Ikke sendt:",
+    "ownAddress": "Dette er adressen på denne telefon",
+    "stoppedResponding": "{name} svarer ikke længere",
+    "stoppedSending": "{name} stoppede med at sende",
+    "stoppedSendingSome": "{name} stoppede med at sende. {curr} af {n} filer blev gemt."
+  },
+  "favorites": {
+    "addFailed": "Kunne ikke tilføje til favoritter",
+    "saveFailed": "Kunne ikke gemme favoritten"
+  },
+  "general": {
+    "clear": "Ryd",
+    "invalidIp": "Ugyldig IP-adresse",
+    "transferCancelled": "Overførslen blev afbrudt",
+    "xOfY": "{curr} af {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Mappen kan ikke åbnes",
+    "cannotOpenFolderContent": "Overførselsmappen kunne ikke åbnes:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Mappen kan ikke vises."
+  },
+  "picker": {
+    "selectFile": "Vælg fil",
+    "selectFiles": "Vælg filer",
+    "selectFolder": "Vælg mappe"
+  },
+  "receive": {
+    "message": "Besked",
+    "saved": {
+      "one": "Gemte 1 fil fra {name}",
+      "other": "Gemte filer fra {name}: {n}"
+    },
+    "savedTo": "i {folder}",
+    "waitingFor": "Venter på {name}..."
+  },
+  "receiveLink": {
+    "connect": "Opret forbindelse",
+    "noNetwork": "Ikke forbundet til et netværk.",
+    "serverStopped": "Serveren er stoppet.",
+    "startServer": "Start server"
+  },
+  "selection": {
+    "textItem": "Tekst, {size} - tryk for at redigere"
+  },
+  "send": {
+    "asksForPin": "{name} beder om en PIN-kode",
+    "connecting": "Forbinder",
+    "connectingTo": "Forbinder til {name}...",
+    "editText": "Rediger tekst",
+    "folderTruncated": "Kun de første {n} filer i mappen blev tilføjet",
+    "images": "Billeder",
+    "noDevices": "Ingen enheder fundet",
+    "preparing": "Forbereder",
+    "searching": "Søger...",
+    "sentSome": "Sendte {curr} af {n} filer til {name}",
+    "sentTo": "Sendt til {name}",
+    "totalProgress": "Samlet fremgang",
+    "videos": "Videoer"
+  },
+  "settings": {
+    "about": "Om Symbisend",
+    "changePin": "Tryk for at ændre PIN-koden",
+    "chooseFolder": "Vælg mappe...",
+    "createChecksumsHint": "Langsommere start med store filer",
+    "restore": "Gendan",
+    "restoreDefaults": "Gendan standardindstillinger",
+    "restoreDefaultsContent": "Alle indstillinger sættes tilbage til standard, og PIN-koden fjernes. Enhedsnavn, favoritter og historik bevares.",
+    "serverRunning": "Kører",
+    "serverStopped": "Stoppet",
+    "useDefaultFolder": "Brug standard"
+  }
+}

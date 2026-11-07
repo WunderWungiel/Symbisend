@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "LocalSend klijent za Symbian.\nKompatibilan sa LocalSend-om (protokol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Računar",
+    "headless": "Bez ekrana",
+    "mobile": "Mobilni uređaj",
+    "server": "Server",
+    "web": "Veb"
+  },
+  "errors": {
+    "andMore": "i još {n}",
+    "cancelledBy": "Uređaj {name} je otkazao prenos",
+    "cannotCreateFile": "Fajl se ne može napraviti",
+    "cannotCreateFolder": "Folder {folder} se ne može napraviti",
+    "cannotRead": "Fajl se ne može pročitati",
+    "cannotWrite": "Fajl se ne može upisati (puna memorija?)",
+    "certificateChanged": "Ovo nije pronađeni uređaj {name} (sertifikat je drugačiji)",
+    "certificateRejected": "Sertifikat adrese {ip} je odbijen",
+    "checksum": "Kontrolna suma se ne poklapa",
+    "connectionBroke": "Veza je prekinuta",
+    "connectionLost": "Veza je izgubljena",
+    "deviceGone": "Uređaj više nije dostupan",
+    "httpError": "Uređaj {name} je odgovorio greškom {status}",
+    "invalidAnswer": "Primalac je poslao neispravan odgovor",
+    "largerThanAnnounced": "Veći od najavljenog",
+    "noDeviceAt": "Nijedan LocalSend uređaj nije pronađen na adresi {ip}",
+    "notConnected": "Nije povezano",
+    "notSaved": "Nije sačuvano:",
+    "notSent": "Nije poslato:",
+    "ownAddress": "Ovo je adresa ovog telefona",
+    "stoppedResponding": "Uređaj {name} je prestao da odgovara",
+    "stoppedSending": "Uređaj {name} je prestao da šalje",
+    "stoppedSendingSome": "Uređaj {name} je prestao da šalje. Sačuvano fajlova: {curr} od {n}."
+  },
+  "favorites": {
+    "addFailed": "Dodavanje u omiljene nije uspelo",
+    "saveFailed": "Čuvanje omiljenog nije uspelo"
+  },
+  "general": {
+    "clear": "Obriši",
+    "invalidIp": "Neispravna IP adresa",
+    "transferCancelled": "Prenos je otkazan",
+    "xOfY": "{curr} od {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Folder se ne može otvoriti",
+    "cannotOpenFolderContent": "Folder za preuzimanje se nije mogao otvoriti:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Folder se ne može prikazati."
+  },
+  "picker": {
+    "selectFile": "Izaberi fajl",
+    "selectFiles": "Izaberi fajlove",
+    "selectFolder": "Izaberi folder"
+  },
+  "receive": {
+    "message": "Poruka",
+    "saved": {
+      "one": "Sačuvan 1 fajl od {name}",
+      "other": "Sačuvani fajlovi od {name}: {n}"
+    },
+    "savedTo": "u {folder}",
+    "waitingFor": "Čekanje na {name}..."
+  },
+  "receiveLink": {
+    "connect": "Poveži se",
+    "noNetwork": "Nije povezano sa mrežom.",
+    "serverStopped": "Server je zaustavljen.",
+    "startServer": "Pokreni server"
+  },
+  "selection": {
+    "textItem": "Tekst, {size} - dodirnite za izmenu"
+  },
+  "send": {
+    "asksForPin": "{name} traži PIN",
+    "connecting": "Povezivanje",
+    "connectingTo": "Povezivanje sa {name}...",
+    "editText": "Izmeni tekst",
+    "folderTruncated": "Dodati su samo prvi fajlovi iz foldera: {n}",
+    "images": "Slike",
+    "noDevices": "Nema pronađenih uređaja",
+    "preparing": "Priprema",
+    "searching": "Pretraga...",
+    "sentSome": "Poslato fajlova na {name}: {curr} od {n}",
+    "sentTo": "Poslato na {name}",
+    "totalProgress": "Ukupan napredak",
+    "videos": "Video snimci"
+  },
+  "settings": {
+    "about": "O aplikaciji Symbisend",
+    "changePin": "Dodirnite da promenite PIN",
+    "chooseFolder": "Izaberi folder...",
+    "createChecksumsHint": "Sporiji početak kod velikih fajlova",
+    "restore": "Vrati",
+    "restoreDefaults": "Vrati podrazumevano",
+    "restoreDefaultsContent": "Sva podešavanja se vraćaju na podrazumevana, a PIN se uklanja. Naziv uređaja, omiljeni i istorija ostaju.",
+    "serverRunning": "Radi",
+    "serverStopped": "Zaustavljen",
+    "useDefaultFolder": "Podrazumevani"
+  }
+}

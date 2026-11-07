@@ -1,0 +1,104 @@
+{
+  "about": {
+    "description": "Un client LocalSend pentru Symbian.\nCompatibil cu LocalSend (protocol v2)."
+  },
+  "deviceTypes": {
+    "desktop": "Computer",
+    "headless": "Fără ecran",
+    "mobile": "Mobil",
+    "server": "Server",
+    "web": "Web"
+  },
+  "errors": {
+    "andMore": "și încă {n}",
+    "cancelledBy": "{name} a anulat transferul",
+    "cannotCreateFile": "Fișierul nu poate fi creat",
+    "cannotCreateFolder": "Dosarul {folder} nu poate fi creat",
+    "cannotRead": "Fișierul nu poate fi citit",
+    "cannotWrite": "Fișierul nu poate fi scris (memorie plină?)",
+    "certificateChanged": "Acesta nu este dispozitivul {name} găsit anterior (certificatul este diferit)",
+    "certificateRejected": "Certificatul pentru {ip} a fost respins",
+    "checksum": "Suma de control nu se potrivește",
+    "connectionBroke": "Conexiunea s-a întrerupt",
+    "connectionLost": "Conexiune pierdută",
+    "deviceGone": "Dispozitivul nu mai este disponibil",
+    "httpError": "{name} a răspuns cu eroarea {status}",
+    "invalidAnswer": "Destinatarul a trimis un răspuns nevalid",
+    "largerThanAnnounced": "Mai mare decât s-a anunțat",
+    "noDeviceAt": "Niciun dispozitiv LocalSend găsit la {ip}",
+    "notConnected": "Neconectat",
+    "notSaved": "Nesalvate:",
+    "notSent": "Netrimise:",
+    "ownAddress": "Aceasta este adresa acestui telefon",
+    "stoppedResponding": "{name} nu mai răspunde",
+    "stoppedSending": "{name} a oprit trimiterea",
+    "stoppedSendingSome": "{name} a oprit trimiterea. Fișiere salvate: {curr} din {n}."
+  },
+  "favorites": {
+    "addFailed": "Nu s-a putut adăuga la favorite",
+    "saveFailed": "Nu s-a putut salva favoritul"
+  },
+  "general": {
+    "clear": "Șterge",
+    "invalidIp": "Adresă IP nevalidă",
+    "transferCancelled": "Transferul a fost anulat",
+    "xOfY": "{curr} din {n}"
+  },
+  "history": {
+    "cannotOpenFolder": "Dosarul nu poate fi deschis",
+    "cannotOpenFolderContent": "Dosarul de descărcări nu a putut fi deschis:\n{folder}"
+  },
+  "openFile": {
+    "cannotShowFolder": "Dosarul nu poate fi afișat."
+  },
+  "picker": {
+    "selectFile": "Selectează fișierul",
+    "selectFiles": "Selectează fișierele",
+    "selectFolder": "Selectează dosarul"
+  },
+  "receive": {
+    "message": "Mesaj",
+    "saved": {
+      "one": "1 fișier salvat de la {name}",
+      "other": "Fișiere salvate de la {name}: {n}"
+    },
+    "savedTo": "în {folder}",
+    "waitingFor": "Se așteaptă {name}..."
+  },
+  "receiveLink": {
+    "connect": "Conectează",
+    "noNetwork": "Neconectat la o rețea.",
+    "serverStopped": "Serverul este oprit.",
+    "startServer": "Pornește serverul"
+  },
+  "selection": {
+    "textItem": "Text, {size} - atinge pentru a edita"
+  },
+  "send": {
+    "asksForPin": "{name} cere un PIN",
+    "connecting": "Se conectează",
+    "connectingTo": "Se conectează la {name}...",
+    "editText": "Editează textul",
+    "folderTruncated": "Au fost adăugate doar primele fișiere din dosar: {n}",
+    "images": "Imagini",
+    "noDevices": "Niciun dispozitiv găsit",
+    "preparing": "Se pregătește",
+    "searching": "Se caută...",
+    "sentSome": "Fișiere trimise către {name}: {curr} din {n}",
+    "sentTo": "Trimis către {name}",
+    "totalProgress": "Progres total",
+    "videos": "Videoclipuri"
+  },
+  "settings": {
+    "about": "Despre Symbisend",
+    "changePin": "Atinge pentru a schimba PIN-ul",
+    "chooseFolder": "Alege dosarul...",
+    "createChecksumsHint": "Pornire mai lentă cu fișiere mari",
+    "restore": "Restabilește",
+    "restoreDefaults": "Restabilește implicitele",
+    "restoreDefaultsContent": "Toate setările revin la valorile implicite, iar PIN-ul este șters. Numele dispozitivului, favoritele și istoricul rămân.",
+    "serverRunning": "Rulează",
+    "serverStopped": "Oprit",
+    "useDefaultFolder": "Implicit"
+  }
+}
