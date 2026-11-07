@@ -46,7 +46,7 @@ public:
     // The instance, for C++ code; 0 before main() created it.
     static I18n *instance() { return s_instance; }
     // instance()->t() / plural(), or the key if there is no instance:
-    // I18n::text("symbisend.errors.declined", I18n::args("name", alias)).
+    // I18n::text("symbisend.errors.cancelledBy", I18n::args("name", alias)).
     static QString text(const char *key, const QVariantMap &args = QVariantMap());
     static QString pluralText(const char *key, int n, const QVariantMap &args = QVariantMap());
     static QVariantMap args(const char *k1, const QVariant &v1,

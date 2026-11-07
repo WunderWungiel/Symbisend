@@ -22,7 +22,6 @@
     "checksum": "The checksum doesn't match",
     "connectionBroke": "The connection broke off",
     "connectionLost": "Connection lost",
-    "declined": "{name} declined the transfer",
     "deviceGone": "The device is gone",
     "httpError": "{name} answered with error {status}",
     "invalidAnswer": "The receiver sent an invalid answer",

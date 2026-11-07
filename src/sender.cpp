@@ -496,8 +496,7 @@ void Sender::onPrepareFinished()
         setState(QLatin1String("pin"), m_pinSent ? I18n::text("web.invalidPin") : QString());
         return;
     case 403:
-        finish(QLatin1String("declined"),
-               I18n::text("symbisend.errors.declined", I18n::args("name", m_peer.alias)));
+        finish(QLatin1String("declined"), I18n::text("sendPage.rejected"));
         return;
     case 409:
         finish(QLatin1String("failed"),

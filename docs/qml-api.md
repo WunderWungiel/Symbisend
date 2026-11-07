@@ -266,7 +266,7 @@ checksum mismatch (422) is sent again first, 3 uploads in all.
     one), or the connection was lost or the receiver's certificate changed while sending, which
     fails the rest. `errorText` starts with `Not sent:` and has a line `name: why` for the
     first few
-  - `declined` — the receiver said no
+  - `declined` — the receiver said no (`errorText`: `sendPage.rejected`)
   - `failed` — the transfer stopped, see `errorText` (busy receiver, connection lost
     before sending began, no progress for 60 s, ...)
   - `cancelled` — by us, or by the receiver (`errorText` says so)
