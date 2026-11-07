@@ -163,7 +163,7 @@ Page {
         id: pinDialog
         platformInverted: page.platformInverted
         titleText: i18n.t("dialogs.pin.title") + i18n.rev
-        buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
+        buttonTexts: [i18n.t("general.confirm") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
         function openWith(pin) {
             pinField.text = pin

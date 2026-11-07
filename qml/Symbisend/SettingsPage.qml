@@ -322,7 +322,7 @@ Page {
         id: pinDialog
         platformInverted: page.platformInverted
         titleText: i18n.t("dialogs.pin.title") + i18n.rev
-        buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
+        buttonTexts: [i18n.t("general.confirm") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
         function openWith(pin) {
             pinField.text = pin
@@ -392,14 +392,14 @@ Page {
         platformInverted: page.platformInverted
         titleText: i18n.t("dialogs.encryptionDisabledNotice.title") + i18n.rev
         message: i18n.t("dialogs.encryptionDisabledNotice.content") + i18n.rev
-        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
+        acceptButtonText: i18n.t("general.close") + i18n.rev
     }
 
     CommonDialog {
         id: nameDialog
         platformInverted: page.platformInverted
         titleText: i18n.t("settingsTab.network.alias") + i18n.rev
-        buttonTexts: [i18n.t("symbisend.general.ok") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
+        buttonTexts: [i18n.t("general.confirm") + i18n.rev, i18n.t("general.cancel") + i18n.rev]
 
         function openWith(name) {
             nameField.text = name

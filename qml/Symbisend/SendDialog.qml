@@ -145,7 +145,7 @@ CommonDialog {
             Button {
                 id: pinButton
                 platformInverted: root.platformInverted
-                text: i18n.t("symbisend.general.ok") + i18n.rev
+                text: i18n.t("general.confirm") + i18n.rev
                 enabled: pinField.text != ""
                 onClicked: {
                     pinField.closeSoftwareInputPanel()

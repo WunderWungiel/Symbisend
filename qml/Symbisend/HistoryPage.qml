@@ -300,7 +300,7 @@ Page {
         function openFor(name) { fileName = name; open() }
         titleText: i18n.t("dialogs.cannotOpenFile.title") + i18n.rev
         message: i18n.t("dialogs.cannotOpenFile.content", { file: fileName }) + i18n.rev
-        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
+        acceptButtonText: i18n.t("general.close") + i18n.rev
     }
 
     QueryDialog {
@@ -308,7 +308,7 @@ Page {
         platformInverted: page.platformInverted
         titleText: i18n.t("symbisend.history.cannotOpenFolder") + i18n.rev
         message: i18n.t("symbisend.history.cannotOpenFolderContent", { folder: settings.downloadFolder }) + i18n.rev
-        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
+        acceptButtonText: i18n.t("general.close") + i18n.rev
     }
 
     // Like the official app: confirm first. Only the list is cleared, the

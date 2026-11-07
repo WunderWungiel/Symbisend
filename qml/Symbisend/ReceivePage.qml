@@ -104,7 +104,7 @@ Page {
                  + "\n" + i18n.t("receiveTab.infoBox.ip") + " "
                  + (network.localAddress !== "" ? network.localAddress : "-")
                  + "\n" + i18n.t("receiveTab.infoBox.port") + " " + myDevice.port
-        acceptButtonText: i18n.t("symbisend.general.ok") + i18n.rev
+        acceptButtonText: i18n.t("general.close") + i18n.rev
     }
 
     // "Receive via link": browsers upload to us (ReceiveLinkPage).

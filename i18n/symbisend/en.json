@@ -44,7 +44,6 @@
     "cancelled": "Cancelled",
     "clear": "Clear",
     "invalidIp": "Invalid IP address",
-    "ok": "OK",
     "transferCancelled": "The transfer was cancelled",
     "xOfY": "{curr} of {n}"
   },
