@@ -19,6 +19,9 @@ Page {
     // Heart button next to Refresh; main.qml opens FavoritesPage, and calls
     // sendToFavorite() when a favourite is tapped there.
     signal favoritesRequested()
+    // File button: main.qml opens FileBrowserPage (several files at once;
+    // the native file picker takes only one).
+    signal fileBrowserRequested()
 
     // The Selection card's Add button toggles the send option row below it.
     property bool addOptionsShown: false
@@ -160,7 +163,7 @@ Page {
                 width: sendOptions.buttonWidth
                 label: i18n.t("sendTab.picker.file") + i18n.rev
                 icon: "send-file"
-                onClicked: picker.pickFile()
+                onClicked: page.fileBrowserRequested()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth

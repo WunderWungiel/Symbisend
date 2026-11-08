@@ -79,6 +79,7 @@ SOURCES += main.cpp \
     src/i18n.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
+    src/foldermodel.cpp \
     src/historymodel.cpp \
     src/favoritesmodel.cpp \
     src/sender.cpp \
@@ -106,6 +107,7 @@ HEADERS += \
     src/i18n.h \
     src/picker.h \
     src/selectionmodel.h \
+    src/foldermodel.h \
     src/historymodel.h \
     src/favoritesmodel.h \
     src/sender.h \

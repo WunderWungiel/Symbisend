@@ -185,7 +185,8 @@ Network:
 
 ## `picker` — what to send (Send page buttons)
 Native pickers. Their results go straight into `selection` (connected in `main.cpp`).
-- `pickFile()` — native file picker (memory, then browse), one file
+- `pickFile()` — native file picker (memory, then browse), one file. The UI's File button
+  opens `FileBrowserPage` (`fileBrowser`, several files) instead.
 - `pickMedia(kind)` — the gallery (Photos) picker, several items; `kind` is `"image"` or
   `"video"` (the gallery picker shows one type at a time)
 - `pickFolder()` — native folder picker
@@ -228,6 +229,43 @@ Methods:
 - `setText(index, text)` — edit a text item; `""` removes it
 - `remove(index)`, `clear()`
 - `formatSize(bytes)` → string, e.g. `formatSize(1300000)` = `1.2 MB`
+
+## `fileBrowser` — multi-select file browser (ListView model)
+Symbian has no native multi-select file picker, so the Send page's File button opens
+`FileBrowserPage`. One folder's contents (folders first, then by name; hidden entries left
+out), or the drives (Symbian: no D: or Z:, and drives that can't be read, e.g. an empty card
+slot, are hidden; Windows: every drive; elsewhere the browser starts in the home folder and
+`/` is the top). Check marks are kept while moving between folders. Listing happens on the
+UI thread, logged as `FolderModel: listed … in N ms`.
+
+| role           | type   | example                                       |
+|----------------|--------|-----------------------------------------------|
+| `name`         | string | `a.jpg`; drives: `E:`                         |
+| `path`         | string | `E:/Images/a.jpg` (`/` separators); drives: `E:/` |
+| `isDir`        | bool   | folders and drives                            |
+| `isDrive`      | bool   | a drive in the drive list (can't be checked)  |
+| `size`         | number | bytes; 0 for folders                          |
+| `sizeText`     | string | `1.2 MB`; `""` for folders                    |
+| `modifiedText` | string | last change, short system-locale format; `""` for drives |
+| `checked`      | bool   |                                               |
+
+Properties: `folder` (string, `/` separators; `""` = the drive list), `folderText` (native,
+`E:\Images`; `""` for the drive list), `atRoot` (bool), `count` (int), `checkedCount` (int,
+files and folders in all folders), `checkedSizeText` (string: the checked files only, a
+folder's size isn't known until it is walked).
+Methods:
+- `refresh()` — lists the current folder again (the page calls it when shown; the folder
+  is the one left last time)
+- `open(index)` — go into the folder or drive; signal `openFailed(path)` (native path) if it
+  can't be read, and the folder stays
+- `up()` → int — one level up (from a drive's top to the drive list); returns the index of
+  the folder just left in the new listing (to scroll to it), or -1
+- `toggle(index)` — check or uncheck (not drives)
+- `clearChecked()`
+- `checkedFiles()`, `checkedFolders()` → list of paths, in checking order. The page adds
+  them with `selection.addFiles()` and `selection.addFolder()` (already selected files
+  are skipped there).
+- Signals: `folderChanged()`, `checkedChanged()`, `openFailed(path)`
 
 ## `sender` — sending the selection to a device
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by

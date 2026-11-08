@@ -40,6 +40,7 @@ PageStackWindow {
                 onDeviceInfoRequested: mainPage.pageStack.push(Qt.resolvedUrl("DeviceDetailsPage.qml"),
                                                                { fingerprint: fingerprint })
                 onEditSelectionRequested: mainPage.pageStack.push(Qt.resolvedUrl("SelectionPage.qml"))
+                onFileBrowserRequested: mainPage.pageStack.push(Qt.resolvedUrl("FileBrowserPage.qml"))
                 onFavoritesRequested: {
                     var favourites = mainPage.pageStack.push(Qt.resolvedUrl("FavoritesPage.qml"))
                     favourites.sendRequested.connect(sendTab.sendToFavorite)
