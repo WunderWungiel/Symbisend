@@ -180,7 +180,7 @@ This is the biggest logic change, and it should also save battery and CPU on the
 - [ ] **Address dialog:** `#123` suffix mode and recent devices
 - [x] **Settings:** Advanced settings switch, port, multicast address, discovery timeout, device type and model, turning off checksum verification, the notices after turning on quick save (`settings_tab.dart`, `settings_tab_controller.dart`)
 - [ ] **Settings left out:** "Network" (an address filter, `networkWhitelist`/`networkBlacklist`), "Use system name", "Animations", "Color", a "System" theme. "Automatically accept requests in Share via link mode" comes with Share via link.
-- [ ] **Translations:** the language setting is stored but does nothing
+- [x] **Translations:** every visible string goes through `I18n` with the official translations (`i18n/*.json`, unchanged) and the official keys; "System" follows the phone's locale, and changing the language applies at once. Plurals use the official app's rule (`initI18n()` in `i18n.dart`). Symbisend's own strings (`i18n/symbisend/`) are translated into every LocalSend language. Left out: right-to-left layout (mirroring) for Arabic, Hebrew, Persian and Urdu
 - [x] **Receive via link page:** copying the URL and showing it as a QR code (`web_share_page.dart`, `qr_dialog.dart`)
 
 ## Robustness
