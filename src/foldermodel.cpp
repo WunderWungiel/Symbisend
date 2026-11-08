@@ -204,7 +204,8 @@ void FolderModel::toggle(int index)
     if (index < 0 || index >= m_entries.size())
         return;
     const Entry &e = m_entries.at(index);
-    if (e.isDrive)
+    // Only files: whole folders come from the Send page's Folder button.
+    if (e.isDir)
         return;
     QString k = key(e.path);
     if (m_checkedKeys.contains(k)) {
@@ -218,7 +219,6 @@ void FolderModel::toggle(int index)
     } else {
         Checked c;
         c.path = e.path;
-        c.isDir = e.isDir;
         c.size = e.size;
         m_checked << c;
         m_checkedKeys.insert(k);
@@ -242,19 +242,7 @@ void FolderModel::clearChecked()
 QStringList FolderModel::checkedFiles() const
 {
     QStringList paths;
-    foreach (const Checked &c, m_checked) {
-        if (!c.isDir)
-            paths << c.path;
-    }
-    return paths;
-}
-
-QStringList FolderModel::checkedFolders() const
-{
-    QStringList paths;
-    foreach (const Checked &c, m_checked) {
-        if (c.isDir)
-            paths << c.path;
-    }
+    foreach (const Checked &c, m_checked)
+        paths << c.path;
     return paths;
 }

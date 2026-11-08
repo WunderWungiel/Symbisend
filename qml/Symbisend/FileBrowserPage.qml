@@ -5,7 +5,8 @@ import QtQuick 1.1
 import com.nokia.symbian 1.1
 
 // The Send page's File button: browse the drives and check any number of
-// files and folders, then Add puts them into the selection. Symbian has no
+// files, then Add puts them into the selection (whole folders come from the
+// Folder button). Symbian has no
 // native multi-select file picker. The check marks live in C++
 // (`fileBrowser`) and stay while moving between folders. Has its own back
 // button at the top (one folder up, or closes the page on the drive list),
@@ -42,9 +43,6 @@ Page {
 
     function addChecked() {
         selection.addFiles(fileBrowser.checkedFiles())
-        var folders = fileBrowser.checkedFolders()
-        for (var i = 0; i < folders.length; ++i)
-            selection.addFolder(folders[i])
         fileBrowser.clearChecked()
         page.pageStack.pop()
     }
@@ -196,7 +194,7 @@ Page {
                 // paddingItem already leaves room for a folder's arrow.
                 anchors { right: row.paddingItem.right; verticalCenter: parent.verticalCenter }
                 platformInverted: row.platformInverted
-                visible: !model.isDrive
+                visible: !model.isDir
                 checked: model.checked
 
                 MouseArea {

@@ -13,8 +13,9 @@
 #include <QStringList>
 
 // The Send page's file browser (FileBrowserPage.qml): one folder's contents,
-// or the list of drives, with a check mark per entry that is kept while the
-// user moves between folders. Symbian has no native multi-select file
+// or the list of drives, with a check mark per file that is kept while the
+// user moves between folders (folders aren't checked: the Folder button
+// adds a whole folder). Symbian has no native multi-select file
 // picker (the Avkon dialog picks one file, MGFetch only media), hence this.
 // See docs/qml-api.md (`fileBrowser`).
 //
@@ -30,9 +31,9 @@ class FolderModel : public QAbstractListModel
     // Nothing above: the drive list (Symbian, Windows) or "/".
     Q_PROPERTY(bool atRoot READ atRoot NOTIFY folderChanged)
     Q_PROPERTY(int count READ rowCount NOTIFY folderChanged)
-    // Checked files and folders, in all folders.
+    // Checked files, in all folders.
     Q_PROPERTY(int checkedCount READ checkedCount NOTIFY checkedChanged)
-    // Size of the checked files (folders not counted: unknown until walked).
+    // Total size of the checked files.
     Q_PROPERTY(QString checkedSizeText READ checkedSizeText NOTIFY checkedChanged)
 
 public:
@@ -66,11 +67,11 @@ public:
     Q_INVOKABLE int up();
     // Lists the current folder again (e.g. when the page is shown again).
     Q_INVOKABLE void refresh();
+    // Checks or unchecks the file at index (folders and drives: nothing).
     Q_INVOKABLE void toggle(int index);
     Q_INVOKABLE void clearChecked();
     // '/'-separated paths, in the order they were checked.
     Q_INVOKABLE QStringList checkedFiles() const;
-    Q_INVOKABLE QStringList checkedFolders() const;
 
 signals:
     void folderChanged();
@@ -89,7 +90,6 @@ private:
     };
     struct Checked {
         QString path;
-        bool isDir;
         qint64 size;
     };
 
