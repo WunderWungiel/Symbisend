@@ -63,8 +63,16 @@ Page {
             id: nameLabel
             platformInverted: page.platformInverted
             anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(implicitWidth, page.width - 2 * platformStyle.paddingLarge)
+            // A fixed width, centred text. Not min(implicitWidth, …): in Qt
+            // Quick 1 a Text with an explicit width reports implicitWidth
+            // from its constrained layout, so a renamed alias kept the old
+            // width and was drawn off-centre (or elided too early).
+            width: page.width - 2 * platformStyle.paddingLarge
             horizontalAlignment: Text.AlignHCenter
+            // Long names wrap between words (inside a word only if it alone
+            // is too wide), at most two lines, then "…".
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            maximumLineCount: 2
             elide: Text.ElideRight
             // Big, like the official app (48 px under a 200 px logo).
             font.pixelSize: 2 * platformStyle.fontSizeLarge
