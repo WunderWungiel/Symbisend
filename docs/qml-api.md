@@ -254,8 +254,8 @@ Properties: `folder` (string, `/` separators; `""` = the drive list), `folderTex
 `E:\Images`; `""` for the drive list), `atRoot` (bool), `count` (int), `checkedCount` (int,
 checked files in all folders), `checkedSizeText` (string, their total size).
 Methods:
-- `refresh()` — lists the current folder again (the page calls it when shown; the folder
-  is the one left last time)
+- `openStart()` — lists the start folder: the drive list (home folder where there are no
+  drives). The page calls it each time it is shown.
 - `open(index)` — go into the folder or drive; signal `openFailed(path)` (native path) if it
   can't be read, and the folder stays
 - `up()` → int — one level up (from a drive's top to the drive list); returns the index of

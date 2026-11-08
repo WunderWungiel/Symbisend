@@ -23,11 +23,10 @@ Page {
     property color mutedColor: platformInverted ? platformStyle.colorNormalMidInverted
                                                 : platformStyle.colorNormalMid
 
-    // The list is read again each time the page is opened (files may have
-    // changed meanwhile); the folder is the one left last time.
+    // Each time the page is opened it starts at the drive list again.
     onStatusChanged: {
         if (status == PageStatus.Activating)
-            fileBrowser.refresh()
+            fileBrowser.openStart()
     }
 
     function back() {

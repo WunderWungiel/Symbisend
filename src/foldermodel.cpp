@@ -29,7 +29,7 @@ FolderModel::FolderModel(QObject *parent)
     roles[CheckedRole] = "checked";
     setRoleNames(roles);
 
-    // Listed when the page first asks (refresh()), not at startup.
+    // Listed when the page first asks (openStart()), not at startup.
     m_folder = startFolder();
 }
 
@@ -193,9 +193,9 @@ int FolderModel::up()
     return -1;
 }
 
-void FolderModel::refresh()
+void FolderModel::openStart()
 {
-    if (!load(m_folder) && !load(startFolder()))
+    if (!load(startFolder()))
         qWarning() << "FolderModel: can't list" << startFolder();
 }
 

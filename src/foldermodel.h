@@ -65,8 +65,9 @@ public:
     // One level up; returns the index of the folder we came from in the new
     // listing (to scroll to it), or -1.
     Q_INVOKABLE int up();
-    // Lists the current folder again (e.g. when the page is shown again).
-    Q_INVOKABLE void refresh();
+    // Lists the start folder (the drive list, or home without drives); the
+    // page calls it each time it is shown.
+    Q_INVOKABLE void openStart();
     // Checks or unchecks the file at index (folders and drives: nothing).
     Q_INVOKABLE void toggle(int index);
     Q_INVOKABLE void clearChecked();
