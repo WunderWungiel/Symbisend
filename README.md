@@ -26,8 +26,8 @@ Not yet implemented: *Share via link* (sending to a browser).
 
 ## Requirements
 
-- A Symbian^3, Anna or Belle phone with the Qt 4.8 runtime and Qt Quick Components
-  (tested on the Nokia 808 PureView, Belle).
+- A Symbian^3, Anna or Belle phone with Qt 4.7.4 or later and Qt Quick Components 1.1
+  (tested on the Nokia 808 PureView, Belle, Qt 4.8).
 - The [Qt TLS patch](https://nnproject.cc/qtls) (OpenSSL 1.0.2u for Qt), which gives Qt
   apps TLS 1.2. Without it Symbisend can't open encrypted connections to other devices,
   because the official apps require TLS 1.2, so sending and looking for devices fail.
