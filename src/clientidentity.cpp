@@ -75,105 +75,100 @@ QString ClientIdentity::peerFingerprint(const QNetworkReply *reply)
 #include <QSslConfiguration>
 #include <QSslKey>
 
-// The OpenSSL headers of the Symbian SDK are 0.9.8g; the phone runs the
-// patched (1.0.x) library. Only functions exported by both are used, and no
-// structs are touched except through the X509_get_notBefore/notAfter macros,
-// whose layout is the same in both.
-#include <openssl/bio.h>
-#include <openssl/bn.h>
-#include <openssl/crypto.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/rand.h>
-#include <openssl/rsa.h>
-#include <openssl/x509.h>
+#include "tlsrandom.h"
 
-static QString opensslError()
-{
-    const unsigned long e = ERR_get_error();
-    if (!e)
-        return QLatin1String("(no OpenSSL error)");
-    char buf[256];
-    ERR_error_string_n(e, buf, sizeof(buf));
-    return QString::fromLatin1(buf);
-}
-
-static QByteArray bioContents(BIO *bio)
-{
-    char *data = 0;
-    const long n = BIO_get_mem_data(bio, &data);
-    return n > 0 && data ? QByteArray(data, int(n)) : QByteArray();
+// Created with mbedTLS (compiled into the app), not the system libcrypto: Open C's
+// libcrypto differs between firmwares, and an export the phone's copy lacks
+// (EVP_sha256 is ordinal 2631, near the end of the SDK's table) makes the
+// loader refuse to start the app with KErrNotSupported ("Feature not supported").
+extern "C" {
+#include <mbedtls/pk.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/x509_crt.h>
 }
 
 static bool generate(QByteArray *certPem, QByteArray *keyPem)
 {
     QTime timer;
     timer.start();
-    qDebug() << "ClientIdentity: creating a certificate with" << SSLeay_version(SSLEAY_VERSION)
-             << "- RAND_status" << RAND_status();
+    if (!TlsRandom::init()) {
+        qWarning() << "ClientIdentity: no random number generator, cannot create a certificate";
+        return false;
+    }
+    qDebug() << "ClientIdentity: creating a certificate with" << TlsRandom::versionString();
 
-    bool ok = false;
-    BIGNUM *e = BN_new();
-    RSA *rsa = RSA_new();
-    bool rsaOwnedByPkey = false;
-    EVP_PKEY *pkey = EVP_PKEY_new();
-    X509 *x = X509_new();
-    BIO *certBio = BIO_new(BIO_s_mem());
-    BIO *keyBio = BIO_new(BIO_s_mem());
+    int ret = 0;
+    const char *step = "";
+    mbedtls_pk_context key;
+    mbedtls_x509write_cert crt;
+    mbedtls_pk_init(&key);
+    mbedtls_x509write_crt_init(&crt);
+    // PEM of an RSA-2048 key is about 1.7 kB, of the certificate about 1.1 kB.
+    QByteArray keyBuf(8192, '\0');
+    QByteArray certBuf(8192, '\0');
     do {
-        if (!e || !rsa || !pkey || !x || !certBio || !keyBio)
+        step = "pk_setup";
+        if ((ret = mbedtls_pk_setup(&key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA))) != 0)
             break;
-        if (!BN_set_word(e, RSA_F4) || !RSA_generate_key_ex(rsa, 2048, e, 0))
+        step = "rsa_gen_key";
+        if ((ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), TlsRandom::random, TlsRandom::context(),
+                                       2048, 65537)) != 0)
             break;
         qDebug() << "ClientIdentity: RSA key generated in" << timer.elapsed() << "ms";
-        if (!PEM_write_bio_RSAPrivateKey(keyBio, rsa, 0, 0, 0, 0, 0))
+        // PKCS#1 "BEGIN RSA PRIVATE KEY", as Qt's QSslKey and src/tlsserver.cpp read it.
+        step = "pk_write_key_pem";
+        if ((ret = mbedtls_pk_write_key_pem(&key, (unsigned char *)keyBuf.data(), keyBuf.size())) != 0)
             break;
-        if (!EVP_PKEY_assign_RSA(pkey, rsa))
-            break;
-        rsaOwnedByPkey = true;
 
-        if (!X509_set_version(x, 2)) // X.509 v3: rustls/webpki reject v1
+        // X.509 v3 (rustls/webpki reject v1), self-signed, SHA-256.
+        mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3);
+        mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);
+        mbedtls_x509write_crt_set_subject_key(&crt, &key);
+        mbedtls_x509write_crt_set_issuer_key(&crt, &key);
+        step = "set_subject_name";
+        if ((ret = mbedtls_x509write_crt_set_subject_name(&crt, "CN=LocalSend User")) != 0)
             break;
-        unsigned char rnd[4] = { 0, 0, 0, 0 };
-        RAND_bytes(rnd, sizeof(rnd));
-        const long serial = long(((unsigned long)(rnd[0] & 0x7f) << 24) | (rnd[1] << 16)
-                                 | (rnd[2] << 8) | rnd[3]) | 1;
-        if (!ASN1_INTEGER_set(X509_get_serialNumber(x), serial))
+        step = "set_issuer_name";
+        if ((ret = mbedtls_x509write_crt_set_issuer_name(&crt, "CN=LocalSend User")) != 0)
+            break;
+        // A positive 31-bit random serial (never 0).
+        unsigned char serial[4] = { 0, 0, 0, 0 };
+        TlsRandom::random(TlsRandom::context(), serial, sizeof(serial));
+        serial[0] &= 0x7f;
+        serial[3] |= 1;
+        step = "set_serial";
+        if ((ret = mbedtls_x509write_crt_set_serial_raw(&crt, serial, sizeof(serial))) != 0)
             break;
         // Fixed, wide validity: neither the phone's nor the receiver's clock
         // can make it "not yet valid" or expired (the server checks it).
-        if (!ASN1_UTCTIME_set_string(X509_get_notBefore(x), "000101000000Z")
-                || !ASN1_GENERALIZEDTIME_set_string(X509_get_notAfter(x), "40960101000000Z"))
+        // mbedTLS writes UTCTime before 2050, GeneralizedTime after.
+        step = "set_validity";
+        if ((ret = mbedtls_x509write_crt_set_validity(&crt, "20000101000000", "40960101000000")) != 0)
             break;
-        if (!X509_set_pubkey(x, pkey))
+        // mbedTLS always writes the v3 extensions field; without an extension
+        // it is an empty SEQUENCE, which the X.509 grammar (SIZE 1..MAX) and
+        // strict parsers reject. The subject key identifier changes nothing else.
+        step = "set_subject_key_identifier";
+        if ((ret = mbedtls_x509write_crt_set_subject_key_identifier(&crt)) != 0)
             break;
-        X509_NAME *name = X509_get_subject_name(x);
-        if (!X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                                        (const unsigned char *)"LocalSend User", -1, -1, 0))
+        step = "crt_pem";
+        if ((ret = mbedtls_x509write_crt_pem(&crt, (unsigned char *)certBuf.data(), certBuf.size(),
+                                             TlsRandom::random, TlsRandom::context())) != 0)
             break;
-        if (!X509_set_issuer_name(x, name))
-            break;
-        if (!X509_sign(x, pkey, EVP_sha256()))
-            break;
-        if (!PEM_write_bio_X509(certBio, x))
-            break;
-        *certPem = bioContents(certBio);
-        *keyPem = bioContents(keyBio);
-        ok = !certPem->isEmpty() && !keyPem->isEmpty();
+        *keyPem = QByteArray(keyBuf.constData());
+        *certPem = QByteArray(certBuf.constData());
     } while (false);
 
+    mbedtls_x509write_crt_free(&crt);
+    mbedtls_pk_free(&key);
+    keyBuf.fill('\0');
+
+    const bool ok = ret == 0 && !certPem->isEmpty() && !keyPem->isEmpty();
     if (ok)
         qDebug() << "ClientIdentity: certificate created in" << timer.elapsed() << "ms";
     else
-        qWarning() << "ClientIdentity: creating the certificate failed:" << opensslError();
-
-    if (keyBio) BIO_free(keyBio);
-    if (certBio) BIO_free(certBio);
-    if (x) X509_free(x);
-    if (pkey) EVP_PKEY_free(pkey);
-    if (rsa && !rsaOwnedByPkey) RSA_free(rsa);
-    if (e) BN_free(e);
+        qWarning() << "ClientIdentity: creating the certificate failed at" << step << ":"
+                   << TlsRandom::errorString(ret);
     return ok;
 }
 

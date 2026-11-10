@@ -82,7 +82,7 @@ QSharedPointer<TlsServerConfig> TlsServerConfig::create(bool requireClientCert)
         qWarning() << "TLS: cannot read our certificate:" << TlsRandom::errorString(ret);
         return none;
     }
-    // libcrypto wrote a PKCS#1 "BEGIN RSA PRIVATE KEY" without a password.
+    // ClientIdentity wrote a PKCS#1 "BEGIN RSA PRIVATE KEY" without a password.
     const QByteArray key = pemBuffer(keyPem);
     ret = mbedtls_pk_parse_key(&d->key, reinterpret_cast<const unsigned char *>(key.constData()),
                                size_t(key.size()), 0, 0, TlsRandom::random, TlsRandom::context());

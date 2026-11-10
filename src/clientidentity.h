@@ -24,8 +24,8 @@ class QSslError;
 // first use (RSA-2048, self-signed, CN "LocalSend User", like the official
 // app; this takes a few seconds on a phone), and makes them the local
 // certificate of QSslConfiguration::defaultConfiguration(), so every HTTPS
-// request and QSslSocket presents it. Built with SYMBISEND_CLIENT_CERT (which
-// links libcrypto); otherwise it does nothing.
+// request and QSslSocket presents it. The pair is made with mbedTLS. Built
+// with SYMBISEND_CLIENT_CERT; otherwise it does nothing.
 namespace ClientIdentity {
     // Returns the certificate's fingerprint, or an empty string if there is
     // no certificate (then HTTPS peers running the Rust server reject us).

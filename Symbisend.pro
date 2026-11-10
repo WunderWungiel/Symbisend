@@ -51,13 +51,10 @@ symbian:TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
 # is what RSA and ECC in mbedTLS spend their time on, on the UI thread.
 symbian:MMP_RULES += ALWAYS_BUILD_AS_ARM
 
-# TLS client certificate (src/clientidentity.cpp), created with OpenSSL's
-# libcrypto, the library Qt's SSL uses too (Open C on Symbian).
-symbian|unix {
-    DEFINES += SYMBISEND_CLIENT_CERT
-    symbian:LIBS += -llibcrypto
-    else:LIBS += -lcrypto
-}
+# TLS client certificate (src/clientidentity.cpp), created with mbedTLS. Not
+# with the system libcrypto: an export missing from the phone's Open C copy
+# keeps the app from starting ("Feature not supported").
+symbian|unix:DEFINES += SYMBISEND_CLIENT_CERT
 
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
 CONFIG += qdeclarative-boostable
