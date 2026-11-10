@@ -12,7 +12,7 @@ QT += network script
 
 # App version: on Symbian it goes into the .sis header (major 0-127,
 # minor 0-99, patch 0-32767). An update must not be lower than what is installed.
-VERSION = 1.0.0
+VERSION = 1.0.1
 
 symbian:TARGET.UID3 = 0xE62546C5
 
