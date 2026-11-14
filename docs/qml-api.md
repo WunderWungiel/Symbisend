@@ -187,10 +187,9 @@ Network:
 Native pickers. Their results go straight into `selection` (connected in `main.cpp`).
 - `pickFile()` — native file picker (memory, then browse), one file. The UI's File button
   opens `FileBrowserPage` (`fileBrowser`, several files) instead.
-- `pickMedia(kind)` — the gallery (Photos) picker, several items; `kind` is `"image"` or
-  `"video"` (the gallery picker shows one type at a time)
+- The Media button opens `GalleryPage` (`gallery`, below) instead of a native picker.
 - `pickFolder()` — native folder picker
-- The three `pick*()` methods return immediately; on confirm the result arrives as signal
+- The two `pick*()` methods return immediately; on confirm the result arrives as signal
   `filesPicked(paths)` (list of native paths, e.g. `E:\Images\a.jpg`) or
   `folderPicked(path)`, and is added to `selection`. Nothing is emitted on cancel.
 - `clipboardText()` → string — the clipboard's text (`""` if empty); also logged. Not

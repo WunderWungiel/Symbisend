@@ -13,10 +13,7 @@
 #ifdef Q_OS_SYMBIAN
 #include <AknCommonDialogsDynMem.h>
 #include <aknnotewrappers.h>
-#include <MGFetch.h>
-#include <badesca.h>
 #else
-#include <QDesktopServices>
 #include <QFileDialog>
 #include <QMessageBox>
 #endif
@@ -58,16 +55,6 @@ void Picker::checkClipboard()
 void Picker::pickFile()
 {
     QTimer::singleShot(0, this, SLOT(runFilePicker()));
-}
-
-void Picker::pickMedia(const QString &kind)
-{
-    if (kind != QLatin1String("image") && kind != QLatin1String("video")) {
-        qWarning() << "Picker: unknown media kind" << kind;
-        return;
-    }
-    m_mediaKind = kind;
-    QTimer::singleShot(0, this, SLOT(runMediaPicker()));
 }
 
 void Picker::pickFolder()
@@ -145,42 +132,6 @@ void Picker::runFilePicker()
 #endif
 
     reportFiles("file", paths);
-}
-
-void Picker::runMediaPicker()
-{
-    bool video = m_mediaKind == QLatin1String("video");
-    qDebug() << "Picker: opening gallery picker for" << (video ? "videos" : "images");
-    QStringList paths;
-
-#ifdef Q_OS_SYMBIAN
-    // The Photos fetcher; EAnyMediaFile is not supported since S60 5.0, so
-    // images and videos are separate.
-    CDesCArrayFlat *files = new CDesCArrayFlat(8);
-    TBool ok = EFalse;
-    TRAPD(err, ok = MGFetch::RunL(*files, video ? EVideoFile : EImageFile, ETrue,
-                                  toPtr(QLatin1String("Select")),
-                                  toPtr(QLatin1String(video ? "Select videos" : "Select images"))));
-    if (err != KErrNone) {
-        qWarning() << "Picker: gallery picker failed, error" << err
-                   << (err == KErrPermissionDenied ? "(missing capability)" : "");
-    } else if (ok) {
-        for (TInt i = 0; i < files->MdcaCount(); ++i)
-            paths << fromDesC(files->MdcaPoint(i));
-    }
-    delete files;
-    if (err != KErrNone)
-        return;
-#else
-    QString filter = video ? QLatin1String("Videos (*.mp4 *.3gp *.mkv *.avi *.mov)")
-                           : QLatin1String("Images (*.jpg *.jpeg *.png *.gif *.bmp)");
-    QString start = QDesktopServices::storageLocation(video ? QDesktopServices::MoviesLocation
-                                                            : QDesktopServices::PicturesLocation);
-    paths = QFileDialog::getOpenFileNames(0, QLatin1String(video ? "Select videos" : "Select images"),
-                                          start, filter);
-#endif
-
-    reportFiles(video ? "video" : "image", paths);
 }
 
 void Picker::runFolderPicker()

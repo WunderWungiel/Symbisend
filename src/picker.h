@@ -8,9 +8,9 @@
 #include <QString>
 #include <QStringList>
 
-// Native pickers for the Send page: file, media (gallery), folder and the
-// clipboard. On Symbian these are the Avkon common dialogs and the Photos
-// fetcher (MGFetch); elsewhere QFileDialog.
+// Native pickers for the Send page: file, folder and the clipboard. On
+// Symbian these are the Avkon common dialogs; elsewhere QFileDialog. (The
+// Media button has its own page, GalleryPage.qml / GalleryModel.)
 //
 // The pick*() methods return at once; the dialogs run a nested event loop, so
 // they are started from the event loop rather than from the QML click
@@ -30,9 +30,6 @@ public:
 
     // One file from the phone's drives.
     Q_INVOKABLE void pickFile();
-    // Photos/videos from the gallery, several at once. kind: "image" or
-    // "video" (the gallery fetcher shows one type at a time).
-    Q_INVOKABLE void pickMedia(const QString &kind);
     // A folder.
     Q_INVOKABLE void pickFolder();
     // The clipboard's text ("" if empty).
@@ -55,13 +52,11 @@ signals:
 
 private slots:
     void runFilePicker();
-    void runMediaPicker();
     void runFolderPicker();
 
 private:
     void reportFiles(const char *what, const QStringList &paths);
 
-    QString m_mediaKind;
     bool m_clipboardHasText;
 };
 
