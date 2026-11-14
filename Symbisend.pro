@@ -81,6 +81,7 @@ SOURCES += main.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
     src/foldermodel.cpp \
+    src/gallerythumbnails.cpp \
     src/historymodel.cpp \
     src/favoritesmodel.cpp \
     src/sender.cpp \
@@ -109,6 +110,7 @@ HEADERS += \
     src/picker.h \
     src/selectionmodel.h \
     src/foldermodel.h \
+    src/gallerythumbnails.h \
     src/historymodel.h \
     src/favoritesmodel.h \
     src/sender.h \
