@@ -22,7 +22,7 @@
         <file>qml/Symbisend/SendDialog.qml</file>
         <file>qml/Symbisend/SendOptionButton.qml</file>
         <file>qml/Symbisend/SendPage.qml</file>
-        <file>qml/Symbisend/SendTextDialog.qml</file>
+        <file>qml/Symbisend/SendTextPage.qml</file>
         <file>qml/Symbisend/SettingsHeading.qml</file>
         <file>qml/Symbisend/SettingsItem.qml</file>
         <file>qml/Symbisend/SettingsNote.qml</file>

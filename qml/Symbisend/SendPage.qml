@@ -22,6 +22,9 @@ Page {
     // File button: main.qml opens FileBrowserPage (several files at once;
     // the native file picker takes only one).
     signal fileBrowserRequested()
+    // Text button: main.qml opens SendTextPage (a page, since a TextArea's
+    // copy/paste is broken inside a dialog before Belle FP2).
+    signal textRequested()
 
     // The Selection card's Add button toggles the send option row below it.
     property bool addOptionsShown: false
@@ -182,7 +185,7 @@ Page {
                 width: sendOptions.buttonWidth
                 label: i18n.t("sendTab.picker.text") + i18n.rev
                 icon: "send-text"
-                onClicked: textDialog.openNew()
+                onClicked: page.textRequested()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
@@ -246,10 +249,5 @@ Page {
     AddressDialog {
         id: addressDialog
         onAddressEntered: page.showSendResult(sender.sendToAddress(ip))
-    }
-
-    SendTextDialog {
-        id: textDialog
-        platformInverted: page.platformInverted
     }
 }

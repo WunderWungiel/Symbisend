@@ -28,6 +28,11 @@ Page {
                 page.pageStack.pop()
         }
     }
+    // The selection may have been emptied on SendTextPage (text cleared).
+    onStatusChanged: {
+        if (status == PageStatus.Active && selection.count === 0)
+            pageStack.pop()
+    }
 
     // ------------------------------------------------ Header
     Item {
@@ -120,7 +125,8 @@ Page {
             MouseArea {
                 anchors.fill: parent
                 enabled: row.isText
-                onClicked: textDialog.openEdit(index, model.text)
+                onClicked: page.pageStack.push(Qt.resolvedUrl("SendTextPage.qml"),
+                                               { editIndex: index, initialText: model.text })
             }
 
             SelectionTile {
@@ -174,11 +180,6 @@ Page {
 
     ScrollDecorator {
         flickableItem: list
-        platformInverted: page.platformInverted
-    }
-
-    SendTextDialog {
-        id: textDialog
         platformInverted: page.platformInverted
     }
 }
