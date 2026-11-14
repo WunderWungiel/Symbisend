@@ -11,9 +11,11 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QImageReader>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QSet>
 #include <QTransform>
 #include <QUrl>
 
@@ -21,9 +23,9 @@
 #include <QDesktopServices>
 #endif
 
-// Cache limit (about 5 KB a thumbnail, so ~2000 photos). Above it, the
-// oldest files go until it is down to kPruneToBytes, so pruning isn't
-// needed on every visit. The prefetcher stops at kPruneToBytes, so on a
+// Cache limit (about 5 KB a thumbnail, so ~2000 photos). Above it, only
+// the newest photos' thumbnails are kept, up to kPruneToBytes, so pruning
+// isn't needed on every visit. The prefetcher stops at kPruneToBytes, so on a
 // larger gallery the newest photos are cached and older ones only when
 // scrolled to.
 static const qint64 kMaxCacheBytes = 10 * 1024 * 1024;
@@ -168,11 +170,16 @@ static void record(Stats &s, Method m, qint64 ms)
 
 // ------------------------------------------------------------------ cache
 
+// File-scope rather than function-local statics: those aren't guaranteed to
+// be initialised thread-safely before C++11, and QML's loader thread and the
+// prefetcher make their first call at about the same time.
+static QMutex g_cacheDirMutex;
+static QString g_cacheDir;
+
 static QString cacheDir()
 {
-    static QMutex mutex;
-    static QString dir;
-    QMutexLocker lock(&mutex);
+    QMutexLocker lock(&g_cacheDirMutex);
+    QString &dir = g_cacheDir;
     if (dir.isEmpty()) {
 #ifdef Q_OS_SYMBIAN
         // The private folder (applicationDirPath() is that), no capabilities needed.
@@ -189,14 +196,19 @@ static QString cacheDir()
     return dir;
 }
 
-static QString cachePath(const QFileInfo &fi)
+// The cache file's name for a photo.
+static QString cacheName(const QFileInfo &fi)
 {
     const QString key = fi.absoluteFilePath().toLower() + QLatin1Char('|')
                         + QString::number(fi.size()) + QLatin1Char('|')
                         + QString::number(fi.lastModified().toTime_t());
-    return cacheDir() + QLatin1Char('/')
-           + QString::fromLatin1(QCryptographicHash::hash(key.toUtf8(), QCryptographicHash::Md5).toHex())
+    return QString::fromLatin1(QCryptographicHash::hash(key.toUtf8(), QCryptographicHash::Md5).toHex())
            + QLatin1String(".jpg");
+}
+
+static QString cachePath(const QFileInfo &fi)
+{
+    return cacheDir() + QLatin1Char('/') + cacheName(fi);
 }
 
 QSize GalleryThumbs::cacheSize()
@@ -249,13 +261,13 @@ static QImage make(const QString &path, Method *method)
 }
 
 // From the cache, or made and cached. With onlyEnsure, a cached thumbnail
-// isn't read (returns a null image then; *cached says so). *written gets
-// the size of a newly cached file.
+// isn't read (returns a null image then; *cached says so). *bytes gets the
+// size of its cache file (0 if it couldn't be cached); onlyEnsure only.
 static QImage loadThumb(const QString &path, Stats &stats, bool onlyEnsure, bool *cached,
-                        qint64 *written = 0)
+                        qint64 *bytes = 0)
 {
-    if (written)
-        *written = 0;
+    if (bytes)
+        *bytes = 0;
     QElapsedTimer timer;
     timer.start();
     *cached = false;
@@ -264,9 +276,14 @@ static QImage loadThumb(const QString &path, Stats &stats, bool onlyEnsure, bool
         return QImage();
     const QString cp = cachePath(fi);
 
-    if (onlyEnsure && QFile::exists(cp)) {
-        *cached = true;
-        return QImage();
+    if (onlyEnsure) {
+        const QFileInfo cfi(cp);
+        if (cfi.exists()) {
+            *cached = true;
+            if (bytes)
+                *bytes = cfi.size();
+            return QImage();
+        }
     }
     QImage img;
     if (!onlyEnsure && img.load(cp, "JPG")) {
@@ -283,12 +300,14 @@ static QImage loadThumb(const QString &path, Stats &stats, bool onlyEnsure, bool
     // make the same one at once, and a half-written file must not be read.
     const QString temp = cp + QLatin1String(".") + QString::number(quintptr(QThread::currentThreadId())) + QLatin1String(".tmp");
     if (img.save(temp, "JPG", 85)) {
-        const qint64 bytes = QFileInfo(temp).size();
+        const qint64 size = QFileInfo(temp).size();
         if (QFile::rename(temp, cp)) {
-            if (written)
-                *written = bytes;
+            if (bytes)
+                *bytes = size;
         } else {
             QFile::remove(temp); // made by the other thread meanwhile
+            if (bytes)
+                *bytes = QFileInfo(cp).size();
         }
     } else {
         qWarning() << "Gallery: cannot write" << temp;
@@ -304,29 +323,61 @@ QImage GalleryThumbs::load(const QString &path)
     return loadThumb(path, g_viewStats, false, &cached);
 }
 
-qint64 GalleryThumbs::prune()
+qint64 GalleryThumbs::prune(const QStringList &newestFirst)
 {
-    QDir dir(cacheDir());
+    const QDir dir(cacheDir());
     const QFileInfoList files = dir.entryInfoList(QStringList() << QLatin1String("*.jpg") << QLatin1String("*.tmp"),
-                                                  QDir::Files, QDir::Time); // newest first
+                                                  QDir::Files);
+    // A .tmp file is being written by QML's loader thread, unless it was
+    // left behind (the app died while writing): only those old ones go.
+    const QDateTime staleBefore = QDateTime::currentDateTime().addSecs(-60);
+    QHash<QString, qint64> sizes; // cache file name -> size
     qint64 total = 0;
-    foreach (const QFileInfo &fi, files)
+    int staleTemps = 0;
+    foreach (const QFileInfo &fi, files) {
+        if (fi.suffix() == QLatin1String("tmp")) {
+            if (fi.lastModified() < staleBefore && QFile::remove(fi.absoluteFilePath()))
+                ++staleTemps;
+            continue;
+        }
+        sizes.insert(fi.fileName(), fi.size());
         total += fi.size();
+    }
+    if (staleTemps > 0)
+        qDebug() << "Gallery: removed" << staleTemps << "unfinished thumbnails";
     if (total <= kMaxCacheBytes)
         return total;
-    // Keep the newest up to kPruneToBytes, remove the rest.
+
+    // Keep the newest photos' thumbnails up to kPruneToBytes: those are the
+    // grid's first rows and what the prefetcher makes first. (The files'
+    // own dates would say which were made last, not which are wanted.)
+    // Everything else goes, also thumbnails of photos no longer listed.
+    QSet<QString> keep;
     qint64 kept = 0;
-    int removed = 0;
-    foreach (const QFileInfo &fi, files) {
-        if (kept + fi.size() <= kPruneToBytes) {
-            kept += fi.size();
-        } else if (QFile::remove(fi.absoluteFilePath())) {
-            ++removed;
-        }
+    foreach (const QString &path, newestFirst) {
+        const QString name = cacheName(QFileInfo(path));
+        const QHash<QString, qint64>::const_iterator it = sizes.constFind(name);
+        if (it == sizes.constEnd())
+            continue;
+        if (kept + it.value() > kPruneToBytes)
+            break;
+        kept += it.value();
+        keep.insert(name);
     }
-    qDebug() << "Gallery: thumbnail cache had" << files.size() << "files," << total / 1024
-             << "KB; removed" << removed << "oldest, now" << kept / 1024 << "KB";
-    return kept;
+    int removed = 0;
+    qint64 left = kept;
+    for (QHash<QString, qint64>::const_iterator it = sizes.constBegin(); it != sizes.constEnd(); ++it) {
+        if (keep.contains(it.key()))
+            continue;
+        if (QFile::remove(dir.filePath(it.key())))
+            ++removed;
+        else
+            left += it.value(); // open in the loader thread
+    }
+    qDebug() << "Gallery: thumbnail cache had" << sizes.size() << "files," << total / 1024
+             << "KB; kept" << keep.size() << "of the newest photos, removed" << removed
+             << ", now" << left / 1024 << "KB";
+    return left;
 }
 
 // ------------------------------------------------------------------ provider
@@ -350,7 +401,7 @@ QImage GalleryThumbnailProvider::requestImage(const QString &id, QSize *size, co
 // ------------------------------------------------------------------ prefetcher
 
 GalleryPrefetcher::GalleryPrefetcher(QObject *parent)
-    : QThread(parent), m_stop(0)
+    : QThread(parent), m_hasPending(false), m_running(false), m_stop(0)
 {
 }
 
@@ -361,44 +412,83 @@ GalleryPrefetcher::~GalleryPrefetcher()
 
 void GalleryPrefetcher::start(const QStringList &paths)
 {
-    stop();
-    m_paths = paths;
-    m_stop = 0;
+    QMutexLocker lock(&m_mutex);
+    m_pending = paths;
+    m_hasPending = true;
+    m_stop = 1; // a running pass ends, run() then takes this one
+    if (m_running)
+        return;
+    m_running = true;
+    lock.unlock();
+    // run() may be between its last unlock and returning: start() does
+    // nothing on a running thread, so wait for that (microseconds).
+    wait();
     QThread::start(QThread::LowestPriority);
+}
+
+void GalleryPrefetcher::requestStop()
+{
+    QMutexLocker lock(&m_mutex);
+    m_pending.clear();
+    m_hasPending = false;
+    m_stop = 1;
 }
 
 void GalleryPrefetcher::stop()
 {
-    m_stop = 1;
+    requestStop();
     wait();
 }
 
 void GalleryPrefetcher::run()
 {
+    forever {
+        QStringList paths;
+        {
+            QMutexLocker lock(&m_mutex);
+            if (!m_hasPending) {
+                m_running = false;
+                return;
+            }
+            paths = m_pending;
+            m_pending.clear();
+            m_hasPending = false;
+            m_stop = 0;
+        }
+        runPass(paths);
+    }
+}
+
+void GalleryPrefetcher::runPass(const QStringList &paths)
+{
     QElapsedTimer timer;
     timer.start();
-    qint64 cacheBytes = GalleryThumbs::prune();
+    GalleryThumbs::prune(paths);
+    // Counts the newest photos' thumbnails, cached or made, the same way
+    // prune() keeps them: stops at kPruneToBytes, so a pass never makes
+    // what the next prune would remove.
+    qint64 bytes = 0;
     int made = 0, cached = 0, done = 0;
     bool full = false;
-    foreach (const QString &path, m_paths) {
+    foreach (const QString &path, paths) {
         if (int(m_stop))
             break;
-        if (cacheBytes >= kPruneToBytes) {
+        if (bytes >= kPruneToBytes) {
             full = true;
             break;
         }
         bool wasCached = false;
-        qint64 written = 0;
-        const QImage img = loadThumb(path, g_prefetchStats, true, &wasCached, &written);
+        qint64 size = 0;
+        const QImage img = loadThumb(path, g_prefetchStats, true, &wasCached, &size);
         if (wasCached)
             ++cached;
         else if (!img.isNull())
             ++made;
-        cacheBytes += written;
+        bytes += size;
         ++done;
     }
-    qDebug() << "Gallery: prefetch" << (full ? "stopped, cache full," : done < m_paths.size() ? "stopped" : "done")
+    qDebug() << "Gallery: prefetch" << (full ? "stopped, cache full," : done < paths.size() ? "stopped" : "done")
              << "after"
-             << done << "of" << m_paths.size() << "photos:" << made << "made," << cached
-             << "already cached, cache" << cacheBytes / 1024 << "KB, in" << timer.elapsed() << "ms";
+             << done << "of" << paths.size() << "photos:" << made << "made," << cached
+             << "already cached, their thumbnails" << bytes / 1024 << "KB, in" << timer.elapsed() << "ms";
 }

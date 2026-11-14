@@ -7,6 +7,7 @@
 #include <QAtomicInt>
 #include <QDeclarativeImageProvider>
 #include <QImage>
+#include <QMutex>
 #include <QSize>
 #include <QString>
 #include <QStringList>
@@ -27,9 +28,10 @@ namespace GalleryThumbs {
     // The thumbnail of a photo ('/' or native path), from the cache or made
     // and cached; null if the file can't be read.
     QImage load(const QString &path);
-    // Keeps the cache below its limit, 10 MB (oldest files go first);
-    // returns its size in bytes.
-    qint64 prune();
+    // Keeps the cache below its limit, 10 MB: above it, only the thumbnails
+    // of the newest photos (newestFirst, as listed) are kept, up to 8 MB.
+    // Returns the cache's size in bytes.
+    qint64 prune(const QStringList &newestFirst);
 }
 
 // image://gallery/<percent-encoded path>: GalleryThumbs::load(), scaled to
@@ -50,17 +52,26 @@ class GalleryPrefetcher : public QThread
 public:
     explicit GalleryPrefetcher(QObject *parent = 0);
     ~GalleryPrefetcher();
-    // Stops a running pass, then starts one over these paths.
+    // A pass over these paths; a running one stops after the thumbnail it
+    // is making, and this one follows in the same thread. Doesn't wait.
     void start(const QStringList &paths);
-    // Stops and waits (a thumbnail being made is finished first).
+    // Stops after the thumbnail being made. Doesn't wait (the UI thread
+    // calls it, and a scaled decode of a large photo can take seconds).
+    void requestStop();
+    // Stops and waits (for the destructor).
     void stop();
 
 protected:
     void run();
 
 private:
-    QStringList m_paths;
-    QAtomicInt m_stop;
+    void runPass(const QStringList &paths);
+
+    QMutex m_mutex;          // guards the members below
+    QStringList m_pending;   // the next pass
+    bool m_hasPending;
+    bool m_running;          // run() is (about to be) looping
+    QAtomicInt m_stop;       // the current pass should stop
 };
 
 #endif // GALLERYTHUMBNAILS_H

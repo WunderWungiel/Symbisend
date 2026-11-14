@@ -407,7 +407,7 @@ void GalleryModel::finishLoad(const QList<Item> &found, const char *source)
 void GalleryModel::close()
 {
     m_open = false;
-    m_prefetcher->stop();
+    m_prefetcher->requestStop(); // without waiting: the UI would freeze meanwhile
 }
 
 static bool newerFirst(const GalleryModel::Item &a, const GalleryModel::Item &b)
