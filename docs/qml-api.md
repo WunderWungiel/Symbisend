@@ -267,6 +267,42 @@ Methods:
   `selection.addFiles()` (already selected files are skipped there).
 - Signals: `folderChanged()`, `checkedChanged()`, `openFailed(path)`
 
+## `gallery` — photos and videos (GridView model)
+The Send page's Media button opens `GalleryPage`: the phone's photos and videos, newest
+first. Replaces the system gallery picker (MGFetch), which also listed app caches and
+thumbnail folders and can't be filtered. Symbian: the metadata store (MdS, the index the
+Photos app uses), Image and Video objects; elsewhere the Pictures and Movies folders are
+scanned. Files in hidden (`.x`, `_x` such as `_PAlbTN`), cache, thumbnail, temp and system
+folders are left out. The log shows, per folder, what was listed and what was left out
+(`Gallery:   listed N in E:/Images/...`, `Gallery:   left out N in ...`).
+
+| role        | type   | example                                              |
+|-------------|--------|------------------------------------------------------|
+| `path`      | string | `E:/Images/201211/a.jpg` (`/` separators)            |
+| `name`      | string | `a.jpg`                                              |
+| `isVideo`   | bool   |                                                      |
+| `thumbnail` | string | `image://gallery/<percent-encoded path>`; `""` for videos |
+| `checked`   | bool   |                                                      |
+
+Properties: `loading` (bool, a listing is running; the old list stays until it is done),
+`count` (int), `checkedCount` (int), `checkedSizeText` (string, total size of the checked
+files).
+Methods:
+- `load()` — lists again (asynchronous); the page calls it each time it is shown
+- `close()` — the page is gone: stops making thumbnails in the background (the page calls
+  it when it deactivates)
+- `toggle(index)`, `clearChecked()`
+- `checkedFiles()` → list of paths, in checking order; add them with `selection.addFiles()`
+- Signals: `loadingChanged()`, `countChanged()`, `checkedChanged()`
+
+`image://gallery/<percent-encoded path>` — a photo's thumbnail, scaled to cover the
+requested size (set `sourceSize`), for `asynchronous: true` Images. Made once and kept in a
+disk cache (the app's private folder, `thumbs/`, at most 10 MB, about 2000 photos; the oldest go first): from the JPEG's EXIF
+thumbnail when there is one (rotated by the EXIF orientation), else a scaled decode. After
+each `load()`, a low-priority thread fills the cache for every photo, newest first, until
+`close()`. Timings are logged: `Gallery: thumbnails shown: 25 so far, cache 10 (avg 8 ms),
+exif …, decode …`, the same for `prefetched`, and `Gallery: prefetch done/stopped …`.
+
 ## `sender` — sending the selection to a device
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by
 one, streamed from disk). The selection is copied when sending starts; it is cleared when

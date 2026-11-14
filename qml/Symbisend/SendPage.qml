@@ -22,6 +22,8 @@ Page {
     // File button: main.qml opens FileBrowserPage (several files at once;
     // the native file picker takes only one).
     signal fileBrowserRequested()
+    // Media button: main.qml opens GalleryPage (photos and videos).
+    signal galleryRequested()
     // Text button: main.qml opens SendTextPage (a page, since a TextArea's
     // copy/paste is broken inside a dialog before Belle FP2).
     signal textRequested()
@@ -172,7 +174,7 @@ Page {
                 width: sendOptions.buttonWidth
                 label: i18n.t("sendTab.picker.media") + i18n.rev
                 icon: "send-media"
-                onClicked: mediaMenu.open()
+                onClicked: page.galleryRequested()
             }
             SendOptionButton {
                 width: sendOptions.buttonWidth
@@ -222,24 +224,6 @@ Page {
     }
 
     // ---------------------------------------------------- dialogs
-
-    // The gallery fetcher shows one media type at a time.
-    ContextMenu {
-        id: mediaMenu
-        platformInverted: page.platformInverted
-        MenuLayout {
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: i18n.t("symbisend.send.images") + i18n.rev
-                onClicked: picker.pickMedia("image")
-            }
-            MenuItem {
-                platformInverted: page.platformInverted
-                text: i18n.t("symbisend.send.videos") + i18n.rev
-                onClicked: picker.pickMedia("video")
-            }
-        }
-    }
 
     SendDialog {
         id: sendDialog

@@ -31,8 +31,11 @@ symbian:LIBS += -lcommondialogs
 # Native information notes (CAknInformationNote)
 symbian:LIBS += -lavkon -leikdlg -leikctl
 
-# Gallery (Photos) fetcher for the Send page's Media button
+# Gallery (Photos) fetcher (Picker::pickMedia, no longer used by the UI)
 symbian:LIBS += -lmgfetch -lbafl
+# The Send page's Media button lists photos and videos from the metadata
+# store (MdS, src/gallerymodel.cpp)
+symbian:LIBS += -lmdeclient
 # History page's Open folder: starts the File manager app (src/historymodel.cpp)
 symbian:LIBS += -lapgrfx -lapparc -lcone -lws32
 # Received files keep the time of the original (src/receiver.cpp)
@@ -81,6 +84,7 @@ SOURCES += main.cpp \
     src/picker.cpp \
     src/selectionmodel.cpp \
     src/foldermodel.cpp \
+    src/gallerymodel.cpp \
     src/gallerythumbnails.cpp \
     src/historymodel.cpp \
     src/favoritesmodel.cpp \
@@ -110,6 +114,7 @@ HEADERS += \
     src/picker.h \
     src/selectionmodel.h \
     src/foldermodel.h \
+    src/gallerymodel.h \
     src/gallerythumbnails.h \
     src/historymodel.h \
     src/favoritesmodel.h \

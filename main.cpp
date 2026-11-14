@@ -19,6 +19,8 @@
 #include "src/picker.h"
 #include "src/selectionmodel.h"
 #include "src/foldermodel.h"
+#include "src/gallerymodel.h"
+#include "src/gallerythumbnails.h"
 #include "src/historymodel.h"
 #include "src/favoritesmodel.h"
 #include "src/sender.h"
@@ -48,6 +50,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     SelectionModel selection;
     // The Send page's multi-select file browser (FileBrowserPage.qml).
     FolderModel fileBrowser;
+    GalleryModel gallery;
     // Everything picked on the Send page goes into the selection.
     QObject::connect(&picker, SIGNAL(filesPicked(QStringList)), &selection, SLOT(addFiles(QStringList)));
     QObject::connect(&picker, SIGNAL(folderPicked(QString)), &selection, SLOT(addFolder(QString)));
@@ -82,6 +85,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     ctx->setContextProperty(QLatin1String("picker"), &picker);
     ctx->setContextProperty(QLatin1String("selection"), &selection);
     ctx->setContextProperty(QLatin1String("fileBrowser"), &fileBrowser);
+    ctx->setContextProperty(QLatin1String("gallery"), &gallery);
     ctx->setContextProperty(QLatin1String("sender"), &sender);
     ctx->setContextProperty(QLatin1String("receiver"), &receiver);
     ctx->setContextProperty(QLatin1String("receiveFiles"), receiver.offeredFiles());
@@ -91,6 +95,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // image://verify/<name>/<rrggbb>, the Verify dialog's icons
     viewer.engine()->addImageProvider(QLatin1String("verify"), new VerifyIconProvider);
     viewer.engine()->addImageProvider(QLatin1String("qrcode"), new QrCodeProvider);
+    // image://gallery/<path>, GalleryPage's thumbnails
+    viewer.engine()->addImageProvider(QLatin1String("gallery"), new GalleryThumbnailProvider);
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setSource(QUrl(QLatin1String("qrc:/qml/Symbisend/main.qml")));

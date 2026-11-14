@@ -7,6 +7,7 @@
         <file>qml/Symbisend/FavoritesPage.qml</file>
         <file>qml/Symbisend/FileBrowserPage.qml</file>
         <file>qml/Symbisend/FileNameDialog.qml</file>
+        <file>qml/Symbisend/GalleryPage.qml</file>
         <file>qml/Symbisend/HistoryPage.qml</file>
         <file>qml/Symbisend/LogPage.qml</file>
         <file>qml/Symbisend/PeerItem.qml</file>
