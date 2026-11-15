@@ -1,265 +1,119 @@
+// SPDX-FileCopyrightText: 2026 The Symbigram authors (https://github.com/Symnok/Symbigram)
 // SPDX-FileCopyrightText: 2026 Wunder Wungiel
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "gallerymodel.h"
 
-#include "gallerythumbnails.h"
 #include "selectionmodel.h"
+#include "thumbnailer.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
-#include <QHash>
-#include <QMap>
-#include <QMetaObject>
 #include <QTimer>
 #include <QUrl>
+#include <QtAlgorithms>
 
-#ifdef Q_OS_SYMBIAN
-#include <mdesession.h>
-#include <mdequery.h>
-#include <mdeobjectquery.h>
-#include <mdeobject.h>
-#include <mdeobjectdef.h>
-#include <mdenamespacedef.h>
-#include <mdeproperty.h>
-#include <mdepropertydef.h>
-#include <mdeconstants.h>
-#else
+#ifndef Q_OS_SYMBIAN
 #include <QDesktopServices>
-#include <QDirIterator>
 #endif
 
-static qint64 nowMs()
+namespace
 {
-    return QDateTime::currentDateTime().toMSecsSinceEpoch();
+    const char *const KImagePatterns[] = { "*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif" };
+    const char *const KVideoPatterns[] = {
+        "*.mp4", "*.m4v", "*.3gp", "*.3g2", "*.mov", "*.avi", "*.mkv", "*.wmv"
+    };
+
+    // Where a Symbian phone keeps photos and videos, per drive (C:/Data/Images,
+    // E:/Images, E:/Videos, ...). Received media go to Images/Symbisend and
+    // Videos/Symbisend, inside these. A missing folder costs nothing.
+    const char *const KFolders[] = {
+        "Data/Images", "Data/Videos", "Images", "Videos", "DCIM", "Data/Pictures", "Pictures"
+    };
+
+    const int KMaxDepth = 4;     // Images/201211/... is shallow; this is plenty
+    const int KMaxDirs = 400;    // an enormous library cannot make us walk forever
+    const int KMaxFiles = 4000;  // beyond this the grid is unusable anyway
+
+    qint64 nowMs()
+    {
+        return QDateTime::currentDateTime().toMSecsSinceEpoch();
+    }
+
+    // Hidden folders and the old Gallery's thumbnails (_PAlbTN).
+    bool skippedFolder(const QString &name)
+    {
+        return name.startsWith(QLatin1Char('.')) || name.startsWith(QLatin1Char('_'));
+    }
+
+    bool isVideoName(const QString &name)
+    {
+        const QString l = name.toLower();
+        for (int i = 0; i < int(sizeof(KVideoPatterns) / sizeof(KVideoPatterns[0])); ++i) {
+            if (l.endsWith(QLatin1String(KVideoPatterns[i] + 1))) // "*.mp4" -> ".mp4"
+                return true;
+        }
+        return false;
+    }
 }
-
-#ifdef Q_OS_SYMBIAN
-// The MdS side: a session (opened once, asynchronously) and one object
-// query per media type. MdS calls back from the active scheduler on the UI
-// thread; a query is not deleted inside its own callback, so each step goes
-// through GalleryModel::mdsStep() (queued).
-class GalleryMdsQuery : public MMdESessionObserver, public MMdEQueryObserver
-{
-public:
-    explicit GalleryMdsQuery(GalleryModel *model)
-        : m_model(model), m_session(0), m_query(0), m_opened(false), m_broken(false),
-          m_stage(0), m_created(0), m_modified(0), m_stageStarted(0)
-    {
-    }
-    ~GalleryMdsQuery()
-    {
-        delete m_query;
-        delete m_session;
-    }
-
-    void start()
-    {
-        m_found.clear();
-        m_stage = 0;
-        if (m_broken) { // a failed session is replaced on the next listing
-            delete m_query;
-            m_query = 0;
-            delete m_session;
-            m_session = 0;
-            m_opened = false;
-            m_broken = false;
-        }
-        if (!m_session) {
-            qDebug() << "Gallery: opening the metadata session";
-            TRAPD(err, m_session = CMdESession::NewL(*this));
-            if (err != KErrNone) {
-                qWarning() << "Gallery: cannot open the metadata session, error" << err;
-                m_session = 0;
-                m_stage = 2;
-                queueStep();
-            }
-            return; // continues in HandleSessionOpened()
-        }
-        if (m_opened)
-            queueStep();
-        // else: still opening, HandleSessionOpened() continues
-    }
-
-    // One step: the next query, or the end.
-    void step()
-    {
-        delete m_query;
-        m_query = 0;
-        while (m_stage < 2) {
-            TRAPD(err, startQueryL());
-            if (err == KErrNone)
-                return; // continues in HandleQueryCompleted()
-            qWarning() << "Gallery: cannot query" << stageName() << "error" << err;
-            delete m_query;
-            m_query = 0;
-            ++m_stage;
-        }
-        m_model->finishLoad(m_found, "MdS");
-    }
-
-    void HandleSessionOpened(CMdESession &, TInt aError)
-    {
-        if (aError != KErrNone) {
-            qWarning() << "Gallery: metadata session failed to open, error" << aError
-                       << (aError == KErrPermissionDenied ? "(missing capability)" : "");
-            m_broken = true;
-            m_stage = 2;
-        } else {
-            qDebug() << "Gallery: metadata session open";
-            m_opened = true;
-        }
-        queueStep();
-    }
-
-    void HandleSessionError(CMdESession &, TInt aError)
-    {
-        qWarning() << "Gallery: metadata session error" << aError;
-        m_broken = true;
-        if (m_model->loading()) {
-            m_stage = 2;
-            queueStep();
-        }
-    }
-
-    void HandleQueryNewResults(CMdEQuery &, TInt, TInt) {}
-
-    void HandleQueryCompleted(CMdEQuery &aQuery, TInt aError)
-    {
-        const int before = m_found.size();
-        if (aError != KErrNone)
-            qWarning() << "Gallery:" << stageName() << "query failed, error" << aError;
-        TRAPD(err, collectL(aQuery));
-        if (err != KErrNone)
-            qWarning() << "Gallery: reading the" << stageName() << "results failed, error" << err;
-        qDebug() << "Gallery: MdS has" << (m_found.size() - before) << stageName()
-                 << "in" << (nowMs() - m_stageStarted) << "ms";
-        ++m_stage;
-        queueStep();
-    }
-
-private:
-    const char *stageName() const { return m_stage == 0 ? "images" : "videos"; }
-
-    void queueStep()
-    {
-        QMetaObject::invokeMethod(m_model, "mdsStep", Qt::QueuedConnection);
-    }
-
-    void startQueryL()
-    {
-        m_stageStarted = nowMs();
-        CMdENamespaceDef &ns = m_session->GetDefaultNamespaceDefL();
-        CMdEObjectDef &def = ns.GetObjectDefL(m_stage == 0 ? MdeConstants::Image::KImageObject()
-                                                           : MdeConstants::Video::KVideoObject());
-        // Only the dates (for sorting) are fetched; the URI always comes along.
-        m_created = 0;
-        m_modified = 0;
-        TRAP_IGNORE(m_created = &def.GetPropertyDefL(MdeConstants::Object::KCreationDateProperty));
-        TRAP_IGNORE(m_modified = &def.GetPropertyDefL(MdeConstants::Object::KLastModifiedDateProperty));
-        m_query = m_session->NewObjectQueryL(ns, def, this);
-        m_query->SetResultMode(EQueryResultModeItem);
-        if (m_created)
-            m_query->AddPropertyFilterL(m_created);
-        if (m_modified)
-            m_query->AddPropertyFilterL(m_modified);
-        m_query->FindL();
-    }
-
-    qint64 timeOf(const CMdEObject &o, CMdEPropertyDef *def)
-    {
-        CMdEProperty *p = 0;
-        if (!def || o.Property(*def, p) < 0 || !p)
-            return 0;
-        qint64 t = 0;
-        TRAP_IGNORE(t = p->TimeValueL().Int64());
-        return t;
-    }
-
-    void collectL(CMdEQuery &aQuery)
-    {
-        CMdEObjectQuery &q = static_cast<CMdEObjectQuery &>(aQuery);
-        const bool video = m_stage == 1;
-        for (TInt i = 0; i < q.Count(); ++i) {
-            const CMdEObject &o = q.Result(i);
-            const TDesC &uri = o.Uri();
-            GalleryModel::Item item;
-            item.path = QDir::fromNativeSeparators(QString::fromUtf16(uri.Ptr(), uri.Length()));
-            if (item.path.isEmpty())
-                continue;
-            item.name = item.path.section(QLatin1Char('/'), -1);
-            item.video = video;
-            item.time = timeOf(o, m_created);
-            if (item.time == 0)
-                item.time = timeOf(o, m_modified);
-            m_found << item;
-        }
-    }
-
-    GalleryModel *m_model;
-    CMdESession *m_session;
-    CMdEObjectQuery *m_query;
-    bool m_opened;
-    bool m_broken;
-    int m_stage;                 // 0 images, 1 videos, 2 done
-    CMdEPropertyDef *m_created;
-    CMdEPropertyDef *m_modified;
-    qint64 m_stageStarted;
-    QList<GalleryModel::Item> m_found;
-};
-#endif
 
 GalleryModel::GalleryModel(QObject *parent)
     : QAbstractListModel(parent)
-    , m_loading(false)
-    , m_loadStarted(0)
-    , m_mds(0)
-    , m_prefetcher(new GalleryPrefetcher(this))
-    , m_open(false)
+    , m_timer(new QTimer(this))
+    , m_thumbs(new Thumbnailer(this))
+    , m_scanning(false)
+    , m_dirsVisited(0)
+    , m_scanStarted(0)
 {
     QHash<int, QByteArray> roles;
     roles[PathRole] = "path";
     roles[NameRole] = "name";
+    roles[FolderRole] = "folder";
     roles[IsVideoRole] = "isVideo";
-    roles[ThumbnailRole] = "thumbnail";
+    roles[ThumbRole] = "thumb";
+    roles[ThumbFailedRole] = "thumbFailed";
     roles[CheckedRole] = "checked";
     setRoleNames(roles);
+
+    Thumbnailer::discardLegacyCache();
+
+    // Interval 0: one directory per turn of the event loop, so touch and
+    // paint still get served.
+    m_timer->setInterval(0);
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(scanSlice()));
+
+    // ready() is emitted in the worker thread: queued onto this one.
+    connect(m_thumbs, SIGNAL(ready(QString, QString)),
+            this, SLOT(thumbReady(QString, QString)));
+    m_thumbs->start(QThread::LowPriority);
 }
 
 GalleryModel::~GalleryModel()
 {
-    m_prefetcher->stop();
-#ifdef Q_OS_SYMBIAN
-    delete m_mds;
-#endif
+    m_thumbs->stop();
+    m_thumbs->wait();
 }
 
 int GalleryModel::rowCount(const QModelIndex &parent) const
 {
-    return parent.isValid() ? 0 : m_items.size();
+    return parent.isValid() ? 0 : m_rows.size();
 }
 
 QVariant GalleryModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_items.size())
+    if (!index.isValid() || index.row() < 0 || index.row() >= m_rows.size())
         return QVariant();
-    const Item &it = m_items.at(index.row());
+    const Entry &e = m_rows.at(index.row());
     switch (role) {
-    case PathRole:
-        return it.path;
-    case NameRole:
-        return it.name;
-    case IsVideoRole:
-        return it.video;
-    case ThumbnailRole:
-        // Videos have no thumbnail (yet): the page shows an icon.
-        if (it.video)
-            return QString();
-        return QString(QLatin1String("image://gallery/"))
-               + QString::fromLatin1(QUrl::toPercentEncoding(it.path));
-    case CheckedRole:
-        return m_checkedKeys.contains(key(it.path));
+    case PathRole: return e.path;
+    case NameRole: return e.name;
+    case FolderRole: return e.folder;
+    case IsVideoRole: return e.video;
+    case ThumbRole: return e.thumb.isEmpty() ? QString() : QUrl::fromLocalFile(e.thumb).toString();
+    case ThumbFailedRole: return e.failed;
+    case CheckedRole: return m_checkedKeys.contains(key(e.path));
     }
     return QVariant();
 }
@@ -272,155 +126,190 @@ QString GalleryModel::checkedSizeText() const
     return SelectionModel::formatBytes(qreal(total));
 }
 
-bool GalleryModel::isJunk(const QString &path, QString *why)
-{
-    const QStringList parts = QDir::fromNativeSeparators(path).split(QLatin1Char('/'), QString::SkipEmptyParts);
-    for (int i = 0; i < parts.size(); ++i) {
-        const QString &c = parts.at(i);
-        if (i == 0 && c.endsWith(QLatin1Char(':')))
-            continue; // the drive
-        const bool isFile = i == parts.size() - 1;
-        bool junk = c.startsWith(QLatin1Char('.'));
-        if (!junk && !isFile) {
-            const QString l = c.toLower();
-            junk = c.startsWith(QLatin1Char('_'))            // _PAlbTN (old Gallery thumbnails)
-                   || l.contains(QLatin1String("cache"))
-                   || l.contains(QLatin1String("thumb"))
-                   || l == QLatin1String("temp") || l == QLatin1String("tmp")
-                   || l == QLatin1String("private") || l == QLatin1String("system")
-                   || l == QLatin1String("sys") || l == QLatin1String("resource");
-        }
-        if (junk) {
-            if (why)
-                *why = c;
-            return true;
-        }
-    }
-    return false;
-}
-
 void GalleryModel::load()
 {
-    m_open = true;
-    if (m_loading)
-        return;
-    m_loading = true;
-    m_loadStarted = nowMs();
-    emit loadingChanged();
-    qDebug() << "Gallery: listing photos and videos";
-#ifdef Q_OS_SYMBIAN
-    if (!m_mds)
-        m_mds = new GalleryMdsQuery(this);
-    m_mds->start();
-#else
-    QTimer::singleShot(0, this, SLOT(scanFolders()));
-#endif
-}
+    m_timer->stop();
+    m_thumbs->clearQueue();
+    m_found.clear();
+    m_todo.clear();
+    m_dirsVisited = 0;
+    m_scanStarted = nowMs();
 
-void GalleryModel::mdsStep()
-{
-#ifdef Q_OS_SYMBIAN
-    if (m_mds)
-        m_mds->step();
-#endif
-}
-
-void GalleryModel::scanFolders()
-{
-#ifndef Q_OS_SYMBIAN
     QStringList roots;
+#ifdef Q_OS_SYMBIAN
+    // Every drive the phone has now; a removed card simply isn't listed.
+    const QFileInfoList drives = QDir::drives();
+    for (int d = 0; d < drives.size(); ++d) {
+        const QString root = drives.at(d).absolutePath(); // "C:/", "E:/", ...
+        if (root.startsWith(QLatin1String("Z"), Qt::CaseInsensitive))
+            continue; // ROM
+        for (int f = 0; f < int(sizeof(KFolders) / sizeof(KFolders[0])); ++f)
+            roots << root + QLatin1String(KFolders[f]);
+    }
+#else
+    Q_UNUSED(KFolders);
     roots << QDesktopServices::storageLocation(QDesktopServices::PicturesLocation)
           << QDesktopServices::storageLocation(QDesktopServices::MoviesLocation);
     roots.removeDuplicates();
-    QStringList images, videos;
-    images << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.bmp";
-    videos << "*.mp4" << "*.3gp" << "*.mkv" << "*.avi" << "*.mov";
-    const int kMaxFiles = 20000;
-    QList<Item> found;
-    foreach (const QString &root, roots) {
-        if (root.isEmpty() || !QFileInfo(root).isDir())
-            continue;
-        QDirIterator it(root, images + videos, QDir::Files, QDirIterator::Subdirectories);
-        while (it.hasNext() && found.size() < kMaxFiles) {
-            it.next();
-            const QFileInfo fi = it.fileInfo();
-            Item item;
-            item.path = fi.absoluteFilePath();
-            item.name = fi.fileName();
-            item.video = QDir::match(videos, item.name);
-            item.time = fi.lastModified().toMSecsSinceEpoch();
-            found << item;
-        }
-    }
-    finishLoad(found, "folder scan");
 #endif
-}
-
-static bool newerFirst(const GalleryModel::Item &a, const GalleryModel::Item &b);
-
-void GalleryModel::finishLoad(const QList<Item> &found, const char *source)
-{
-    // What is left out, by the junk folder (path up to it), and what is
-    // listed, by folder: both logged, to spot what the filter misses or hits.
-    QMap<QString, int> junk, listed;
-    QList<Item> items;
-    foreach (const Item &it, found) {
-        QString why;
-        if (isJunk(it.path, &why)) {
-            const int at = it.path.indexOf(why);
-            junk[at >= 0 ? it.path.left(at + why.length()) : why] += 1;
+    QStringList existing;
+    foreach (const QString &r, roots) {
+        if (r.isEmpty() || !QFileInfo(r).isDir())
             continue;
-        }
-        listed[it.path.section(QLatin1Char('/'), 0, -2)] += 1;
-        items << it;
+        Dir dir;
+        dir.path = QDir::fromNativeSeparators(r);
+        dir.depth = 0;
+        m_todo << dir;
+        existing << dir.path;
     }
-    qStableSort(items.begin(), items.end(), newerFirst);
+    qDebug() << "Gallery: scanning" << existing;
 
-    qDebug() << "Gallery:" << source << "found" << found.size() << "items in"
-             << (nowMs() - m_loadStarted) << "ms; listing" << items.size()
-             << "in" << listed.size() << "folders, left out" << (found.size() - items.size());
-    for (QMap<QString, int>::const_iterator i = listed.constBegin(); i != listed.constEnd(); ++i)
-        qDebug() << "Gallery:   listed" << i.value() << "in" << i.key();
-    for (QMap<QString, int>::const_iterator i = junk.constBegin(); i != junk.constEnd(); ++i)
-        qDebug() << "Gallery:   left out" << i.value() << "in" << i.key();
-
-    const int oldCount = m_items.size();
-    beginResetModel();
-    m_items = items;
-    endResetModel();
-    if (oldCount != m_items.size())
-        emit countChanged();
-    m_loading = false;
+    m_scanning = true;
     emit loadingChanged();
-
-    // Thumbnails for everything, newest first, while the page is open.
-    if (m_open) {
-        QStringList photos;
-        foreach (const Item &it, m_items) {
-            if (!it.video)
-                photos << it.path;
-        }
-        m_prefetcher->start(photos);
-    }
+    emit foundChanged();
+    if (m_todo.isEmpty())
+        finish();
+    else
+        m_timer->start();
 }
 
 void GalleryModel::close()
 {
-    m_open = false;
-    m_prefetcher->requestStop(); // without waiting: the UI would freeze meanwhile
+    m_thumbs->clearQueue();
+    if (!m_scanning)
+        return;
+    m_timer->stop();
+    m_todo.clear();
+    m_found.clear();
+    m_scanning = false;
+    qDebug() << "Gallery: scan stopped (page closed)";
+    emit loadingChanged();
+    emit foundChanged();
 }
 
-static bool newerFirst(const GalleryModel::Item &a, const GalleryModel::Item &b)
+void GalleryModel::scanSlice()
 {
-    return a.time > b.time;
+    if (m_todo.isEmpty() || m_dirsVisited >= KMaxDirs || m_found.size() >= KMaxFiles) {
+        finish();
+        return;
+    }
+
+    const Dir dir = m_todo.takeFirst();
+    ++m_dirsVisited;
+    QDir d(dir.path);
+
+    QStringList patterns;
+    for (int i = 0; i < int(sizeof(KImagePatterns) / sizeof(KImagePatterns[0])); ++i)
+        patterns << QLatin1String(KImagePatterns[i]);
+    for (int i = 0; i < int(sizeof(KVideoPatterns) / sizeof(KVideoPatterns[0])); ++i)
+        patterns << QLatin1String(KVideoPatterns[i]);
+
+    const QFileInfoList files = d.entryInfoList(patterns, QDir::Files | QDir::Readable);
+    for (int i = 0; i < files.size() && m_found.size() < KMaxFiles; ++i) {
+        const QFileInfo &fi = files.at(i);
+        if (fi.size() <= 0)
+            continue;
+        Entry e;
+        e.path = fi.absoluteFilePath();
+        e.name = fi.fileName();
+        e.folder = fi.absoluteDir().dirName();
+        e.video = isVideoName(e.name);
+        e.failed = false;
+        e.modified = fi.lastModified().toTime_t();
+        m_found << e;
+    }
+    emit foundChanged();
+
+    if (dir.depth < KMaxDepth) {
+        const QFileInfoList subs = d.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable);
+        for (int i = 0; i < subs.size(); ++i) {
+            if (skippedFolder(subs.at(i).fileName())) {
+                qDebug() << "Gallery: skipping" << subs.at(i).absoluteFilePath();
+                continue;
+            }
+            Dir sub;
+            sub.path = subs.at(i).absoluteFilePath();
+            sub.depth = dir.depth + 1;
+            m_todo << sub;
+        }
+    }
+}
+
+void GalleryModel::finish()
+{
+    m_timer->stop();
+    const bool cut = !m_todo.isEmpty();
+    m_todo.clear();
+
+    // Published in one go, newest first: rows appearing and then reordering
+    // under the user's finger is worse than a brief busy indicator.
+    qStableSort(m_found.begin(), m_found.end(), newerFirst);
+    int videos = 0;
+    foreach (const Entry &e, m_found) {
+        if (e.video)
+            ++videos;
+    }
+    qDebug() << "Gallery: listed" << (m_found.size() - videos) << "photos and" << videos
+             << "videos from" << m_dirsVisited << "folders in" << (nowMs() - m_scanStarted) << "ms"
+             << (cut ? "(stopped at the limit)" : "");
+
+    const int oldCount = m_rows.size();
+    beginResetModel();
+    m_rows = m_found;
+    m_rowOf.clear();
+    for (int i = 0; i < m_rows.size(); ++i)
+        m_rowOf.insert(key(m_rows.at(i).path), i);
+    endResetModel();
+    m_found.clear();
+
+    m_scanning = false;
+    emit loadingChanged();
+    emit foundChanged();
+    if (oldCount != m_rows.size())
+        emit countChanged();
+}
+
+void GalleryModel::requestThumb(int index, int edge)
+{
+    if (index < 0 || index >= m_rows.size())
+        return;
+    const Entry &e = m_rows.at(index);
+    if (e.video || e.failed || !e.thumb.isEmpty())
+        return;
+
+    // Cached from an earlier visit: take it now and skip the worker.
+    const QString cached = Thumbnailer::thumbPathFor(e.path);
+    if (QFile::exists(cached)) {
+        m_rows[index].thumb = cached;
+        const QModelIndex mi = createIndex(index, 0);
+        emit dataChanged(mi, mi);
+        return;
+    }
+    m_thumbs->request(e.path, edge);
+}
+
+void GalleryModel::thumbReady(const QString &imagePath, const QString &thumbPath)
+{
+    const QHash<QString, int>::const_iterator it = m_rowOf.constFind(key(imagePath));
+    if (it == m_rowOf.constEnd())
+        return; // listed again meanwhile
+    const int row = it.value();
+    // Empty: unreadable, or the cache could not be written. Recorded, so the
+    // cell shows a placeholder instead of waiting for ever.
+    if (thumbPath.isEmpty())
+        m_rows[row].failed = true;
+    else
+        m_rows[row].thumb = thumbPath;
+    const QModelIndex mi = createIndex(row, 0);
+    emit dataChanged(mi, mi);
 }
 
 void GalleryModel::toggle(int index)
 {
-    if (index < 0 || index >= m_items.size())
+    if (index < 0 || index >= m_rows.size())
         return;
-    const Item &it = m_items.at(index);
-    const QString k = key(it.path);
+    const Entry &e = m_rows.at(index);
+    const QString k = key(e.path);
     if (m_checkedKeys.contains(k)) {
         m_checkedKeys.remove(k);
         for (int i = 0; i < m_checked.size(); ++i) {
@@ -430,13 +319,13 @@ void GalleryModel::toggle(int index)
             }
         }
     } else {
-        QFileInfo fi(it.path);
+        QFileInfo fi(e.path);
         if (!fi.isFile()) {
-            qWarning() << "Gallery: no longer there:" << it.path;
+            qWarning() << "Gallery: no longer there:" << e.path;
             return;
         }
         Checked c;
-        c.path = it.path;
+        c.path = e.path;
         c.size = fi.size();
         m_checked << c;
         m_checkedKeys.insert(k);
@@ -452,8 +341,8 @@ void GalleryModel::clearChecked()
         return;
     m_checked.clear();
     m_checkedKeys.clear();
-    if (!m_items.isEmpty())
-        emit dataChanged(createIndex(0, 0), createIndex(m_items.size() - 1, 0));
+    if (!m_rows.isEmpty())
+        emit dataChanged(createIndex(0, 0), createIndex(m_rows.size() - 1, 0));
     emit checkedChanged();
 }
 

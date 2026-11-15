@@ -6,9 +6,9 @@ import com.nokia.symbian 1.1
 
 // The Send page's Media button: the phone's photos and videos, newest
 // first; tap to check any number, then Add puts them into the selection.
-// Our own grid rather than the system gallery picker, which also listed
-// caches and thumbnail folders (`gallery` leaves those out). Has its own
-// back button at the top, so main.qml hides the toolbar.
+// Our own grid of the phone's media folders (`gallery`) rather than the
+// system gallery picker. Has its own back button at the top, so main.qml
+// hides the toolbar.
 Page {
     id: page
 
@@ -21,8 +21,8 @@ Page {
     property color mutedColor: platformInverted ? platformStyle.colorNormalMidInverted
                                                 : platformStyle.colorNormalMid
 
-    // Listed again each time the page is opened (new photos); thumbnails
-    // are made in the background only while it is open.
+    // Scanned again each time the page is opened (new photos); closing it
+    // stops the scan and the thumbnails not yet started.
     onStatusChanged: {
         if (status == PageStatus.Activating)
             gallery.load()
@@ -122,13 +122,44 @@ Page {
                 color: page.platformInverted ? "#d8d8d8" : "#262626"
                 clip: true
 
+                // The cached thumbnail, not the photo itself; "" until the
+                // worker has made it.
                 Image {
+                    id: thumb
                     anchors.fill: parent
                     asynchronous: true
+                    smooth: true
                     fillMode: Image.PreserveAspectCrop
                     sourceSize.width: tile.width
                     sourceSize.height: tile.height
-                    source: model.thumbnail
+                    source: model.thumb
+                }
+
+                // Delegates exist only for cells in or near view, so this asks
+                // for exactly the thumbnails that are needed. 4/3 of the tile,
+                // so a 4:3 photo still covers it when cropped.
+                Component.onCompleted: {
+                    if (!model.isVideo && model.thumb == "" && !model.thumbFailed)
+                        gallery.requestThumb(index, Math.round(grid.cellWidth * 4 / 3))
+                }
+
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    platformInverted: page.platformInverted
+                    running: !model.isVideo && ((model.thumb == "" && !model.thumbFailed)
+                                                || thumb.status == Image.Loading)
+                    visible: running
+                    width: platformStyle.graphicSizeSmall
+                    height: width
+                }
+
+                // A photo the phone cannot decode.
+                Label {
+                    anchors.centerIn: parent
+                    platformInverted: page.platformInverted
+                    visible: !model.isVideo && (model.thumbFailed || thumb.status == Image.Error)
+                    color: page.mutedColor
+                    text: "?"
                 }
 
                 Image {
@@ -183,13 +214,24 @@ Page {
         platformInverted: page.platformInverted
     }
 
-    BusyIndicator {
+    Column {
         anchors.centerIn: grid
-        platformInverted: page.platformInverted
+        spacing: platformStyle.paddingMedium
         visible: gallery.loading && grid.count === 0
-        running: visible
-        width: platformStyle.graphicSizeLarge
-        height: width
+        BusyIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            platformInverted: page.platformInverted
+            running: parent.visible
+            width: platformStyle.graphicSizeLarge
+            height: width
+        }
+        // How many found so far, as the scan can take a while on a full card.
+        Label {
+            anchors.horizontalCenter: parent.horizontalCenter
+            platformInverted: page.platformInverted
+            color: page.mutedColor
+            text: gallery.found
+        }
     }
 
     Label {

@@ -70,7 +70,7 @@ same package as `build_symbian.bat`:
 - Leave **Shadow build** off (Projects → Build), because the build only works in-source.
 - Under Projects → Run → Deploy → **Create SIS Package**, choose **Not signed**. If
   Qt Creator offers to patch the capabilities, say no. The patch removes
-  `ReadDeviceData`, `WriteDeviceData` and `SwEvent`, and the gallery picker needs them.
+  `ReadDeviceData`, `WriteDeviceData` and `SwEvent`, which the app declares.
 - The package is named `Symbisend_unsigned.sis` (the script renames it to `Symbisend.sis`).
 - *Run* installs the package over CODA. If that fails, copy the `.sis` to the phone and
   install it by hand.

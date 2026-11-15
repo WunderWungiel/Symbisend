@@ -267,40 +267,47 @@ Methods:
 - Signals: `folderChanged()`, `checkedChanged()`, `openFailed(path)`
 
 ## `gallery` — photos and videos (GridView model)
-The Send page's Media button opens `GalleryPage`: the phone's photos and videos, newest
-first. Replaces the system gallery picker (MGFetch), which also listed app caches and
-thumbnail folders and can't be filtered. Symbian: the metadata store (MdS, the index the
-Photos app uses), Image and Video objects; elsewhere the Pictures and Movies folders are
-scanned. Files in hidden (`.x`, `_x` such as `_PAlbTN`), cache, thumbnail, temp and system
-folders are left out. The log shows, per folder, what was listed and what was left out
-(`Gallery:   listed N in E:/Images/...`, `Gallery:   left out N in ...`).
+The Send page's Media button opens `GalleryPage`: the photos and videos in the phone's
+media folders, newest first (the approach of [Symbigram](https://github.com/Symnok/Symbigram)'s
+image picker). Symbian: `Data/Images`, `Data/Videos`, `Images`, `Videos`, `DCIM`,
+`Data/Pictures` and `Pictures` on every drive (not Z:); elsewhere the Pictures and Movies
+folders. The scan visits one folder per event-loop turn, so it never blocks the UI; at most
+4 levels deep, 400 folders, 4000 files. Folders starting with `.` or `_` (such as
+`_PAlbTN`) are skipped. Photos: `jpg`, `jpeg`, `png`, `bmp`, `gif`; videos: `mp4`, `m4v`,
+`3gp`, `3g2`, `mov`, `avi`, `mkv`, `wmv`. Logged: `Gallery: scanning [...]`,
+`Gallery: skipping <folder>`, `Gallery: listed N photos and M videos from F folders in T ms`.
 
-| role        | type   | example                                              |
-|-------------|--------|------------------------------------------------------|
-| `path`      | string | `E:/Images/201211/a.jpg` (`/` separators)            |
-| `name`      | string | `a.jpg`                                              |
-| `isVideo`   | bool   |                                                      |
-| `thumbnail` | string | `image://gallery/<percent-encoded path>`; `""` for videos |
-| `checked`   | bool   |                                                      |
+| role          | type   | example                                              |
+|---------------|--------|------------------------------------------------------|
+| `path`        | string | `E:/Images/201211/a.jpg` (`/` separators)            |
+| `name`        | string | `a.jpg`                                              |
+| `folder`      | string | `201211`                                             |
+| `isVideo`     | bool   |                                                      |
+| `thumb`       | string | `file:///E:/Private/e62546c5/thumbnails/<md5>.jpg`; `""` until made (always for videos) |
+| `thumbFailed` | bool   | the photo can't be read (or the cache not written); show a placeholder |
+| `checked`     | bool   |                                                      |
 
-Properties: `loading` (bool, a listing is running; the old list stays until it is done),
-`count` (int), `checkedCount` (int), `checkedSizeText` (string, total size of the checked
-files).
+Properties: `loading` (bool, a scan is running; the old list stays until it is done),
+`found` (int, files found so far by the running scan), `count` (int), `checkedCount`
+(int), `checkedSizeText` (string, total size of the checked files).
 Methods:
-- `load()` — lists again (asynchronous); the page calls it each time it is shown
-- `close()` — the page is gone: stops making thumbnails in the background (the page calls
-  it when it deactivates)
+- `load()` — scans again (asynchronous); the page calls it each time it is shown
+- `close()` — the page is gone: stops the scan and drops the thumbnails not yet started
+  (the page calls it when it deactivates)
+- `requestThumb(index, edge)` — asks for a photo's thumbnail, at most `edge` px (capped at
+  160) on its longer side. A delegate calls it when it is created, so only cells in or
+  near view are made, the ones asked for last first. Returns at once; the row's `thumb`
+  or `thumbFailed` changes when it is done.
 - `toggle(index)`, `clearChecked()`
 - `checkedFiles()` → list of paths, in checking order; add them with `selection.addFiles()`
-- Signals: `loadingChanged()`, `countChanged()`, `checkedChanged()`
+- Signals: `loadingChanged()`, `foundChanged()`, `countChanged()`, `checkedChanged()`
 
-`image://gallery/<percent-encoded path>` — a photo's thumbnail, scaled to cover the
-requested size (set `sourceSize`), for `asynchronous: true` Images. Made once and kept in a
-disk cache (the app's private folder, `thumbs/`, at most 10 MB, about 2000 photos; the oldest go first): from the JPEG's EXIF
-thumbnail when there is one (rotated by the EXIF orientation), else a scaled decode. After
-each `load()`, a low-priority thread fills the cache for every photo, newest first, until
-`close()`. Timings are logged: `Gallery: thumbnails shown: 25 so far, cache 10 (avg 8 ms),
-exif …, decode …`, the same for `prefetched`, and `Gallery: prefetch done/stopped …`.
+Thumbnails are made by a low-priority worker thread (`Thumbnailer`) and kept as small JPEGs
+in the app's private folder, `thumbnails/` (keyed by path, size and date, so a changed
+photo gets a new one; no size limit): from the JPEG's EXIF thumbnail when there is one
+(rotated by the EXIF orientation), else a scaled decode. The earlier cache (`thumbs/`) is
+deleted at startup. Logged: `Gallery: thumbnails made: N - exif N (avg X ms), decode N
+(avg Y ms), failed N` (the first, then every 25th), `Gallery: cannot read <path>`.
 
 ## `sender` — sending the selection to a device
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by

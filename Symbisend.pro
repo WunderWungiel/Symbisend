@@ -31,17 +31,13 @@ symbian:LIBS += -lcommondialogs
 # Native information notes (CAknInformationNote)
 symbian:LIBS += -lavkon -leikdlg -leikctl
 
-# The Send page's Media button lists photos and videos from the metadata
-# store (MdS, src/gallerymodel.cpp)
-symbian:LIBS += -lmdeclient -lbafl
 # History page's Open folder: starts the File manager app (src/historymodel.cpp)
 symbian:LIBS += -lapgrfx -lapparc -lcone -lws32
 # Received files keep the time of the original (src/receiver.cpp)
 symbian:LIBS += -lefsrv
-# The metadata store (src/gallerymodel.cpp) needs ReadUserData. The system
-# gallery picker (MGFetch), used before, needed all of these (it left with
-# -46 otherwise; ReadUserData/WriteUserData alone were not enough on a Belle
-# 808). ReadDeviceData, WriteDeviceData and SwEvent are developer-certificate
+# The system gallery picker (MGFetch), used before, needed all of these (it
+# left with -46 otherwise; ReadUserData/WriteUserData alone were not enough on
+# a Belle 808). ReadDeviceData, WriteDeviceData and SwEvent are developer-certificate
 # capabilities: the self-signed .sis then only installs on phones that accept
 # unsigned packages (patched installserver).
 symbian:TARGET.CAPABILITY += ReadUserData WriteUserData UserEnvironment LocalServices     ReadDeviceData WriteDeviceData SwEvent
@@ -83,7 +79,7 @@ SOURCES += main.cpp \
     src/selectionmodel.cpp \
     src/foldermodel.cpp \
     src/gallerymodel.cpp \
-    src/gallerythumbnails.cpp \
+    src/thumbnailer.cpp \
     src/historymodel.cpp \
     src/favoritesmodel.cpp \
     src/sender.cpp \
@@ -113,7 +109,7 @@ HEADERS += \
     src/selectionmodel.h \
     src/foldermodel.h \
     src/gallerymodel.h \
-    src/gallerythumbnails.h \
+    src/thumbnailer.h \
     src/historymodel.h \
     src/favoritesmodel.h \
     src/sender.h \
