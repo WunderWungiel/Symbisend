@@ -107,8 +107,9 @@ Page {
         // The rows just below the screen start loading early.
         cacheBuffer: cellHeight * 2
 
-        // 3 across, like Symbigram.
-        cellWidth: Math.floor(width / 3)
+        // 3 across in portrait, like Symbigram; 5 in landscape, so the
+        // tiles stay about the same size.
+        cellWidth: Math.floor(width / (page.width > page.height ? 5 : 3))
         cellHeight: cellWidth
 
         delegate: Item {
