@@ -9,13 +9,19 @@ import com.nokia.symbian 1.1
 // folder / Clear, then every entry with its type icon, name (or the
 // message), date, size and sender. Has its own back button at the top, so
 // main.qml hides the toolbar. Tapping a file opens it in the phone's app for
-// it; tapping a text message shows it in a dialog. The three dots button of an
+// it; tapping a text message shows it on ReceivedTextPage. The three dots button of an
 // entry opens a menu: Open file, Information, Delete from history.
 Page {
     id: page
 
     // Read by main.qml: this page has its own back button.
     property bool ownBackButton: true
+
+    // Never shown (ownBackButton hides the toolbar), but required: for a page
+    // without tools the ToolBar shrinks itself to height 0, and
+    // ReceivedTextPage (pushed to show a text message) then gets a toolbar of
+    // height 0 too - no back button. Same as SelectionPage.
+    tools: ToolBarLayout {}
 
     // Light theme = the inverted Symbian style; every component follows it.
     property bool platformInverted: settings.theme == "light"
@@ -104,7 +110,8 @@ Page {
 
             function openEntry() {
                 if (isText)
-                    textDialog.openWith(model.text, model.senderAlias)
+                    page.pageStack.push(Qt.resolvedUrl("ReceivedTextPage.qml"),
+                                        { text: model.text, senderAlias: model.senderAlias })
                 else if (!history.openFile(index))
                     openFailedDialog.openFor(model.fileName)
             }
@@ -257,38 +264,6 @@ Page {
                     wrapMode: Text.Wrap
                     textFormat: Text.PlainText
                 }
-            }
-        }
-    }
-
-    // A received text message, in full, in an editable field (like the
-    // Device name dialog in Settings) so it can be selected and copied.
-    // Edits are not saved.
-    CommonDialog {
-        id: textDialog
-        platformInverted: page.platformInverted
-        buttonTexts: [i18n.t("general.close") + i18n.rev]
-
-        function openWith(text, senderAlias) {
-            titleText = senderAlias
-            textArea.text = text
-            open()
-        }
-
-        content: Item {
-            width: textDialog.platformContentMaximumWidth
-            height: textArea.height + 2 * platformStyle.paddingLarge
-
-            TextArea {
-                id: textArea
-                platformInverted: page.platformInverted
-                anchors {
-                    left: parent.left; right: parent.right
-                    verticalCenter: parent.verticalCenter
-                    margins: platformStyle.paddingLarge
-                }
-                // Grows with the text, up to what fits; scrolls beyond that.
-                height: Math.min(implicitHeight, Math.round(page.height * 0.5))
             }
         }
     }

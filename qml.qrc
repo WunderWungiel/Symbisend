@@ -16,6 +16,7 @@
         <file>qml/Symbisend/ReceiveLinkPage.qml</file>
         <file>qml/Symbisend/ReceiveOptionsPage.qml</file>
         <file>qml/Symbisend/ReceivePage.qml</file>
+        <file>qml/Symbisend/ReceivedTextPage.qml</file>
         <file>qml/Symbisend/ValueDialog.qml</file>
         <file>qml/Symbisend/SelectionCard.qml</file>
         <file>qml/Symbisend/SelectionPage.qml</file>
