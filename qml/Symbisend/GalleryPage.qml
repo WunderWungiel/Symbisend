@@ -107,9 +107,8 @@ Page {
         // The rows just below the screen start loading early.
         cacheBuffer: cellHeight * 2
 
-        // About 90 px tiles: 4 across in portrait on a 360 px screen.
-        property int columns: Math.max(3, Math.floor(width / 90))
-        cellWidth: Math.floor(width / columns)
+        // 3 across, like Symbigram.
+        cellWidth: Math.floor(width / 3)
         cellHeight: cellWidth
 
         delegate: Item {
