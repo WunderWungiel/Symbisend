@@ -24,6 +24,9 @@ namespace
     const int KMaxRunning = 3;          // requests outstanding at the service
     const int KTimeoutMs = 20000;       // a request that never answers
     const int KWatchdogMs = 2000;
+    const int KMaxAttempts = 3;         // first try and two retries
+    const int KRetryDelayMs = 4000;     // times the attempt: 4 s, then 8 s
+    const int KRetryCheckMs = 1000;
 
     QString g_cacheDir;
 
@@ -226,6 +229,7 @@ Thumbnailer::Thumbnailer(QObject *parent)
     : QObject(parent)
     , d(new ThumbnailerPrivate(this))
     , m_watchdog(new QTimer(this))
+    , m_retryTimer(new QTimer(this))
     , m_pumpScheduled(false)
     , m_made(0)
     , m_failed(0)
@@ -234,6 +238,8 @@ Thumbnailer::Thumbnailer(QObject *parent)
     cacheDir();
     m_watchdog->setInterval(KWatchdogMs);
     connect(m_watchdog, SIGNAL(timeout()), this, SLOT(checkTimeouts()));
+    m_retryTimer->setInterval(KRetryCheckMs);
+    connect(m_retryTimer, SIGNAL(timeout()), this, SLOT(retryDue()));
 }
 
 Thumbnailer::~Thumbnailer()
@@ -281,15 +287,25 @@ bool Thumbnailer::available()
     return d->load();
 }
 
-void Thumbnailer::request(const QString &path, int edge)
+bool Thumbnailer::known(const QString &path) const
 {
     for (int i = 0; i < m_queue.size(); ++i)
-        if (m_queue.at(i).path == path) return;
+        if (m_queue.at(i).path == path) return true;
+    for (int i = 0; i < m_retry.size(); ++i)
+        if (m_retry.at(i).path == path) return true;
     for (QHash<int, Running>::const_iterator it = m_running.constBegin(); it != m_running.constEnd(); ++it)
-        if (it.value().path == path) return;
+        if (it.value().path == path) return true;
+    return false;
+}
+
+void Thumbnailer::request(const QString &path, int edge)
+{
+    if (known(path))
+        return;
     Job job;
     job.path = path;
     job.edge = edge > 0 ? qMin(edge, KMaxEdge) : KMaxEdge;
+    job.attempt = 0;
     m_queue.prepend(job); // the cells revealed last are the ones looked at
     schedulePump();
 }
@@ -297,6 +313,44 @@ void Thumbnailer::request(const QString &path, int edge)
 void Thumbnailer::clearQueue()
 {
     m_queue.clear();
+    m_retry.clear();
+    m_retryTimer->stop();
+}
+
+void Thumbnailer::failed(const QString &path, int edge, int attempt)
+{
+    if (attempt + 1 >= KMaxAttempts) {
+        ++m_failed;
+        qWarning() << "Thumbs: giving up on" << path << "after" << KMaxAttempts << "tries";
+        emit ready(path, QString());
+        return;
+    }
+    Job job;
+    job.path = path;
+    job.edge = edge;
+    job.attempt = attempt + 1;
+    job.due = QDateTime::currentMSecsSinceEpoch() + KRetryDelayMs * job.attempt;
+    m_retry << job;
+    if (!m_retryTimer->isActive())
+        m_retryTimer->start();
+}
+
+void Thumbnailer::retryDue()
+{
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    bool moved = false;
+    for (int i = m_retry.size() - 1; i >= 0; --i) {
+        if (m_retry.at(i).due <= now) {
+            const Job job = m_retry.takeAt(i);
+            qDebug() << "Thumbs: trying again (" << (job.attempt + 1) << "of" << KMaxAttempts << ")" << job.path;
+            m_queue.prepend(job);
+            moved = true;
+        }
+    }
+    if (m_retry.isEmpty())
+        m_retryTimer->stop();
+    if (moved)
+        schedulePump();
 }
 
 void Thumbnailer::schedulePump()
@@ -321,14 +375,19 @@ void Thumbnailer::pump()
         }
         const int id = d->start(job.path);
         if (id <= 0) {
-            ++m_failed;
             qWarning() << "Thumbs: cannot request" << job.path << "error" << id;
-            emit ready(job.path, QString());
+            if (id == -5) { // KErrNotSupported: no service, retrying won't help
+                ++m_failed;
+                emit ready(job.path, QString());
+            } else {
+                failed(job.path, job.edge, job.attempt);
+            }
             continue;
         }
         Running r;
         r.path = job.path;
         r.edge = job.edge;
+        r.attempt = job.attempt;
         r.started.start();
         m_running.insert(id, r);
     }
@@ -347,7 +406,6 @@ void Thumbnailer::finished(int requestId, const QImage &image, int error)
 
     QString saved;
     if (image.isNull()) {
-        ++m_failed;
         qWarning() << "Thumbs: none for" << r.path << "error" << error << "after" << ms << "ms";
     } else {
         if (m_made == 0)
@@ -369,7 +427,10 @@ void Thumbnailer::finished(int requestId, const QImage &image, int error)
             qWarning() << "Thumbs: cannot write" << out;
         }
     }
-    emit ready(r.path, saved);
+    if (image.isNull())
+        failed(r.path, r.edge, r.attempt);
+    else
+        emit ready(r.path, saved);
 
     if (m_running.isEmpty())
         m_watchdog->stop();
@@ -382,11 +443,10 @@ void Thumbnailer::checkTimeouts()
     for (QHash<int, Running>::const_iterator it = m_running.constBegin(); it != m_running.constEnd(); ++it)
         if (it.value().started.elapsed() > KTimeoutMs) late << it.key();
     foreach (int id, late) {
-        const QString path = m_running.take(id).path;
+        const Running r = m_running.take(id);
         d->cancel(id);
-        ++m_failed;
-        qWarning() << "Thumbs: no answer for" << path << "in" << KTimeoutMs / 1000 << "s, cancelled";
-        emit ready(path, QString());
+        qWarning() << "Thumbs: no answer for" << r.path << "in" << KTimeoutMs / 1000 << "s, cancelled";
+        failed(r.path, r.edge, r.attempt);
     }
     if (m_running.isEmpty())
         m_watchdog->stop();

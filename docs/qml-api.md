@@ -306,7 +306,9 @@ Thumbnails of photos and videos come from the system thumbnail service (`Thumbna
 ThumbnailManager as used by Photos, with the Photos grid's own settings: generic grid
 size, cropped to a square, optimised for speed, 64K colours; it decodes with the phone's
 codecs and applies the EXIF orientation), loaded at run time from
-`thumbnailmanager.dll`. Three requests at a time, newest first, 20 s timeout each. They are
+`thumbnailmanager.dll`. Three requests at a time, newest first, 20 s timeout each; a failed or
+unanswered one is tried again after 4 s and 8 s before `thumbFailed` (a video just recorded
+is still being processed by the system when first asked for). They are
 kept as small JPEGs in the app's private folder, `thumbnails/` (keyed by path, size and
 date, so a changed file gets a new one; no size limit). Where the service can't be
 loaded, or elsewhere than Symbian, every row has `thumbFailed` true from the start. The
