@@ -185,26 +185,29 @@ Page {
                     text: model.name
                 }
 
-                // A video with its thumbnail: a small badge, so it isn't
-                // taken for a photo. White on a dark patch over any picture.
+                // A video with its thumbnail: a play button in the middle, so
+                // it isn't taken for a photo. White on a translucent dark
+                // circle over any picture.
                 Rectangle {
-                    anchors { left: parent.left; bottom: parent.bottom; margins: 4 }
+                    id: playCircle
+                    anchors.centerIn: parent
                     visible: model.isVideo && thumb.status == Image.Ready
-                    width: platformStyle.graphicSizeSmall + 4
+                    width: Math.round(Math.min(tile.width, tile.height) * 0.4)
                     height: width
-                    radius: 4
+                    radius: width / 2
+                    smooth: true
                     color: "black"
                     opacity: 0.6
                 }
                 Image {
-                    anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
-                    visible: model.isVideo && thumb.status == Image.Ready
-                    width: platformStyle.graphicSizeSmall
+                    anchors.centerIn: playCircle
+                    visible: playCircle.visible
+                    width: Math.round(playCircle.width * 0.7)
                     height: width
                     sourceSize.width: width
                     sourceSize.height: height
                     smooth: true
-                    source: "images/send-video.svg"
+                    source: "images/play-arrow.svg"
                 }
 
                 Rectangle {
