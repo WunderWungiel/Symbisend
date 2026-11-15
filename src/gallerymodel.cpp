@@ -63,6 +63,7 @@ GalleryModel::GalleryModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_timer(new QTimer(this))
     , m_thumbs(new Thumbnailer(this))
+    , m_thumbsOk(false)
     , m_scanning(false)
     , m_dirsVisited(0)
     , m_scanStarted(0)
@@ -84,16 +85,13 @@ GalleryModel::GalleryModel(QObject *parent)
     m_timer->setInterval(0);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(scanSlice()));
 
-    // ready() is emitted in the worker thread: queued onto this one.
+    // Same thread: a direct call, but never from inside requestThumb().
     connect(m_thumbs, SIGNAL(ready(QString, QString)),
             this, SLOT(thumbReady(QString, QString)));
-    m_thumbs->start(QThread::LowPriority);
 }
 
 GalleryModel::~GalleryModel()
 {
-    m_thumbs->stop();
-    m_thumbs->wait();
 }
 
 int GalleryModel::rowCount(const QModelIndex &parent) const
@@ -130,6 +128,7 @@ void GalleryModel::load()
 {
     m_timer->stop();
     m_thumbs->clearQueue();
+    m_thumbsOk = m_thumbs->available(); // loads the service once
     m_found.clear();
     m_todo.clear();
     m_dirsVisited = 0;
@@ -214,7 +213,9 @@ void GalleryModel::scanSlice()
         e.name = fi.fileName();
         e.folder = fi.absoluteDir().dirName();
         e.video = isVideoName(e.name);
-        e.failed = false;
+        // Without the system service there are no thumbnails: the grid
+        // shows placeholders at once instead of waiting.
+        e.failed = !m_thumbsOk;
         e.modified = fi.lastModified().toTime_t();
         m_found << e;
     }
@@ -274,10 +275,10 @@ void GalleryModel::requestThumb(int index, int edge)
     if (index < 0 || index >= m_rows.size())
         return;
     const Entry &e = m_rows.at(index);
-    if (e.video || e.failed || !e.thumb.isEmpty())
+    if (e.failed || !e.thumb.isEmpty())
         return;
 
-    // Cached from an earlier visit: take it now and skip the worker.
+    // Cached from an earlier visit: take it now and skip the service.
     const QString cached = Thumbnailer::thumbPathFor(e.path);
     if (QFile::exists(cached)) {
         m_rows[index].thumb = cached;

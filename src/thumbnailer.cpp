@@ -1,10 +1,8 @@
-// SPDX-FileCopyrightText: 2026 The Symbigram authors (https://github.com/Symnok/Symbigram)
 // SPDX-FileCopyrightText: 2026 Wunder Wungiel
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "thumbnailer.h"
 
-#include <QBuffer>
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -12,9 +10,8 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QImageReader>
-#include <QTime>
-#include <QTransform>
+#include <QMetaObject>
+#include <QTimer>
 
 #ifndef Q_OS_SYMBIAN
 #include <QDesktopServices>
@@ -22,41 +19,13 @@
 
 namespace
 {
-    // Big enough for one grid cell, with a little to spare.
-    const int KMaxEdge = 160;
+    const int KMaxEdge = 160;           // one grid cell, with a little to spare
     const int KJpegQuality = 82;
+    const int KMaxRunning = 3;          // requests outstanding at the service
+    const int KTimeoutMs = 20000;       // a request that never answers
+    const int KWatchdogMs = 2000;
 
-    // A JPEG segment carries a 16-bit length, so an APP1/EXIF block is at
-    // most this big. APP1 can sit behind other segments (an ICC profile in
-    // APP2 is itself up to 64 KB), so the markers are walked with seeks and
-    // only the EXIF segment itself is read.
-    const int KMaxSegment = 65533;
-    const int KMaxMarkers = 64;
-
-    // Written once, by the first Thumbnailer's constructor on the UI thread,
-    // before its worker starts; only read after that. File scope, as
-    // function-local statics aren't initialised thread-safely before C++11.
     QString g_cacheDir;
-
-    // Readers over a TIFF block, honouring its endianness.
-    quint16 tiffU16(const QByteArray &d, int base, bool big, int off)
-    {
-        if (base + off + 2 > d.size() || base + off < 0) return 0;
-        const quint8 a = quint8(d.at(base + off));
-        const quint8 b = quint8(d.at(base + off + 1));
-        return big ? quint16((a << 8) | b) : quint16((b << 8) | a);
-    }
-
-    quint32 tiffU32(const QByteArray &d, int base, bool big, int off)
-    {
-        if (base + off + 4 > d.size() || base + off < 0) return 0;
-        const quint8 a = quint8(d.at(base + off));
-        const quint8 b = quint8(d.at(base + off + 1));
-        const quint8 c = quint8(d.at(base + off + 2));
-        const quint8 e = quint8(d.at(base + off + 3));
-        return big ? ((quint32(a) << 24) | (quint32(b) << 16) | (quint32(c) << 8) | quint32(e))
-                   : ((quint32(e) << 24) | (quint32(c) << 16) | (quint32(b) << 8) | quint32(a));
-    }
 
     QString privateFolder()
     {
@@ -73,17 +42,203 @@ namespace
     }
 }
 
-Thumbnailer::Thumbnailer(QObject *parent)
-    : QThread(parent)
-    , m_stop(false)
+#ifdef Q_OS_SYMBIAN
+
+#include <e32base.h>
+#include <e32std.h>
+#include <thumbnaildata.h>
+#include <thumbnailmanager.h>
+#include <thumbnailmanagerobserver.h>
+#include <thumbnailobjectsource.h>
+#include <QPixmap>
+
+namespace
 {
-    cacheDir(); // settled here, on the UI thread, before run() can read it
+    // Ordinals in thumbnailmanager.dll, from the frozen export table
+    // (imagehandlingutilities/thumbnailmanager/thumbnailclient/eabi/
+    // thumbnailmanageru.def in the Symbian Foundation sources). Symbian's
+    // binary compatibility rules keep frozen ordinals fixed across releases;
+    // later ones only append.
+    //   @1 _ZN17CThumbnailManager4NewLER25MThumbnailManagerObserver
+    //   @4 _ZN22CThumbnailObjectSource4NewLERK7TDesC16S2_
+    const TInt KOrdinalManagerNewL = 1;
+    const TInt KOrdinalSourceNewL = 4;
+
+    typedef CThumbnailManager *(*ManagerNewL)(MThumbnailManagerObserver &);
+    typedef CThumbnailObjectSource *(*SourceNewL)(const TDesC &, const TDesC &);
+
+    // Both classes' destructors are virtual but not exported: deleting
+    // through CBase goes through the vtable and links against nothing.
+    template <typename T> void destroy(T *p)
+    {
+        delete static_cast<CBase *>(p);
+    }
+}
+
+class ThumbnailerPrivate : public MThumbnailManagerObserver
+{
+public:
+    explicit ThumbnailerPrivate(Thumbnailer *q)
+        : q(q), m_tried(false), m_loaded(false), m_broken(false),
+          m_managerNewL(0), m_sourceNewL(0), m_manager(0)
+    {
+    }
+
+    ~ThumbnailerPrivate()
+    {
+        if (m_manager)
+            destroy(m_manager); // cancels what is still outstanding
+        if (m_loaded)
+            m_lib.Close();
+    }
+
+    bool load()
+    {
+        if (m_tried)
+            return m_loaded && !m_broken;
+        m_tried = true;
+        const TInt err = m_lib.Load(_L("thumbnailmanager.dll"));
+        if (err != KErrNone) {
+            qWarning() << "Thumbs: cannot load thumbnailmanager.dll, error" << err
+                       << "- the gallery gets no thumbnails";
+            return false;
+        }
+        m_managerNewL = reinterpret_cast<ManagerNewL>(m_lib.Lookup(KOrdinalManagerNewL));
+        m_sourceNewL = reinterpret_cast<SourceNewL>(m_lib.Lookup(KOrdinalSourceNewL));
+        if (!m_managerNewL || !m_sourceNewL) {
+            qWarning() << "Thumbs: thumbnailmanager.dll lacks the expected exports"
+                       << "- the gallery gets no thumbnails";
+            m_lib.Close();
+            return false;
+        }
+        m_loaded = true;
+        qDebug() << "Thumbs: loaded thumbnailmanager.dll";
+        return true;
+    }
+
+    // The session with the thumbnail server, opened on the first request.
+    bool ensureManager()
+    {
+        if (m_manager)
+            return true;
+        if (!load())
+            return false;
+        CThumbnailManager *manager = 0;
+        TRAPD(err, manager = m_managerNewL(*this));
+        if (err != KErrNone || !manager) {
+            qWarning() << "Thumbs: cannot open the thumbnail service, error" << err;
+            m_broken = true;
+            return false;
+        }
+        // Exactly what the Photos app asks for in its grid (glxcachemanager.cpp
+        // in the Symbian Foundation sources), so the service hands back the
+        // thumbnails it already keeps for Photos instead of making new ones.
+        // A failed setting is logged and the service's default used.
+        TRAP(err, manager->SetDisplayModeL(EColor64K));
+        if (err != KErrNone)
+            qWarning() << "Thumbs: cannot set the display mode, error" << err;
+        TRAP(err, manager->SetFlagsL(CThumbnailManager::ECropToAspectRatio));
+        if (err != KErrNone)
+            qWarning() << "Thumbs: cannot set crop to aspect ratio, error" << err;
+        TRAP(err, manager->SetQualityPreferenceL(CThumbnailManager::EOptimizeForPerformance));
+        if (err != KErrNone)
+            qWarning() << "Thumbs: cannot set the quality preference, error" << err;
+        TRAP(err, manager->SetThumbnailSizeL(EGridThumbnailSize));
+        if (err != KErrNone)
+            qWarning() << "Thumbs: cannot set the grid size, error" << err;
+        m_manager = manager;
+        qDebug() << "Thumbs: thumbnail service ready";
+        return true;
+    }
+
+    // A request id (> 0), or a Symbian error (< 0).
+    int start(const QString &path)
+    {
+        if (!ensureManager())
+            return KErrNotSupported;
+        const QString native = QDir::toNativeSeparators(path);
+        const TPtrC uri(reinterpret_cast<const TUint16 *>(native.utf16()), native.length());
+        CThumbnailObjectSource *source = 0;
+        TRAPD(err, source = m_sourceNewL(uri, KNullDesC));
+        if (err != KErrNone || !source)
+            return err != KErrNone ? err : KErrNoMemory;
+        TThumbnailRequestId id = 0;
+        TRAP(err, id = m_manager->GetThumbnailL(*source));
+        destroy(source); // the request has copied what it needs
+        if (err != KErrNone)
+            return err;
+        return id > 0 ? int(id) : KErrGeneral;
+    }
+
+    void cancel(int id)
+    {
+        if (m_manager)
+            m_manager->CancelRequest(id);
+    }
+
+    void ThumbnailPreviewReady(MThumbnailData &, TThumbnailRequestId)
+    {
+    }
+
+    // Runs in the service's active object: must not leave or throw.
+    void ThumbnailReady(TInt aError, MThumbnailData &aThumbnail, TThumbnailRequestId aId)
+    {
+        try {
+            QImage image;
+            if (aError == KErrNone) {
+                CFbsBitmap *bitmap = aThumbnail.Bitmap();
+                // Copied out now: the bitmap is the service's and goes when
+                // this returns.
+                if (bitmap)
+                    image = QPixmap::fromSymbianCFbsBitmap(bitmap).toImage();
+            }
+            q->finished(int(aId), image, int(aError));
+        } catch (...) {
+            qWarning() << "Thumbs: exception in the thumbnail callback";
+        }
+    }
+
+private:
+    Thumbnailer *q;
+    bool m_tried;
+    bool m_loaded;
+    bool m_broken;
+    RLibrary m_lib;
+    ManagerNewL m_managerNewL;
+    SourceNewL m_sourceNewL;
+    CThumbnailManager *m_manager;
+};
+
+#else // !Q_OS_SYMBIAN
+
+class ThumbnailerPrivate
+{
+public:
+    explicit ThumbnailerPrivate(Thumbnailer *) {}
+    bool load() { return false; }
+    int start(const QString &) { return -5; } // KErrNotSupported
+    void cancel(int) {}
+};
+
+#endif
+
+Thumbnailer::Thumbnailer(QObject *parent)
+    : QObject(parent)
+    , d(new ThumbnailerPrivate(this))
+    , m_watchdog(new QTimer(this))
+    , m_pumpScheduled(false)
+    , m_made(0)
+    , m_failed(0)
+    , m_totalMs(0)
+{
+    cacheDir();
+    m_watchdog->setInterval(KWatchdogMs);
+    connect(m_watchdog, SIGNAL(timeout()), this, SLOT(checkTimeouts()));
 }
 
 Thumbnailer::~Thumbnailer()
 {
-    stop();
-    wait();
+    delete d;
 }
 
 QString Thumbnailer::cacheDir()
@@ -91,7 +246,7 @@ QString Thumbnailer::cacheDir()
     if (g_cacheDir.isEmpty()) {
         g_cacheDir = privateFolder() + QLatin1String("/thumbnails");
         if (!QDir().mkpath(g_cacheDir))
-            qWarning() << "Gallery: cannot create the thumbnail cache" << g_cacheDir;
+            qWarning() << "Thumbs: cannot create the thumbnail cache" << g_cacheDir;
     }
     return g_cacheDir;
 }
@@ -106,13 +261,13 @@ void Thumbnailer::discardLegacyCache()
         QFile::remove(files.at(i).absoluteFilePath());
     dir.cdUp();
     dir.rmdir(QLatin1String("thumbs"));
-    qDebug() << "Gallery: removed the old thumbnail cache," << files.size() << "files";
+    qDebug() << "Thumbs: removed the old thumbnail cache," << files.size() << "files";
 }
 
-QString Thumbnailer::thumbPathFor(const QString &imagePath)
+QString Thumbnailer::thumbPathFor(const QString &path)
 {
-    const QFileInfo fi(imagePath);
-    QByteArray key = imagePath.toUtf8();
+    const QFileInfo fi(path);
+    QByteArray key = path.toUtf8();
     key += '\0';
     key += QByteArray::number(qint64(fi.size()));
     key += '\0';
@@ -121,225 +276,120 @@ QString Thumbnailer::thumbPathFor(const QString &imagePath)
     return cacheDir() + QLatin1Char('/') + QString::fromLatin1(hash) + QLatin1String(".jpg");
 }
 
-void Thumbnailer::request(const QString &imagePath, int edge)
+bool Thumbnailer::available()
 {
-    QMutexLocker lock(&m_mutex);
+    return d->load();
+}
+
+void Thumbnailer::request(const QString &path, int edge)
+{
     for (int i = 0; i < m_queue.size(); ++i)
-        if (m_queue.at(i).path == imagePath) return; // already waiting
+        if (m_queue.at(i).path == path) return;
+    for (QHash<int, Running>::const_iterator it = m_running.constBegin(); it != m_running.constEnd(); ++it)
+        if (it.value().path == path) return;
     Job job;
-    job.path = imagePath;
+    job.path = path;
     job.edge = edge > 0 ? qMin(edge, KMaxEdge) : KMaxEdge;
-    // At the front: the cells revealed last are the ones being looked at.
-    m_queue.prepend(job);
-    m_wake.wakeAll();
+    m_queue.prepend(job); // the cells revealed last are the ones looked at
+    schedulePump();
 }
 
 void Thumbnailer::clearQueue()
 {
-    QMutexLocker lock(&m_mutex);
     m_queue.clear();
 }
 
-void Thumbnailer::stop()
+void Thumbnailer::schedulePump()
 {
-    QMutexLocker lock(&m_mutex);
-    m_stop = true;
-    m_queue.clear();
-    m_wake.wakeAll();
+    if (m_pumpScheduled)
+        return;
+    m_pumpScheduled = true;
+    // Queued: request() is called while QML builds a delegate, and the
+    // service must not be called back into from its own callback.
+    QMetaObject::invokeMethod(this, "pump", Qt::QueuedConnection);
 }
 
-QByteArray Thumbnailer::exifThumbnail(const QString &path, int *orientation)
+void Thumbnailer::pump()
 {
-    if (orientation) *orientation = 1;
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) return QByteArray();
-
-    char soi[2];
-    if (f.read(soi, 2) != 2) return QByteArray();
-    if (quint8(soi[0]) != 0xFF || quint8(soi[1]) != 0xD8) return QByteArray(); // not a JPEG
-
-    const QByteArray exifMagic("Exif\0\0", 6);
-
-    // Walk the markers, reading only each 4-byte header and skipping the
-    // payloads, until APP1 with an EXIF payload turns up.
-    for (int seen = 0; seen < KMaxMarkers; ++seen) {
-        char hdr[4];
-        if (f.read(hdr, 2) != 2) break;
-        if (quint8(hdr[0]) != 0xFF) break;
-        const quint8 marker = quint8(hdr[1]);
-        if (marker == 0x01 || (marker >= 0xD0 && marker <= 0xD7)) continue; // no payload
-        if (marker == 0xDA || marker == 0xD9) break;                         // pixels start
-        if (f.read(hdr + 2, 2) != 2) break;
-        const int len = (int(quint8(hdr[2])) << 8) | int(quint8(hdr[3]));
-        if (len < 2 || len > KMaxSegment + 2) break;
-        const int payloadLen = len - 2;
-
-        if (marker != 0xE1) {
-            if (!f.seek(f.pos() + payloadLen)) break;
-            continue;
-        }
-
-        const QByteArray seg = f.read(payloadLen);
-        if (seg.size() != payloadLen) break;
-        if (seg.size() < 6 || seg.left(6) != exifMagic) continue; // APP1, but not EXIF (XMP)
-
-        // EXIF offsets are relative to the start of the TIFF header.
-        const QByteArray tiff = seg.mid(6);
-        if (tiff.size() < 8) return QByteArray();
-
-        const bool big = tiff.left(2) == QByteArray("MM", 2);
-        if (!big && tiff.left(2) != QByteArray("II", 2)) return QByteArray();
-
-        const quint32 ifd0 = tiffU32(tiff, 0, big, 4);
-        if (ifd0 < 8 || ifd0 > quint32(tiff.size())) return QByteArray();
-        const quint16 n0 = tiffU16(tiff, 0, big, int(ifd0));
-        if (n0 == 0 || n0 > 512) return QByteArray();
-
-        // Orientation lives in IFD0.
-        if (orientation) {
-            for (int i = 0; i < int(n0); ++i) {
-                const int e = int(ifd0) + 2 + 12 * i;
-                if (tiffU16(tiff, 0, big, e) != 0x0112) continue;
-                const int v = int(tiffU16(tiff, 0, big, e + 8));
-                if (v >= 1 && v <= 8) *orientation = v;
-                break;
-            }
-        }
-
-        // IFD1, the thumbnail directory, is linked right after IFD0's entries.
-        const quint32 ifd1 = tiffU32(tiff, 0, big, int(ifd0) + 2 + 12 * int(n0));
-        if (ifd1 < 8 || ifd1 > quint32(tiff.size())) return QByteArray();
-        const quint16 n1 = tiffU16(tiff, 0, big, int(ifd1));
-        if (n1 == 0 || n1 > 512) return QByteArray();
-
-        quint32 thumbOff = 0;
-        quint32 thumbLen = 0;
-        for (int i = 0; i < int(n1); ++i) {
-            const int e = int(ifd1) + 2 + 12 * i;
-            const quint16 tag = tiffU16(tiff, 0, big, e);
-            if (tag == 0x0201) thumbOff = tiffU32(tiff, 0, big, e + 8);      // offset
-            else if (tag == 0x0202) thumbLen = tiffU32(tiff, 0, big, e + 8); // byte count
-        }
-        if (thumbOff == 0 || thumbLen == 0) return QByteArray();
-        if (qint64(thumbOff) + qint64(thumbLen) > qint64(tiff.size())) return QByteArray();
-        return tiff.mid(int(thumbOff), int(thumbLen));
-    }
-    return QByteArray();
-}
-
-QImage Thumbnailer::applyOrientation(const QImage &image, int orientation)
-{
-    if (orientation <= 1 || orientation > 8 || image.isNull()) return image;
-
-    QTransform t;
-    switch (orientation) {
-    case 2: return image.mirrored(true, false);
-    case 3: t.rotate(180); break;
-    case 4: return image.mirrored(false, true);
-    case 5: t.rotate(90); return image.transformed(t).mirrored(true, false);
-    case 6: t.rotate(90); break;
-    case 7: t.rotate(270); return image.transformed(t).mirrored(true, false);
-    case 8: t.rotate(270); break;
-    default: return image;
-    }
-    return image.transformed(t);
-}
-
-void Thumbnailer::run()
-{
-    // For the log: how many were made each way, and how long they took.
-    int exifCount = 0, decodeCount = 0, failed = 0;
-    qint64 exifMs = 0, decodeMs = 0;
-
-    for (;;) {
-        Job job;
-        {
-            QMutexLocker lock(&m_mutex);
-            while (!m_stop && m_queue.isEmpty()) m_wake.wait(&m_mutex);
-            if (m_stop) return;
-            job = m_queue.takeFirst();
-        }
-
+    m_pumpScheduled = false;
+    while (m_running.size() < KMaxRunning && !m_queue.isEmpty()) {
+        const Job job = m_queue.takeFirst();
         const QString out = thumbPathFor(job.path);
         if (QFile::exists(out)) {
             emit ready(job.path, out);
             continue;
         }
-
-        QTime timer;
-        timer.start();
-        QImage image;
-        int orientation = 1;
-        bool fromExif = false;
-
-        // The stored (un-rotated) size of the picture, from the header alone.
-        const QSize storedSize = QImageReader(job.path).size();
-
-        // Fast path: the picture's own EXIF thumbnail.
-        const QByteArray embedded = exifThumbnail(job.path, &orientation);
-        if (!embedded.isEmpty()) {
-            // Scaled even here: cameras embed up to 512x384.
-            QBuffer buffer;
-            buffer.setData(embedded);
-            buffer.open(QIODevice::ReadOnly);
-            QImageReader reader(&buffer, "JPEG");
-            const QSize full = reader.size();
-            if (full.isValid() && (full.width() > job.edge || full.height() > job.edge)) {
-                QSize target = full;
-                target.scale(job.edge, job.edge, Qt::KeepAspectRatio);
-                reader.setScaledSize(target);
-            }
-            image = reader.read();
-
-            // An embedded thumbnail can be stale: editors crop or rotate the
-            // picture and leave the old one. Aspect is the cheap tell.
-            if (!image.isNull() && storedSize.isValid() && image.height() > 0 && storedSize.height() > 0) {
-                const qreal a = qreal(image.width()) / qreal(image.height());
-                const qreal b = qreal(storedSize.width()) / qreal(storedSize.height());
-                if (qAbs(a - b) > 0.05 * b) image = QImage();
-            }
-            fromExif = !image.isNull();
-        }
-
-        // Otherwise a scaled read (the JPEG reader decodes at 1/2 to 1/8).
-        if (image.isNull()) {
-            QImageReader reader(job.path);
-            const QSize full = reader.size();
-            if (full.isValid() && (full.width() > job.edge || full.height() > job.edge)) {
-                QSize target = full;
-                target.scale(job.edge, job.edge, Qt::KeepAspectRatio);
-                reader.setScaledSize(target);
-            }
-            image = reader.read();
-        }
-
-        if (image.isNull()) {
-            ++failed;
-            qWarning() << "Gallery: cannot read" << job.path;
-            emit ready(job.path, QString()); // the grid shows a placeholder
+        const int id = d->start(job.path);
+        if (id <= 0) {
+            ++m_failed;
+            qWarning() << "Thumbs: cannot request" << job.path << "error" << id;
+            emit ready(job.path, QString());
             continue;
         }
-
-        // Both paths give stored pixels, so the rotation is applied here.
-        image = applyOrientation(image, orientation);
-
-        if (image.width() > job.edge || image.height() > job.edge)
-            image = image.scaled(job.edge, job.edge, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-        const bool saved = image.save(out, "JPEG", KJpegQuality);
-        if (!saved) {
-            ++failed;
-            qWarning() << "Gallery: cannot write thumbnail" << out;
-        }
-        const int ms = timer.elapsed();
-        if (fromExif) { ++exifCount; exifMs += ms; }
-        else { ++decodeCount; decodeMs += ms; }
-        const int made = exifCount + decodeCount;
-        if (made == 1 || made % 25 == 0)
-            qDebug() << "Gallery: thumbnails made:" << made
-                     << "- exif" << exifCount << "(avg" << (exifCount ? exifMs / exifCount : 0) << "ms),"
-                     << "decode" << decodeCount << "(avg" << (decodeCount ? decodeMs / decodeCount : 0) << "ms),"
-                     << "failed" << failed;
-        emit ready(job.path, saved ? out : QString());
+        Running r;
+        r.path = job.path;
+        r.edge = job.edge;
+        r.started.start();
+        m_running.insert(id, r);
     }
+    if (!m_running.isEmpty() && !m_watchdog->isActive())
+        m_watchdog->start();
+}
+
+void Thumbnailer::finished(int requestId, const QImage &image, int error)
+{
+    QHash<int, Running>::iterator it = m_running.find(requestId);
+    if (it == m_running.end())
+        return; // timed out meanwhile
+    const Running r = it.value();
+    m_running.erase(it);
+    const int ms = r.started.elapsed();
+
+    QString saved;
+    if (image.isNull()) {
+        ++m_failed;
+        qWarning() << "Thumbs: none for" << r.path << "error" << error << "after" << ms << "ms";
+    } else {
+        if (m_made == 0)
+            qDebug() << "Thumbs: first thumbnail" << image.width() << "x" << image.height()
+                     << "in" << ms << "ms";
+        QImage scaled = image;
+        if (scaled.width() > r.edge || scaled.height() > r.edge)
+            scaled = scaled.scaled(r.edge, r.edge, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        const QString out = thumbPathFor(r.path);
+        if (scaled.save(out, "JPEG", KJpegQuality)) {
+            saved = out;
+            ++m_made;
+            m_totalMs += ms;
+            if (m_made % 25 == 0)
+                qDebug() << "Thumbs: made" << m_made << "(avg" << (m_totalMs / m_made)
+                         << "ms), failed" << m_failed;
+        } else {
+            ++m_failed;
+            qWarning() << "Thumbs: cannot write" << out;
+        }
+    }
+    emit ready(r.path, saved);
+
+    if (m_running.isEmpty())
+        m_watchdog->stop();
+    schedulePump();
+}
+
+void Thumbnailer::checkTimeouts()
+{
+    QList<int> late;
+    for (QHash<int, Running>::const_iterator it = m_running.constBegin(); it != m_running.constEnd(); ++it)
+        if (it.value().started.elapsed() > KTimeoutMs) late << it.key();
+    foreach (int id, late) {
+        const QString path = m_running.take(id).path;
+        d->cancel(id);
+        ++m_failed;
+        qWarning() << "Thumbs: no answer for" << path << "in" << KTimeoutMs / 1000 << "s, cancelled";
+        emit ready(path, QString());
+    }
+    if (m_running.isEmpty())
+        m_watchdog->stop();
+    if (!late.isEmpty())
+        schedulePump();
 }

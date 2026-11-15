@@ -283,8 +283,8 @@ folders. The scan visits one folder per event-loop turn, so it never blocks the 
 | `name`        | string | `a.jpg`                                              |
 | `folder`      | string | `201211`                                             |
 | `isVideo`     | bool   |                                                      |
-| `thumb`       | string | `file:///E:/Private/e62546c5/thumbnails/<md5>.jpg`; `""` until made (always for videos) |
-| `thumbFailed` | bool   | the photo can't be read (or the cache not written); show a placeholder |
+| `thumb`       | string | `file:///E:/Private/e62546c5/thumbnails/<md5>.jpg`; `""` until made |
+| `thumbFailed` | bool   | no thumbnail can be made (no system thumbnail service, unreadable file, unsupported codec, cache not writable); show a placeholder |
 | `checked`     | bool   |                                                      |
 
 Properties: `loading` (bool, a scan is running; the old list stays until it is done),
@@ -294,7 +294,7 @@ Methods:
 - `load()` — scans again (asynchronous); the page calls it each time it is shown
 - `close()` — the page is gone: stops the scan and drops the thumbnails not yet started
   (the page calls it when it deactivates)
-- `requestThumb(index, edge)` — asks for a photo's thumbnail, at most `edge` px (capped at
+- `requestThumb(index, edge)` — asks for a photo's or video's thumbnail, at most `edge` px (capped at
   160) on its longer side. A delegate calls it when it is created, so only cells in or
   near view are made, the ones asked for last first. Returns at once; the row's `thumb`
   or `thumbFailed` changes when it is done.
@@ -302,12 +302,19 @@ Methods:
 - `checkedFiles()` → list of paths, in checking order; add them with `selection.addFiles()`
 - Signals: `loadingChanged()`, `foundChanged()`, `countChanged()`, `checkedChanged()`
 
-Thumbnails are made by a low-priority worker thread (`Thumbnailer`) and kept as small JPEGs
-in the app's private folder, `thumbnails/` (keyed by path, size and date, so a changed
-photo gets a new one; no size limit): from the JPEG's EXIF thumbnail when there is one
-(rotated by the EXIF orientation), else a scaled decode. The earlier cache (`thumbs/`) is
-deleted at startup. Logged: `Gallery: thumbnails made: N - exif N (avg X ms), decode N
-(avg Y ms), failed N` (the first, then every 25th), `Gallery: cannot read <path>`.
+Thumbnails of photos and videos come from the system thumbnail service (`Thumbnailer`,
+ThumbnailManager as used by Photos, with the Photos grid's own settings: generic grid
+size, cropped to a square, optimised for speed, 64K colours; it decodes with the phone's
+codecs and applies the EXIF orientation), loaded at run time from
+`thumbnailmanager.dll`. Three requests at a time, newest first, 20 s timeout each. They are
+kept as small JPEGs in the app's private folder, `thumbnails/` (keyed by path, size and
+date, so a changed file gets a new one; no size limit). Where the service can't be
+loaded, or elsewhere than Symbian, every row has `thumbFailed` true from the start. The
+earlier cache (`thumbs/`) is deleted at startup. Logged: `Thumbs: loaded
+thumbnailmanager.dll` / `cannot load thumbnailmanager.dll, error E`, `Thumbs: thumbnail
+service ready` / `cannot open the thumbnail service, error E`, `Thumbs: first thumbnail
+W x H in T ms`, `Thumbs: made N (avg X ms), failed N` (every 25th), `Thumbs: none for
+<path> error E after T ms`, `Thumbs: no answer for <path> in 20 s, cancelled`.
 
 ## `sender` — sending the selection to a device
 One transfer at a time (LocalSend v2: `prepare-upload`, then the accepted files one by

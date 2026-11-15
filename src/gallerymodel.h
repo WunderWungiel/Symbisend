@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Wunder Wungiel
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Based on Symbigram's ImagePicker (src/app/imagepicker.*), with videos and
-// check marks added for Symbisend.
+// The folder scan is based on Symbigram's ImagePicker (src/app/imagepicker.*),
+// with videos and check marks added for Symbisend.
 
 #ifndef GALLERYMODEL_H
 #define GALLERYMODEL_H
@@ -23,9 +23,9 @@ class Thumbnailer;
 //
 // The scan is ours and incremental: one directory per event-loop turn, so it
 // cannot block the UI however large the media library is. Listing folders is
-// cheap; the expensive part is thumbnails, which Thumbnailer makes in a
-// worker thread for the cells in view only (each delegate asks with
-// requestThumb()) and caches on disk.
+// cheap; the expensive part is thumbnails, which Thumbnailer gets from the
+// system thumbnail service for the cells in view only (each delegate asks
+// with requestThumb()) and caches on disk.
 // See docs/qml-api.md (`gallery`).
 class GalleryModel : public QAbstractListModel
 {
@@ -65,8 +65,7 @@ public:
     Q_INVOKABLE void load();
     // The page is gone: stops the scan and drops the thumbnails not started.
     Q_INVOKABLE void close();
-    // Asks for a row's thumbnail (photos only); a delegate calls it when it
-    // is created. Returns at once; the row changes when the file is there.
+    // Asks for a row's thumbnail; a delegate calls it when it is created. Returns at once; the row changes when the file is there.
     Q_INVOKABLE void requestThumb(int index, int edge);
     Q_INVOKABLE void toggle(int index);
     Q_INVOKABLE void clearChecked();
@@ -113,6 +112,7 @@ private:
     QList<Dir> m_todo;             // directories still to visit
     QTimer *m_timer;
     Thumbnailer *m_thumbs;
+    bool m_thumbsOk;               // the system thumbnail service could be loaded
     bool m_scanning;
     int m_dirsVisited;
     qint64 m_scanStarted;          // ms since epoch, for the log

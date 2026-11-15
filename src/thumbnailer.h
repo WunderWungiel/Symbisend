@@ -1,33 +1,40 @@
-// SPDX-FileCopyrightText: 2026 The Symbigram authors (https://github.com/Symnok/Symbigram)
 // SPDX-FileCopyrightText: 2026 Wunder Wungiel
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// Taken from Symbigram (src/app/thumbnailer.*), trimmed to what Symbisend
-// needs: the cache is the app's private folder, no settings or migrations.
 
 #ifndef THUMBNAILER_H
 #define THUMBNAILER_H
 
-#include <QByteArray>
+#include <QHash>
 #include <QImage>
 #include <QList>
-#include <QMutex>
+#include <QObject>
 #include <QString>
-#include <QThread>
-#include <QWaitCondition>
+#include <QTime>
 
-// Thumbnails for GalleryPage.qml, made off the UI thread and cached on disk.
+class QTimer;
+class ThumbnailerPrivate;
+
+// Thumbnails of photos and videos for GalleryPage.qml, cached on disk as small
+// JPEGs so QML can show them as file:// URLs and a second visit costs one
+// small file read per cell.
 //
-// 1. Camera JPEGs carry a thumbnail inside their EXIF block. Reading that
-//    touches tens of KB instead of several MB. Anything without one
-//    (screenshots, downloads, PNGs) falls back to a scaled read, which the
-//    JPEG reader does cheaply by DCT scaling.
-// 2. The result is written to cacheDir() as a small JPEG, so opening the
-//    gallery again costs one small file read per cell.
+// They come from the system thumbnail service (ThumbnailManager, what Photos
+// and Videos use): it decodes with the phone's own codecs (hardware JPEG and
+// video), honours EXIF orientation, and often has a grid thumbnail already
+// from the camera or the media harvester. It is asked with the Photos app's
+// own grid settings, so those come straight from its store. The SDK ships
+// its headers but no import library, so thumbnailmanager.dll is loaded at
+// run time and its two
+// factory functions are looked up by ordinal (frozen, see the .cpp); all the
+// rest is virtual. If that fails, available() is false and the grid shows
+// placeholders. Elsewhere than Symbian it is always false for now (Harmattan
+// could use Tumbler behind the same interface).
 //
-// Requests come only from the cells in view, newest first (LIFO), so a fast
-// scroll doesn't leave the user waiting behind cells already gone past.
-class Thumbnailer : public QThread
+// The service is asynchronous and runs on this (the UI) thread's active
+// scheduler, so there is no worker thread. A few requests are outstanding at
+// once; the rest wait newest first, so a fast scroll doesn't leave the user
+// waiting behind cells already gone past.
+class Thumbnailer : public QObject
 {
     Q_OBJECT
 
@@ -35,48 +42,59 @@ public:
     explicit Thumbnailer(QObject *parent = 0);
     ~Thumbnailer();
 
-    // <private folder>/thumbnails. Settled by the first Thumbnailer, on the
-    // UI thread, before its worker starts.
+    // <private folder>/thumbnails.
     static QString cacheDir();
     // Deletes the cache of the earlier gallery (<private folder>/thumbs).
     static void discardLegacyCache();
+    // The cache file a picture or video would use, whether or not it exists
+    // yet. Keyed on path, size and modification time, so an edited or
+    // replaced file gets a new thumbnail by itself.
+    static QString thumbPathFor(const QString &path);
 
-    // The cache file a picture would use, whether or not it exists yet. Keyed
-    // on path, size and modification time, so an edited or replaced picture
-    // gets a new thumbnail by itself.
-    static QString thumbPathFor(const QString &imagePath);
+    // Whether the system service could be loaded (tried once, on first call).
+    bool available();
 
-    // Queues a picture. Returns at once; ready() arrives later on the UI
-    // thread.
-    void request(const QString &imagePath, int edge);
-    // Drops anything not yet started (the page was closed or listed again).
+    // Queues a file. Returns at once; ready() comes later, never from inside
+    // this call.
+    void request(const QString &path, int edge);
+    // Drops what has not been sent to the service yet.
     void clearQueue();
-    void stop();
-
-    // The embedded EXIF thumbnail, or a null array when there is none.
-    // orientation, when given, receives the EXIF Orientation tag (1 if
-    // absent): Qt 4.7 has no setAutoTransform, so the caller rotates.
-    static QByteArray exifThumbnail(const QString &path, int *orientation = 0);
-    static QImage applyOrientation(const QImage &image, int orientation);
 
 signals:
-    // thumbPath is the file now on disk, or empty if the picture could not
-    // be read (or the cache not written).
-    void ready(const QString &imagePath, const QString &thumbPath);
+    // thumbPath is the cache file now on disk, or empty if no thumbnail could
+    // be made (unreadable file, unsupported codec, timeout, cache not
+    // writable).
+    void ready(const QString &path, const QString &thumbPath);
 
-protected:
-    void run();
+private slots:
+    void pump();
+    void checkTimeouts();
 
 private:
+    friend class ThumbnailerPrivate;
+    // From the service callback: image is null on failure.
+    void finished(int requestId, const QImage &image, int error);
+    void schedulePump();
+
     struct Job {
         QString path;
         int edge;
     };
+    struct Running {
+        QString path;
+        int edge;
+        QTime started;
+    };
 
+    ThumbnailerPrivate *d;
     QList<Job> m_queue;
-    QMutex m_mutex;
-    QWaitCondition m_wake;
-    bool m_stop;
+    QHash<int, Running> m_running;   // request id -> job
+    QTimer *m_watchdog;
+    bool m_pumpScheduled;
+    // For the log.
+    int m_made;
+    int m_failed;
+    qint64 m_totalMs;
 };
 
 #endif // THUMBNAILER_H

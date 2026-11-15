@@ -35,6 +35,10 @@ symbian:LIBS += -lavkon -leikdlg -leikctl
 symbian:LIBS += -lapgrfx -lapparc -lcone -lws32
 # Received files keep the time of the original (src/receiver.cpp)
 symbian:LIBS += -lefsrv
+
+# Gallery thumbnails: ThumbnailManager's headers (the DLL is loaded at run
+# time, see src/thumbnailer.cpp, as the SDK has no import library for it)
+symbian:MMP_RULES += "SYSTEMINCLUDE /epoc32/include/platform/mw"
 # The system gallery picker (MGFetch), used before, needed all of these (it
 # left with -46 otherwise; ReadUserData/WriteUserData alone were not enough on
 # a Belle 808). ReadDeviceData, WriteDeviceData and SwEvent are developer-certificate

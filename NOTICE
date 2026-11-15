@@ -33,8 +33,7 @@ LocalSend web pages (web/upload.html, web/error-403.html) and LocalSend logo
   Copyright the LocalSend authors
   Apache License 2.0, see LICENSES/Apache-2.0.txt.
 
-Symbigram (src/gallerymodel.*, src/thumbnailer.*: the gallery's folder scan and
-thumbnailer, adapted)
+Symbigram (src/gallerymodel.*: the gallery's folder scan, adapted)
   https://github.com/Symnok/Symbigram
   Copyright the Symbigram authors
   GNU General Public License v3.0 or later, see LICENSE.

@@ -138,15 +138,15 @@ Page {
                 // for exactly the thumbnails that are needed. 4/3 of the tile,
                 // so a 4:3 photo still covers it when cropped.
                 Component.onCompleted: {
-                    if (!model.isVideo && model.thumb == "" && !model.thumbFailed)
+                    if (model.thumb == "" && !model.thumbFailed)
                         gallery.requestThumb(index, Math.round(grid.cellWidth * 4 / 3))
                 }
 
                 BusyIndicator {
                     anchors.centerIn: parent
                     platformInverted: page.platformInverted
-                    running: !model.isVideo && ((model.thumb == "" && !model.thumbFailed)
-                                                || thumb.status == Image.Loading)
+                    running: (model.thumb == "" && !model.thumbFailed)
+                             || thumb.status == Image.Loading
                     visible: running
                     width: platformStyle.graphicSizeSmall
                     height: width
@@ -161,9 +161,11 @@ Page {
                     text: "?"
                 }
 
+                // A video without a thumbnail (no system thumbnail service, or
+                // a codec the phone lacks): icon and file name instead.
                 Image {
                     anchors.centerIn: parent
-                    visible: model.isVideo
+                    visible: model.isVideo && (model.thumbFailed || thumb.status == Image.Error)
                     width: platformStyle.graphicSizeMedium
                     height: platformStyle.graphicSizeMedium
                     sourceSize.width: width
@@ -172,15 +174,36 @@ Page {
                     source: "images/send-video" + (page.platformInverted ? "-inverted" : "") + ".svg"
                 }
 
-                // Videos: the file name, as there is no thumbnail.
                 Text {
                     anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 2 }
-                    visible: model.isVideo
+                    visible: model.isVideo && (model.thumbFailed || thumb.status == Image.Error)
                     elide: Text.ElideMiddle
                     horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: platformStyle.fontSizeSmall - 2
                     color: page.mutedColor
                     text: model.name
+                }
+
+                // A video with its thumbnail: a small badge, so it isn't
+                // taken for a photo. White on a dark patch over any picture.
+                Rectangle {
+                    anchors { left: parent.left; bottom: parent.bottom; margins: 4 }
+                    visible: model.isVideo && thumb.status == Image.Ready
+                    width: platformStyle.graphicSizeSmall + 4
+                    height: width
+                    radius: 4
+                    color: "black"
+                    opacity: 0.6
+                }
+                Image {
+                    anchors { left: parent.left; bottom: parent.bottom; margins: 6 }
+                    visible: model.isVideo && thumb.status == Image.Ready
+                    width: platformStyle.graphicSizeSmall
+                    height: width
+                    sourceSize.width: width
+                    sourceSize.height: height
+                    smooth: true
+                    source: "images/send-video.svg"
                 }
 
                 Rectangle {
