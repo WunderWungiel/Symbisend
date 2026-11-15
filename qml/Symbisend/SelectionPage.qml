@@ -15,6 +15,12 @@ Page {
     // Read by main.qml: this page has its own back button.
     property bool ownBackButton: true
 
+    // Never shown (ownBackButton hides the toolbar), but required: for a page
+    // without tools the ToolBar shrinks itself to height 0, and SendTextPage
+    // (pushed to edit a text message) then gets a toolbar of height 0 too -
+    // no back or confirm button. Same as mainPage in main.qml.
+    tools: ToolBarLayout {}
+
     // Light theme = the inverted Symbian style; every component follows it.
     property bool platformInverted: settings.theme == "light"
 
